@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Search } from "lucide-react";
 import { api } from "@/services/mockApi";
 import type { StandardClause } from "@/types";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ export default function StandardClauses() {
   const [clauses, setClauses] = useState<StandardClause[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [search, setSearch] = useState("");
   const [form, setForm] = useState({ articleName: "", clauseName: "", text: "", tags: "" });
 
   useEffect(() => {
@@ -34,8 +35,22 @@ export default function StandardClauses() {
     <div className="page-container">
       <h1 className="page-header">Standard Clauses</h1>
 
+      <div className="relative mb-4 max-w-md">
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <input
+          className="w-full border border-input rounded-lg pl-9 pr-3 py-2 text-sm bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Search clauses by name, article, or tag..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {clauses.map((c) => (
+        {clauses.filter(c =>
+          !search || c.clauseName.toLowerCase().includes(search.toLowerCase()) ||
+          c.articleName.toLowerCase().includes(search.toLowerCase()) ||
+          c.tags.some(t => t.toLowerCase().includes(search.toLowerCase()))
+        ).map((c) => (
           <div
             key={c.id}
             onClick={() => setSelected(selected === c.id ? null : c.id)}
