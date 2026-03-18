@@ -162,4 +162,5 @@ export const seedUsers: AppUser[] = [
   { id: "user-010", name: "Michael Rivera", email: "michael.rivera@optum.com", roleId: "role-compliance", status: "Active", createdAt: "2024-10-15T09:00:00Z" },
   { id: "user-011", name: "Amanda Foster", email: "amanda.foster@optum.com", roleId: "role-auditor", status: "Active", createdAt: "2024-11-01T09:00:00Z" },
   { id: "user-012", name: "ChandravadhanaTK", email: "chandravadhanatk@optum.com", roleId: "role-platform-admin", status: "Active", createdAt: "2024-06-01T09:00:00Z" },
+  { id: "user-013", name: "Raj Srirangam", email: "raj.srirangam@optum.com", roleId: "role-platform-admin", status: "Active", createdAt: "2024-05-15T09:00:00Z" },
 ];

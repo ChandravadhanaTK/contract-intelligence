@@ -1,7 +1,7 @@
 import { AppSidebar } from "./AppSidebar";
 import { AuditLogDrawer } from "../AuditLogDrawer";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Activity } from "lucide-react";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { currentUser, currentRole, users, switchUser } = useCurrentUser();
@@ -36,7 +36,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary/20 text-secondary-foreground font-medium">{currentRole.name}</span>
               )}
             </div>
-            <span className="status-chip status-chip-success">● Running</span>
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+              <Activity className="w-3.5 h-3.5 animate-pulse" />
+            </div>
             <AuditLogDrawer />
           </div>
         </header>

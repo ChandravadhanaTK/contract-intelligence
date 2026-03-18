@@ -341,6 +341,64 @@ export interface AppUser {
   createdAt: string;
 }
 
+// CoAuthor types
+export interface DefinitionTerm {
+  id: string;
+  term: string;
+  definition: string;
+  usedInSections: string[];
+}
+
+export interface MissingField {
+  id: string;
+  fieldKey: string;
+  reason: string;
+  suggestedPrompt: string;
+}
+
+export interface Citation {
+  refType: "ContractDraft" | "UploadedDoc";
+  sectionRef: string;
+  pageRef: string;
+}
+
+export interface CoAuthorAction {
+  type: "add_section" | "update_section" | "insert_clause" | "replace_text" | "add_exhibit" | "add_definition" | "mark_missing_field";
+  sectionRef?: string;
+  title?: string;
+  body?: string;
+  oldText?: string;
+  newText?: string;
+  exhibitName?: string;
+  exhibitDescription?: string;
+  term?: string;
+  definition?: string;
+  fieldKey?: string;
+  reason?: string;
+}
+
+export interface CoAuthorMessage {
+  id: string;
+  draftId: string;
+  role: "user" | "assistant";
+  text: string;
+  time: string;
+  actions?: CoAuthorAction[];
+  citations?: Citation[];
+}
+
+export interface DraftVersion {
+  id: string;
+  draftId: string;
+  version: number;
+  sections: ContractDocSection[];
+  exhibits: ExhibitRef[];
+  definitions: DefinitionTerm[];
+  placeholdersMissing: MissingField[];
+  createdAt: string;
+  changeNote: string;
+}
+
 // Downstream mapping
 export interface DownstreamMapping {
   targetId: string;
