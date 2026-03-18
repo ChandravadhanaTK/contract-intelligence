@@ -8,16 +8,15 @@ export default function AgentWorkspace() {
   const [logs, setLogs] = useState<AgentLog[]>([]);
   const [running, setRunning] = useState(false);
   const [contracts, setContracts] = useState<Contract[]>([]);
-  const [selectedContractId, setSelectedContractId] = useState<string>("");
+  const [selectedContractId, setSelectedContractId] = useState<string>("all");
 
   useEffect(() => {
     api.getContracts().then(c => {
       setContracts(c);
-      if (c.length > 0) setSelectedContractId(c[0].id);
     });
   }, []);
 
-  const selectedContract = contracts.find(c => c.id === selectedContractId);
+  const selectedContract = selectedContractId === "all" ? null : contracts.find(c => c.id === selectedContractId);
 
   const handleRun = async () => {
     setRunning(true);
