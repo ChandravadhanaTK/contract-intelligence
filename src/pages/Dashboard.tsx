@@ -81,8 +81,8 @@ export default function Dashboard() {
           <h1 className="page-header">Welcome {currentUser?.name || "User"}</h1>
           <p className="text-sm text-muted-foreground mt-1">Here are your highlights for the day</p>
         </div>
-        <button onClick={() => setTalkToContract(!talkToContract)} className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90">
-          <MessageSquare className="w-4 h-4" /> Talk to Contract
+        <button onClick={() => setTalkToContract(!talkToContract)} className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90" title="Your AI Contract CoAuthor to write contracts faster and smarter">
+          <MessageSquare className="w-4 h-4" /> Talk to Contract Agent – Your CoAuthor
         </button>
       </div>
 
@@ -146,13 +146,14 @@ export default function Dashboard() {
 
         {talkToContract && (
           <div className="bg-card border rounded-xl flex flex-col h-[600px]">
-            <div className="p-3 border-b flex items-center gap-2">
+            <div className="p-3 border-b flex items-center gap-2" title="Your AI Contract CoAuthor to write contracts faster and smarter">
               <MessageSquare className="w-4 h-4 text-secondary" />
-              <span className="font-semibold text-xs">Talk to Contract</span>
+              <span className="font-semibold text-xs">Talk to Contract Agent – Your CoAuthor</span>
             </div>
             <div className="p-3 border-b">
               <label className="text-[10px] font-medium text-muted-foreground block mb-1">Select Contract(s)</label>
               <select className="w-full border rounded px-2 py-1.5 text-xs bg-background">
+                <option value="all">All Contracts</option>
                 {contracts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
