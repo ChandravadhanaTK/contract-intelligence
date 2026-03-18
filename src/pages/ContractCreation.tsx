@@ -217,7 +217,7 @@ function IntakeCredentialingTab({ onNavigate }: { onNavigate: (path: string) => 
   );
 }
 
-
+function BulkUploadTab({ onNavigate }: { onNavigate: (path: string) => void }) {
   const [files, setFiles] = useState<BulkFile[]>([]);
   const [processing, setProcessing] = useState(false);
 
