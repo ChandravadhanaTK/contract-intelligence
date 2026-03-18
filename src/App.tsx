@@ -13,6 +13,12 @@ import WorkflowPage from "./pages/WorkflowPage";
 import DownstreamFeed from "./pages/DownstreamFeed";
 import ObligationCompliance from "./pages/ObligationCompliance";
 import Dashboard from "./pages/Dashboard";
+import IntakePage from "./pages/IntakePage";
+import CredentialingPage from "./pages/CredentialingPage";
+import IntegrityPage from "./pages/IntegrityPage";
+import RatesPage from "./pages/RatesPage";
+import MonitoringPage from "./pages/MonitoringPage";
+import RenewalsPage from "./pages/RenewalsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +41,13 @@ const App = () => (
             <Route path="/downstream" element={<DownstreamFeed />} />
             <Route path="/compliance" element={<ObligationCompliance />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            {/* Hidden routes - accessible via CTA buttons only */}
+            <Route path="/intake" element={<IntakePage />} />
+            <Route path="/credentialing" element={<CredentialingPage />} />
+            <Route path="/integrity" element={<IntegrityPage />} />
+            <Route path="/rates" element={<RatesPage />} />
+            <Route path="/monitoring" element={<MonitoringPage />} />
+            <Route path="/renewals" element={<RenewalsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>
