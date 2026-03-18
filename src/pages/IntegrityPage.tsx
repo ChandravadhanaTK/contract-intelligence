@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, AlertTriangle, CheckCircle, ArrowRight } from "lucide-react";
+import { Shield, AlertTriangle, CheckCircle, ArrowRight, ArrowLeft, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import type { IntegrityFinding, Contract } from "@/types";
+import { api } from "@/services/mockApi";
 
 function get<T>(key: string, fb: T): T { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; }
 function set(key: string, v: unknown) { localStorage.setItem(key, JSON.stringify(v)); }
 
 const seedFindings: IntegrityFinding[] = [
-  { id: "if-1", contractId: "contract-001", severity: "Critical", category: "Missing Signatures", title: "Provider signature block incomplete", description: "The signature block on page 48 is missing the Provider representative signature and date fields.", sectionRef: "Section 14.0", pageRef: "Page 48", remediation: "Add complete signature block with name, title, and date fields", status: "Open" },
+  { id: "if-1", contractId: "all", severity: "Critical", category: "Missing Signatures", title: "Provider signature block incomplete", description: "The signature block on page 48 is missing the Provider representative signature and date fields.", sectionRef: "Section 14.0", pageRef: "Page 48", remediation: "Add complete signature block with name, title, and date fields", status: "Open" },
   { id: "if-2", contractId: "contract-001", severity: "High", category: "Cross-Reference Mismatch", title: "Appendix C referenced but not attached", description: "Section 3.2 references 'Exhibit C – Reporting & Quality' but the exhibit is not included in the document package.", sectionRef: "Section 3.2", pageRef: "Page 12", remediation: "Attach Exhibit C or update cross-reference", status: "Open" },
   { id: "if-3", contractId: "contract-001", severity: "High", category: "Product List Mismatch", title: "Rate table products don't match services scope", description: "Rate Table 1C includes 'Behavioral Health' services not listed in the Services Scope (Section 3.1).", sectionRef: "Section 3.1 vs Exhibit A", pageRef: "Page 8, 38", remediation: "Add Behavioral Health to Services Scope or remove from rate table", status: "Open" },
   { id: "if-4", contractId: "contract-001", severity: "Medium", category: "Conflicting Terms", title: "Termination notice period conflict", description: "Section 7.1 states 180 days notice but the Summary of Terms on Page 2 states 90 days.", sectionRef: "Section 7.1 vs Summary", pageRef: "Page 2, 22", remediation: "Align both references to 180 days", status: "Open" },
@@ -23,7 +24,7 @@ export default function IntegrityPage() {
   const navigate = useNavigate();
   const [findings, setFindings] = useState<IntegrityFinding[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
-  const [selectedContract, setSelectedContract] = useState("");
+  const [selectedContract, setSelectedContract] = useState("all");
   const [filterSeverity, setFilterSeverity] = useState<string>("all");
 
   useEffect(() => {
