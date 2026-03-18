@@ -46,7 +46,11 @@ export default function StandardClauses() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {clauses.map((c) => (
+        {clauses.filter(c =>
+          !search || c.clauseName.toLowerCase().includes(search.toLowerCase()) ||
+          c.articleName.toLowerCase().includes(search.toLowerCase()) ||
+          c.tags.some(t => t.toLowerCase().includes(search.toLowerCase()))
+        ).map((c) => (
           <div
             key={c.id}
             onClick={() => setSelected(selected === c.id ? null : c.id)}
