@@ -47,7 +47,177 @@ const docPipelineStages = [
   "Entity Extraction", "Clause Extraction", "Standard Matching",
 ];
 
-function BulkUploadTab({ onNavigate }: { onNavigate: (path: string) => void }) {
+/* ─── Intake → Credentialing Pipeline ─── */
+const credentialingPipeline = [
+  { name: "Credentialing Checks", icon: Shield, desc: "Verify licensure, board certifications, DEA, malpractice history, and sanctions", stages: ["License Verification", "Board Certification", "DEA Registration", "Malpractice History", "OIG/SAM Exclusion Check"] },
+  { name: "Credentialing Verification", icon: UserCheck, desc: "Primary source verification of all credentials with issuing bodies", stages: ["State Medical Board", "NPDB Query", "Education Verification", "Training Verification", "Work History Confirmation"] },
+  { name: "Credentialing Data Extraction", icon: FileSearch, desc: "Extract structured credentialing data from submitted documents", stages: ["License Numbers & Expiry", "Certification Details", "Insurance Policy Data", "Sanction Records", "Accreditation Status"] },
+  { name: "Demographic Data Extraction", icon: Users, desc: "Pull provider demographic details for contract population", stages: ["Provider Name & NPI", "Practice Addresses", "Contact Information", "Tax ID & SSN", "Specialties & Taxonomy Codes"] },
+  { name: "Delegate Data Extraction", icon: Building2, desc: "Identify and extract delegate entity information for delegated contracts", stages: ["Delegate Entity Name", "Delegation Agreement Ref", "Delegated Functions Scope", "Oversight Requirements", "Reporting Obligations"] },
+];
+
+const sampleIntakeProviders = [
+  { id: "INT-001", name: "Northwell Health Systems", specialty: "Multi-Specialty Hospital Network", tin: "11-2345678", status: "Ready for Drafting" as const, completeness: 96 },
+  { id: "INT-002", name: "Dr. Maria Santos", specialty: "Cardiology", tin: "22-8765432", status: "Ready for Credentialing" as const, completeness: 88 },
+  { id: "INT-003", name: "Summit Behavioral Health", specialty: "Behavioral Health", tin: "95-1234567", status: "Need more info" as const, completeness: 62 },
+];
+
+function IntakeCredentialingTab({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(sampleIntakeProviders[0].id);
+  const [runningPipeline, setRunningPipeline] = useState(false);
+  const [pipelineProgress, setPipelineProgress] = useState<Record<string, "pending" | "running" | "done">>({});
+
+  const runPipeline = async () => {
+    setRunningPipeline(true);
+    for (const step of credentialingPipeline) {
+      setPipelineProgress(prev => ({ ...prev, [step.name]: "running" }));
+      await new Promise(r => setTimeout(r, 1200));
+      setPipelineProgress(prev => ({ ...prev, [step.name]: "done" }));
+    }
+    setRunningPipeline(false);
+    toast.success("Credentialing pipeline complete — ready for contract creation!");
+  };
+
+  const selected = sampleIntakeProviders.find(p => p.id === selectedProvider);
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-card border rounded-xl p-5">
+        <h3 className="text-base font-semibold text-foreground mb-1">Start from Provider Intake</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Initiate contracts from provider intake data — linking upstream credentialing to contract creation.
+        </p>
+
+        {/* Provider selection */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          {sampleIntakeProviders.map(p => (
+            <button
+              key={p.id}
+              onClick={() => setSelectedProvider(p.id)}
+              className={`text-left rounded-lg border p-3 transition-all ${
+                selectedProvider === p.id
+                  ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                  : "border-border bg-card hover:border-primary/30"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-mono text-muted-foreground">{p.id}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                  p.status === "Ready for Drafting" ? "bg-emerald-100 text-emerald-700" :
+                  p.status === "Ready for Credentialing" ? "bg-blue-100 text-blue-700" :
+                  "bg-amber-100 text-amber-700"
+                }`}>{p.status}</span>
+              </div>
+              <p className="text-sm font-semibold text-foreground">{p.name}</p>
+              <p className="text-xs text-muted-foreground">{p.specialty}</p>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-[10px] text-muted-foreground">TIN: {p.tin}</span>
+                <span className="text-[10px] text-muted-foreground">Completeness: {p.completeness}%</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-1 mt-1">
+                <div className="h-1 rounded-full bg-primary transition-all" style={{ width: `${p.completeness}%` }} />
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {selected && (
+          <div className="flex gap-2">
+            <button
+              onClick={runPipeline}
+              disabled={runningPipeline}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
+            >
+              <Shield className="w-4 h-4" />
+              {runningPipeline ? "Running Credentialing Pipeline..." : "Run Credentialing Pipeline"}
+            </button>
+            <button
+              onClick={() => onNavigate("/intake")}
+              className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium hover:bg-muted"
+            >
+              <ArrowRight className="w-4 h-4" /> Go to Provider Intake
+            </button>
+            <button
+              onClick={() => onNavigate("/credentialing")}
+              className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium hover:bg-muted"
+            >
+              <UserCheck className="w-4 h-4" /> Go to Credentialing
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Credentialing Pipeline Stages */}
+      {selected && (
+        <div className="bg-card border rounded-xl p-5 space-y-3">
+          <h3 className="text-sm font-bold text-foreground">Credentialing Pipeline — {selected.name}</h3>
+          {credentialingPipeline.map((step, idx) => {
+            const status = pipelineProgress[step.name] || "pending";
+            return (
+              <div key={step.name} className={`rounded-lg border p-4 transition-all ${
+                status === "done" ? "border-emerald-200 bg-emerald-50/50" :
+                status === "running" ? "border-amber-200 bg-amber-50/50" :
+                "border-border bg-background"
+              }`}>
+                <div className="flex items-start gap-3">
+                  <div className={`mt-0.5 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    status === "done" ? "bg-emerald-100 text-emerald-700" :
+                    status === "running" ? "bg-amber-100 text-amber-700 animate-pulse" :
+                    "bg-muted text-muted-foreground"
+                  }`}>
+                    {status === "done" ? <CheckCircle className="w-4 h-4" /> : <step.icon className="w-4 h-4" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-sm font-semibold text-foreground">{step.name}</p>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                        status === "done" ? "bg-emerald-100 text-emerald-700" :
+                        status === "running" ? "bg-amber-100 text-amber-700" :
+                        "bg-muted text-muted-foreground"
+                      }`}>
+                        {status === "done" ? "Complete" : status === "running" ? "Processing..." : "Pending"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2">{step.desc}</p>
+                    {status === "running" && (
+                      <div className="w-full bg-muted rounded-full h-1.5 mb-2">
+                        <div className="h-1.5 rounded-full bg-amber-400 animate-pulse" style={{ width: "65%" }} />
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-1.5">
+                      {step.stages.map(s => (
+                        <span key={s} className={`text-[10px] px-2 py-0.5 rounded-md border ${
+                          status === "done" ? "border-emerald-200 bg-emerald-50 text-emerald-700" :
+                          status === "running" ? "border-amber-200 bg-amber-50 text-amber-700" :
+                          "border-border bg-muted/50 text-muted-foreground"
+                        }`}>
+                          {status === "done" && "✓ "}{s}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {Object.values(pipelineProgress).filter(v => v === "done").length === credentialingPipeline.length && (
+            <div className="bg-accent border border-primary/20 rounded-lg p-4 flex items-center justify-between">
+              <p className="text-sm font-medium text-accent-foreground">
+                ✅ All credentialing checks passed for <strong>{selected.name}</strong> — ready for contract drafting!
+              </p>
+              <button className="flex items-center gap-1.5 px-4 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-medium hover:opacity-90">
+                <FileText className="w-3.5 h-3.5" /> Create Contract
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
   const [files, setFiles] = useState<BulkFile[]>([]);
   const [processing, setProcessing] = useState(false);
 
