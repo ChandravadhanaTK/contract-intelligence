@@ -39,7 +39,146 @@ const quickPrompts = [
   "Highlight missing info",
 ];
 
-export default function ContractCreation() {
+type BulkFileStatus = "pending" | "uploading" | "processing" | "completed" | "error";
+interface BulkFile { name: string; size: string; status: BulkFileStatus; progress: number; }
+
+const docPipelineStages = [
+  "Contract Type Identification", "OCR Detection", "Layout Extraction",
+  "Entity Extraction", "Clause Extraction", "Standard Matching",
+];
+
+function BulkUploadTab({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const [files, setFiles] = useState<BulkFile[]>([]);
+  const [processing, setProcessing] = useState(false);
+
+  const handleFilesSelected = (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    const newFiles: BulkFile[] = Array.from(fileList).map(f => ({
+      name: f.name,
+      size: `${(f.size / 1024).toFixed(0)} KB`,
+      status: "pending" as const,
+      progress: 0,
+    }));
+    setFiles(prev => [...prev, ...newFiles]);
+  };
+
+  const removeFile = (name: string) => setFiles(prev => prev.filter(f => f.name !== name));
+
+  const handleBulkProcess = async () => {
+    setProcessing(true);
+    for (let i = 0; i < files.length; i++) {
+      setFiles(prev => prev.map((f, j) => j === i ? { ...f, status: "uploading", progress: 10 } : f));
+      await new Promise(r => setTimeout(r, 400));
+      setFiles(prev => prev.map((f, j) => j === i ? { ...f, status: "processing", progress: 30 } : f));
+      for (let p = 30; p <= 90; p += 15) {
+        await new Promise(r => setTimeout(r, 300));
+        setFiles(prev => prev.map((f, j) => j === i ? { ...f, progress: p } : f));
+      }
+      await new Promise(r => setTimeout(r, 300));
+      setFiles(prev => prev.map((f, j) => j === i ? { ...f, status: "completed", progress: 100 } : f));
+    }
+    setProcessing(false);
+    toast.success(`${files.length} contracts processed successfully!`);
+  };
+
+  const allDone = files.length > 0 && files.every(f => f.status === "completed");
+  const hasFiles = files.length > 0;
+
+  return (
+    <div className="space-y-4">
+      {/* Drop zone */}
+      <div
+        onDrop={e => { e.preventDefault(); handleFilesSelected(e.dataTransfer.files); }}
+        onDragOver={e => e.preventDefault()}
+        className="border-2 border-dashed rounded-xl p-12 text-center hover:border-secondary transition-colors cursor-pointer bg-card"
+      >
+        <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+        <p className="text-lg font-medium mb-1">Drag & drop multiple contracts here</p>
+        <p className="text-sm text-muted-foreground mb-4">Supports PDF, DOCX files · Select multiple files at once</p>
+        <label className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:opacity-90 font-medium text-sm">
+          Select Multiple Files
+          <input type="file" className="hidden" accept=".pdf,.docx" multiple onChange={e => handleFilesSelected(e.target.files)} />
+        </label>
+      </div>
+
+      {/* Selected files list */}
+      {hasFiles && (
+        <div className="bg-card border rounded-xl overflow-hidden">
+          <div className="p-4 border-b bg-muted/50 flex items-center justify-between">
+            <h3 className="text-sm font-semibold">{files.length} File{files.length > 1 ? "s" : ""} Selected</h3>
+            <div className="flex gap-2">
+              {!processing && !allDone && (
+                <button onClick={handleBulkProcess} className="flex items-center gap-2 px-4 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium hover:opacity-90">
+                  <ArrowRight className="w-3.5 h-3.5" /> Process All
+                </button>
+              )}
+              {allDone && (
+                <button onClick={() => onNavigate("/deviation")} className="flex items-center gap-2 px-4 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-medium hover:opacity-90">
+                  <ArrowRight className="w-3.5 h-3.5" /> View Deviations
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="divide-y">
+            {files.map((f, i) => (
+              <div key={`${f.name}-${i}`} className="p-3 flex items-center gap-3">
+                <FileText className="w-4 h-4 text-secondary flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium truncate">{f.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">{f.size}</span>
+                      <span className={`status-chip ${
+                        f.status === "completed" ? "status-chip-success" :
+                        f.status === "processing" || f.status === "uploading" ? "status-chip-running" :
+                        f.status === "error" ? "status-chip-error" :
+                        "bg-muted text-muted-foreground"
+                      }`}>
+                        {f.status === "completed" ? "DONE" : f.status === "processing" ? "PROCESSING" : f.status === "uploading" ? "UPLOADING" : f.status === "error" ? "ERROR" : "PENDING"}
+                      </span>
+                      {f.status === "pending" && !processing && (
+                        <button onClick={() => removeFile(f.name)} className="text-muted-foreground hover:text-destructive">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {(f.status === "uploading" || f.status === "processing") && (
+                    <div className="w-full bg-muted rounded-full h-1.5">
+                      <div className="h-1.5 rounded-full bg-secondary transition-all duration-300" style={{ width: `${f.progress}%` }} />
+                    </div>
+                  )}
+                  {f.status === "completed" && (
+                    <div className="flex gap-1 mt-1">
+                      {docPipelineStages.map(stage => (
+                        <span key={stage} className="flex items-center gap-0.5 text-[10px] text-success">
+                          <CheckCircle className="w-2.5 h-2.5" /> {stage.split(" ")[0]}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {allDone && (
+        <div className="bg-accent border border-secondary/20 rounded-lg p-4">
+          <p className="text-sm font-medium text-accent-foreground">
+            ✅ All {files.length} contracts processed! Navigate to{" "}
+            <button onClick={() => onNavigate("/deviation")} className="text-secondary underline font-semibold">Contract Deviation</button>,{" "}
+            <button onClick={() => onNavigate("/integrity")} className="text-secondary underline font-semibold">Integrity Validation</button>, or{" "}
+            <button onClick={() => onNavigate("/rates")} className="text-secondary underline font-semibold">Rate Tables</button>.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabId>("create");
   const [form, setForm] = useState({ name: "", parties: "", effectiveDate: "", term: "", paymentRate: "", servicesScope: "" });
