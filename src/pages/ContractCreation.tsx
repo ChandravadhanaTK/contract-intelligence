@@ -178,7 +178,7 @@ function BulkUploadTab({ onNavigate }: { onNavigate: (path: string) => void }) {
   );
 }
 
-
+export default function ContractCreation() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabId>("create");
   const [form, setForm] = useState({ name: "", parties: "", effectiveDate: "", term: "", paymentRate: "", servicesScope: "" });
