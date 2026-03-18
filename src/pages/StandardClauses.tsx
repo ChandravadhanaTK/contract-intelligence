@@ -8,6 +8,7 @@ export default function StandardClauses() {
   const [clauses, setClauses] = useState<StandardClause[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [search, setSearch] = useState("");
   const [form, setForm] = useState({ articleName: "", clauseName: "", text: "", tags: "" });
 
   useEffect(() => {
