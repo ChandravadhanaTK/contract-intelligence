@@ -17,6 +17,7 @@ const defaultChecks: Omit<CredentialingCheck, "id" | "intakeId">[] = [
 ];
 
 export default function CredentialingPage() {
+  const navigate = useNavigate();
   const [checks, setChecks] = useState<CredentialingCheck[]>([]);
   const [overrideId, setOverrideId] = useState<string | null>(null);
   const [overrideReason, setOverrideReason] = useState("");
