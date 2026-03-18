@@ -104,7 +104,7 @@ export default function AgentWorkspace() {
 
         <div className="bg-card border rounded-lg overflow-hidden">
           <div className="p-4 border-b bg-muted/50">
-            <h3 className="font-semibold text-sm">Run Logs {selectedContract ? `— ${selectedContract.name}` : ""}</h3>
+            <h3 className="font-semibold text-sm">Run Logs {selectedContractId === "all" ? "— All Contracts" : selectedContract ? `— ${selectedContract.name}` : ""}</h3>
           </div>
           <div className="p-4 max-h-[500px] overflow-y-auto font-mono text-xs space-y-1">
             {logs.length === 0 && <p className="text-muted-foreground">Click "Run Agents" to start...</p>}
