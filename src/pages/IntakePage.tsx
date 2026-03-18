@@ -82,7 +82,7 @@ export default function IntakePage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ providerName: "", specialty: "", tin: "", mpin: "", locations: "", products: "", requestedEffectiveDate: "", contractType: "Standard", docs: "" as string, notes: "" });
 
-  useEffect(() => { setIntakes(get("oci_intakes", [])); }, []);
+  useEffect(() => { setIntakes(get("oci_intakes", sampleIntakes)); }, []);
 
   const handleCreate = () => {
     const docsList = form.docs ? form.docs.split(",").map(s => s.trim()) : [];
