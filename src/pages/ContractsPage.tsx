@@ -336,6 +336,7 @@ export default function ContractsPage() {
           <div className="px-5 border-b border-border bg-card">
             <TabsList className="bg-transparent p-0 h-auto gap-0">
               {[
+                { value: "ingestion", label: "Contract Ingestion", icon: Layers },
                 { value: "document", label: "Contract Document", icon: FileText },
                 { value: "clauses", label: "Clause Extraction", icon: Scale },
                 { value: "obligations", label: "Obligation Extraction", icon: Shield },

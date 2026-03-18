@@ -741,13 +741,7 @@ export default function ContractCreation() {
 
       {/* ═══ TAB: Start from Provider Intake ═══ */}
       {activeTab === "intake" && (
-        <div className="bg-card border rounded-xl p-8 space-y-4">
-          <h3 className="text-lg font-semibold">Start from Provider Intake</h3>
-          <p className="text-sm text-muted-foreground">Pre-fill contract creation from an existing Provider Intake request.</p>
-          <button onClick={() => navigate("/intake")} className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:opacity-90">
-            <ArrowRight className="w-4 h-4" /> Go to Provider Intake & Triage
-          </button>
-        </div>
+        <IntakeCredentialingTab onNavigate={navigate} />
       )}
 
       {/* ═══ TAB: Full CoAuthor (standalone) ═══ */}
