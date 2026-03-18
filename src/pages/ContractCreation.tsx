@@ -1,81 +1,100 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bot, Send, FileText, ArrowRight } from "lucide-react";
+import { Bot, Send, FileText, ArrowRight, Upload, BookOpen, List, Library, ToggleLeft, ToggleRight, MessageSquare, Zap } from "lucide-react";
 import { api } from "@/services/mockApi";
 import { toast } from "sonner";
-import type { DraftContract } from "@/types";
+import type { DraftContract, ContractDraftDocument, CoAuthorMessage, StandardClause } from "@/types";
 import { generateOptumStandardContractDoc } from "@/services/contractDocGenerator";
 import { ContractDocumentPreview } from "@/components/ContractDocumentPreview";
-import type { ContractDraftDocument } from "@/types";
+import { DraftChecklistPanel } from "@/components/DraftChecklistPanel";
+import { CitationChips } from "@/components/CitationChips";
+import { SuggestionDiffCard } from "@/components/SuggestionDiffCard";
+import { ClauseInsertDialog } from "@/components/ClauseInsertDialog";
+import { OutlineDrawer } from "@/components/OutlineDrawer";
+import { processCoAuthorMessage, computeChecklist, guidedSteps } from "@/services/coAuthorAgent";
+import { ProgressStepper } from "@/components/ProgressStepper";
+import { seedContract } from "@/data/seed";
+import type { ContractDocumentProcessing } from "@/types";
 
 function get<T>(key: string, fb: T): T { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; }
 function set(key: string, v: unknown) { localStorage.setItem(key, JSON.stringify(v)); }
 
+type TabId = "create" | "upload" | "bulk" | "intake" | "coauthor";
+
+const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
+  { id: "create", label: "Contract Creation", icon: FileText },
+  { id: "upload", label: "Upload Contract", icon: Upload },
+  { id: "bulk", label: "Bulk Upload", icon: List },
+  { id: "intake", label: "Start from Provider Intake", icon: ArrowRight },
+  { id: "coauthor", label: "Talk to Agent – Your CoAuthor", icon: Bot },
+];
+
+const quickPrompts = [
+  "Draft full contract from inputs",
+  "Generate Payment & Rate section",
+  "Add Termination clause",
+  "Add Compliance (HIPAA/Regulatory) clause",
+  "Add Exhibit A – Fee Schedule reference",
+  "Summarize draft for Legal",
+  "Highlight missing info",
+];
+
 export default function ContractCreation() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    name: "", parties: "", effectiveDate: "", term: "", paymentRate: "", servicesScope: "",
-  });
-  const [agentOpen, setAgentOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{ role: "user" | "agent"; text: string }[]>([]);
-  const [chatInput, setChatInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabId>("create");
+  const [form, setForm] = useState({ name: "", parties: "", effectiveDate: "", term: "", paymentRate: "", servicesScope: "" });
   const [generatedDoc, setGeneratedDoc] = useState<ContractDraftDocument | null>(null);
   const [savedDraftId, setSavedDraftId] = useState<string | null>(null);
 
-  // Load existing generated doc on mount
+  // CoAuthor state
+  const [coAuthorMode, setCoAuthorMode] = useState<"freeform" | "guided">("freeform");
+  const [chatMessages, setChatMessages] = useState<CoAuthorMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [standardClauses, setStandardClauses] = useState<StandardClause[]>([]);
+  const [guidedStepIndex, setGuidedStepIndex] = useState(0);
+  const [clauseDialogOpen, setClauseDialogOpen] = useState(false);
+  const [outlineOpen, setOutlineOpen] = useState(false);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  // Upload state
+  const [uploadPhase, setUploadPhase] = useState<"idle" | "uploading" | "identifying" | "matching" | "completed">("idle");
+  const [uploadFileName, setUploadFileName] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
+
   useEffect(() => {
     const docs = get<ContractDraftDocument[]>("oci_generated_docs", []);
     if (docs.length > 0) setGeneratedDoc(docs[docs.length - 1]);
+    const msgs = get<CoAuthorMessage[]>("oci_coauthor_messages", []);
+    if (msgs.length > 0) setChatMessages(msgs);
+    api.getStandardClauses().then(setStandardClauses);
   }, []);
+
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages, loading]);
+
+  const checklist = computeChecklist(generatedDoc);
 
   const handleSave = async () => {
     const draftId = savedDraftId || `draft-${Date.now()}`;
-    const draft: DraftContract = {
-      id: draftId,
-      ...form,
-      clauses: [],
-      createdAt: new Date().toISOString(),
-    };
-
-    // Generate the document
-    const doc = generateOptumStandardContractDoc({
-      contractId: draftId,
-      name: form.name,
-      parties: form.parties,
-      effectiveDate: form.effectiveDate,
-      term: form.term,
-      paymentRate: form.paymentRate,
-      servicesScope: form.servicesScope,
-    });
-
+    const draft: DraftContract = { id: draftId, ...form, clauses: [], createdAt: new Date().toISOString() };
+    const doc = generateOptumStandardContractDoc({ contractId: draftId, name: form.name, parties: form.parties, effectiveDate: form.effectiveDate, term: form.term, paymentRate: form.paymentRate, servicesScope: form.servicesScope });
     draft.generatedDocument = doc;
     await api.saveDraft(draft);
-
-    // Persist generated doc
     const docs = get<ContractDraftDocument[]>("oci_generated_docs", []);
     const idx = docs.findIndex(d => d.contractId === draftId);
     if (idx >= 0) docs[idx] = doc; else docs.push(doc);
     set("oci_generated_docs", docs);
-
     setGeneratedDoc(doc);
     setSavedDraftId(draftId);
-
-    await api.addAuditEntry({ id: `a-${Date.now()}`, timestamp: new Date().toISOString(), action: "Draft Created", detail: `Contract "${form.name}" drafted with generated document`, actor: "ChandravadhanaTK" });
+    await api.addAuditEntry({ id: `a-${Date.now()}`, timestamp: new Date().toISOString(), action: "Draft Created", detail: `Contract "${form.name}" drafted with generated document`, actor: "System" });
     toast.success("Contract draft saved with generated document!");
   };
 
   const handleRegenerate = () => {
     if (!savedDraftId) return;
-    const doc = generateOptumStandardContractDoc({
-      contractId: savedDraftId,
-      name: form.name,
-      parties: form.parties,
-      effectiveDate: form.effectiveDate,
-      term: form.term,
-      paymentRate: form.paymentRate,
-      servicesScope: form.servicesScope,
-    });
+    const doc = generateOptumStandardContractDoc({ contractId: savedDraftId, ...form });
     doc.version = (generatedDoc?.version || 0) + 1;
     setGeneratedDoc(doc);
     const docs = get<ContractDraftDocument[]>("oci_generated_docs", []);
@@ -87,19 +106,9 @@ export default function ContractCreation() {
 
   const handleSendToRedlining = () => {
     if (!generatedDoc) return;
-    // Create clause versions for redlining
     const versions = get<any[]>("oci_clause_versions", []);
     generatedDoc.sections.forEach(sec => {
-      versions.push({
-        id: `cv-doc-${sec.id}-${Date.now()}`,
-        clauseId: `doc-section-${sec.id}`,
-        contractId: generatedDoc.contractId,
-        originalText: sec.body,
-        proposedText: sec.body,
-        acceptedText: null,
-        status: "pending",
-        timestamp: new Date().toISOString(),
-      });
+      versions.push({ id: `cv-doc-${sec.id}-${Date.now()}`, clauseId: `doc-section-${sec.id}`, contractId: generatedDoc.contractId, originalText: sec.body, proposedText: sec.body, acceptedText: null, status: "pending", timestamp: new Date().toISOString() });
     });
     set("oci_clause_versions", versions);
     toast.success("Sent to Redlining");
@@ -116,105 +125,479 @@ export default function ContractCreation() {
     set("oci_generated_docs", docs);
   };
 
-  const handleChat = async () => {
-    if (!chatInput.trim()) return;
-    const userMsg = chatInput;
-    setChatMessages((m) => [...m, { role: "user", text: userMsg }]);
+  const handleCoAuthorSend = async (text?: string) => {
+    const msg = text || chatInput;
+    if (!msg.trim()) return;
+
+    const draftId = savedDraftId || "draft-coauthor";
+    const userMsg: CoAuthorMessage = { id: `ca-user-${Date.now()}`, draftId, role: "user", text: msg, time: new Date().toISOString() };
+    const updated = [...chatMessages, userMsg];
+    setChatMessages(updated);
     setChatInput("");
     setLoading(true);
-    const response = await api.simulateDraftAgent(userMsg);
-    setChatMessages((m) => [...m, { role: "agent", text: response }]);
+
+    await new Promise(r => setTimeout(r, 800 + Math.random() * 700));
+
+    const response = processCoAuthorMessage(msg, draftId, generatedDoc, standardClauses, form);
+    const allMsgs = [...updated, response.message];
+    setChatMessages(allMsgs);
+    set("oci_coauthor_messages", allMsgs);
+
+    // Apply document updates
+    if (response.updatedSections) {
+      const doc = generatedDoc ? {
+        ...generatedDoc,
+        sections: response.updatedSections,
+        version: (generatedDoc.version || 0) + 1,
+        lastGeneratedAt: new Date().toISOString(),
+      } : {
+        id: `doc-gen-${draftId}`, contractId: draftId, title: form.name || "Provider Services Agreement",
+        parties: { partyA: form.parties.split(/[,&]/)[0]?.trim() || "Plan", partyB: form.parties.split(/[,&]/)[1]?.trim() || "Provider" },
+        effectiveDate: form.effectiveDate || "01/01/2025", term: form.term || "3 years",
+        servicesScope: form.servicesScope, paymentRateSection: form.paymentRate,
+        sections: response.updatedSections,
+        exhibits: response.updatedExhibits || [],
+        renderedText: "", format: "markdown" as const, lastGeneratedAt: new Date().toISOString(), version: 1,
+      };
+      setGeneratedDoc(doc);
+      const docs = get<ContractDraftDocument[]>("oci_generated_docs", []);
+      const idx = docs.findIndex(d => d.contractId === draftId);
+      if (idx >= 0) docs[idx] = doc; else docs.push(doc);
+      set("oci_generated_docs", docs);
+      if (!savedDraftId) setSavedDraftId(draftId);
+    }
+    if (response.updatedExhibits && generatedDoc) {
+      const doc = { ...generatedDoc, exhibits: response.updatedExhibits };
+      setGeneratedDoc(doc);
+    }
+
+    // Audit log
+    if (response.message.actions && response.message.actions.length > 0) {
+      await api.addAuditEntry({
+        id: `a-${Date.now()}`, timestamp: new Date().toISOString(),
+        action: `COAUTHOR_${response.message.actions[0].type.toUpperCase()}`,
+        detail: `CoAuthor: ${response.message.actions[0].type} – ${response.message.actions[0].sectionRef || "general"}`,
+        actor: "CoAuthor Agent",
+      });
+    }
+
     setLoading(false);
   };
 
+  const handleGuidedNext = () => {
+    if (guidedStepIndex < guidedSteps.length) {
+      const step = guidedSteps[guidedStepIndex];
+      const agentMsg: CoAuthorMessage = {
+        id: `guided-${Date.now()}`, draftId: savedDraftId || "draft-coauthor",
+        role: "assistant", text: `**Step ${guidedStepIndex + 1} of ${guidedSteps.length}:** ${step.question}`,
+        time: new Date().toISOString(),
+      };
+      setChatMessages(prev => [...prev, agentMsg]);
+      setGuidedStepIndex(prev => prev + 1);
+    }
+  };
+
+  const handleApplyAction = (action: any) => {
+    if (!generatedDoc || !action.newText || !action.sectionRef) return;
+    const sections = generatedDoc.sections.map(s =>
+      s.headingNumber === action.sectionRef ? { ...s, body: action.newText } : s
+    );
+    handleUpdateSections(sections);
+    api.addAuditEntry({ id: `a-${Date.now()}`, timestamp: new Date().toISOString(), action: "COAUTHOR_APPLY_CHANGE", detail: `Applied change to ${action.sectionRef}`, actor: "User" });
+    toast.success("Change applied");
+  };
+
+  const handleInsertFromLibrary = (clause: StandardClause) => {
+    setClauseDialogOpen(false);
+    handleCoAuthorSend(`Insert standard clause: ${clause.clauseName}`);
+  };
+
+  const handleJumpToSection = (sectionRef: string) => {
+    const el = document.querySelector(`[data-section="${sectionRef}"]`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
+  // Upload handlers
+  const docProcessingStages = [
+    { stage: "Contract Type Identification", detail: "Identified as Provider Services Agreement – Standard" },
+    { stage: "OCR Detection", detail: "Document is digitally native – OCR not required" },
+    { stage: "Layout Extraction", detail: "Found 14 sections, 3 tables, 4 appendix references" },
+    { stage: "Entity Extraction", detail: "Extracted TIN: 90-7000000, Effective: 2025-01-01, Term: 3 years" },
+    { stage: "Clause Extraction", detail: "Extracted 22 clauses across 14 articles" },
+    { stage: "Standard Matching", detail: "Matched: 8 aligned, 4 non-aligned, 10 missing" },
+  ];
+
+  const handleUpload = useCallback(async (name: string) => {
+    setUploadFileName(name);
+    setUploadPhase("uploading");
+    setUploadProgress(0);
+    for (let i = 0; i <= 100; i += 8) {
+      await new Promise(r => setTimeout(r, 200));
+      setUploadProgress(i);
+      if (i === 32) setUploadPhase("identifying");
+      if (i === 64) setUploadPhase("matching");
+    }
+    setUploadProgress(100);
+    setUploadPhase("completed");
+    const processing: ContractDocumentProcessing = {
+      id: `proc-${Date.now()}`, contractId: seedContract.id, docType: "Provider Services Agreement",
+      needsOcr: false, layoutSummary: "14 sections, 3 tables", extractedEntities: { TIN: "90-7000000" },
+      hierarchyMap: [{ section: "Section 3.1", appendixRef: "Exhibit B" }],
+      confidenceByStage: { "Contract Type": 98, Layout: 95 },
+      stageLogs: docProcessingStages.map((s, i) => ({ stage: s.stage, status: "Done", detail: s.detail, timestamp: new Date().toISOString() })),
+    };
+    await api.saveContract({ ...seedContract, name, uploadDate: new Date().toISOString().split("T")[0], status: "completed", docProcessing: processing });
+    toast.success("Contract uploaded and processed!");
+  }, []);
+
   const field = (label: string, key: keyof typeof form, type = "text", multiline = false) => (
     <div>
-      <label className="text-sm font-medium text-foreground block mb-1.5">{label}</label>
+      <label className="text-xs font-medium text-foreground block mb-1">{label}</label>
       {multiline ? (
-        <textarea className="w-full border rounded-lg px-3 py-2 text-sm bg-background h-20 resize-none" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
+        <textarea className="w-full border rounded-lg px-3 py-1.5 text-xs bg-background h-16 resize-none" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} />
       ) : (
-        <input type={type} className="w-full border rounded-lg px-3 py-2 text-sm bg-background" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
+        <input type={type} className="w-full border rounded-lg px-3 py-1.5 text-xs bg-background" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} />
       )}
     </div>
   );
 
   return (
-    <div className="page-container">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="page-header">Contract Creation</h1>
-        <div className="flex gap-2">
-          <button onClick={() => navigate("/intake")} className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium hover:bg-muted">
-            <FileText className="w-4 h-4" /> Start from Provider Intake
+    <div className="p-4 space-y-4 max-w-[1600px] mx-auto">
+      <h1 className="page-header">Contract Creation</h1>
+
+      {/* Tab bar */}
+      <div className="flex flex-wrap gap-1 border-b">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
+              activeTab === tab.id ? "border-secondary text-secondary" : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <tab.icon className="w-3.5 h-3.5" />
+            {tab.label}
           </button>
-          <button onClick={() => setAgentOpen(!agentOpen)} className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90">
-            <Bot className="w-4 h-4" /> Talk to Agent – Your CoAuthor
-          </button>
-        </div>
+        ))}
       </div>
 
-      <div className={`grid gap-6 ${agentOpen ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"}`}>
-        {/* Form */}
-        <div className="bg-card border rounded-xl p-6 space-y-4">
-          {field("Contract Name", "name")}
-          {field("Parties", "parties")}
-          <div className="grid grid-cols-2 gap-4">
-            {field("Effective Date", "effectiveDate", "date")}
-            {field("Term", "term")}
+      {/* ═══ TAB: Contract Creation ═══ */}
+      {activeTab === "create" && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Left: Form */}
+            <div className="bg-card border rounded-xl p-4 space-y-3">
+              <h3 className="text-sm font-semibold">Contract Details</h3>
+              {field("Contract Name", "name")}
+              {field("Parties", "parties")}
+              <div className="grid grid-cols-2 gap-3">
+                {field("Effective Date (mm/dd/yyyy)", "effectiveDate", "date")}
+                {field("Term", "term")}
+              </div>
+              {field("Payment / Rate Section", "paymentRate", "text", true)}
+              {field("Services Scope", "servicesScope", "text", true)}
+              <button onClick={handleSave} className="w-full bg-primary text-primary-foreground py-2 rounded-lg font-medium text-xs hover:opacity-90">
+                Save Draft & Generate Document
+              </button>
+            </div>
+
+            {/* Center: CoAuthor Chat */}
+            <div className="bg-card border rounded-xl flex flex-col h-[520px]">
+              <div className="p-3 border-b flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Bot className="w-4 h-4 text-secondary" />
+                  <span className="font-semibold text-xs">Talk to Agent – Your CoAuthor</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setCoAuthorMode(coAuthorMode === "freeform" ? "guided" : "freeform")} className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground" title="Toggle mode">
+                    {coAuthorMode === "guided" ? <ToggleRight className="w-3.5 h-3.5 text-secondary" /> : <ToggleLeft className="w-3.5 h-3.5" />}
+                    {coAuthorMode === "guided" ? "Guided" : "Freeform"}
+                  </button>
+                  <button onClick={() => setOutlineOpen(true)} className="text-muted-foreground hover:text-foreground" title="Outline">
+                    <List className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick prompts */}
+              <div className="p-2 flex flex-wrap gap-1 border-b">
+                {quickPrompts.map(p => (
+                  <button key={p} onClick={() => handleCoAuthorSend(p)} className="text-[10px] px-2 py-0.5 rounded-full bg-accent text-accent-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors">
+                    {p}
+                  </button>
+                ))}
+              </div>
+
+              {/* Guided mode banner */}
+              {coAuthorMode === "guided" && (
+                <div className="px-3 py-2 bg-accent/50 border-b flex items-center justify-between">
+                  <span className="text-[10px] text-accent-foreground font-medium">
+                    <Zap className="w-3 h-3 inline mr-1" />
+                    Guided Interview — Step {Math.min(guidedStepIndex + 1, guidedSteps.length)} of {guidedSteps.length}
+                  </span>
+                  <button onClick={handleGuidedNext} className="text-[10px] px-2 py-0.5 bg-secondary text-secondary-foreground rounded font-medium">
+                    {guidedStepIndex === 0 ? "Start" : "Next Step"}
+                  </button>
+                </div>
+              )}
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
+                {chatMessages.length === 0 && !loading && (
+                  <p className="text-[10px] text-muted-foreground text-center mt-6">Ask the CoAuthor to help draft your contract…</p>
+                )}
+                {chatMessages.map(m => (
+                  <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div className="max-w-[90%]">
+                      <div className={`rounded-lg px-3 py-2 text-xs ${
+                        m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                      }`}>
+                        <pre className="whitespace-pre-wrap font-sans text-xs">{m.text}</pre>
+                      </div>
+                      {m.citations && <CitationChips citations={m.citations} onJumpToSection={handleJumpToSection} />}
+                      {m.actions?.filter(a => a.type === "update_section" && a.oldText).map((a, i) => (
+                        <SuggestionDiffCard key={i} action={a} onApply={() => handleApplyAction(a)} onReject={() => toast.info("Change rejected")} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                {loading && <div className="flex justify-start"><div className="bg-muted rounded-lg px-3 py-2 text-xs animate-pulse">Thinking...</div></div>}
+                <div ref={chatBottomRef} />
+              </div>
+
+              {/* Input */}
+              <div className="p-2 border-t flex gap-1.5">
+                <button onClick={() => setClauseDialogOpen(true)} className="p-1.5 border rounded-lg hover:bg-muted" title="Insert from Library">
+                  <Library className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+                <input
+                  className="flex-1 border rounded-lg px-3 py-1.5 text-xs bg-background"
+                  placeholder="Ask agent or use /commands…"
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleCoAuthorSend()}
+                />
+                <button onClick={() => handleCoAuthorSend()} className="bg-secondary text-secondary-foreground p-1.5 rounded-lg hover:opacity-90">
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Right: Draft Checklist + Draft Outline */}
+            <div className="space-y-4">
+              <DraftChecklistPanel items={checklist} />
+              {generatedDoc && (
+                <div className="bg-card border rounded-lg p-3">
+                  <h4 className="text-xs font-semibold text-foreground mb-2">Draft Outline</h4>
+                  <div className="space-y-1">
+                    {generatedDoc.sections.map((sec, i) => (
+                      <button
+                        key={sec.id}
+                        onClick={() => handleJumpToSection(sec.headingNumber)}
+                        className="w-full text-left text-[11px] px-2 py-1 rounded hover:bg-muted/50 flex justify-between"
+                      >
+                        <span className="text-foreground">{sec.headingNumber} {sec.title}</span>
+                        <span className="text-muted-foreground">Pg {Math.max(1, Math.ceil((i + 1) * 1.8))}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-          {field("Payment / Rate Section", "paymentRate", "text", true)}
-          {field("Services Scope", "servicesScope", "text", true)}
-          <button onClick={handleSave} className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-medium text-sm hover:opacity-90">
-            Save Draft & Generate Document
+
+          {/* Generated Document Preview */}
+          {generatedDoc && (
+            <ContractDocumentPreview
+              document={generatedDoc}
+              onRegenerate={handleRegenerate}
+              onSendToRedlining={handleSendToRedlining}
+              onUpdateSections={handleUpdateSections}
+            />
+          )}
+        </>
+      )}
+
+      {/* ═══ TAB: Upload Contract ═══ */}
+      {activeTab === "upload" && (
+        <div className="space-y-4">
+          {uploadPhase === "idle" && (
+            <div
+              onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleUpload(f.name); }}
+              onDragOver={e => e.preventDefault()}
+              className="border-2 border-dashed rounded-xl p-16 text-center hover:border-secondary transition-colors cursor-pointer bg-card"
+            >
+              <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-lg font-medium mb-2">Drag & drop your contract here</p>
+              <p className="text-sm text-muted-foreground mb-4">Supports PDF, DOCX files</p>
+              <label className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:opacity-90 font-medium text-sm">
+                Browse Files
+                <input type="file" className="hidden" accept=".pdf,.docx" onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f.name); }} />
+              </label>
+            </div>
+          )}
+          {uploadPhase !== "idle" && (
+            <div className="bg-card border rounded-xl p-8 space-y-4">
+              <div className="flex items-center gap-3">
+                <FileText className="w-5 h-5 text-secondary" />
+                <span className="font-medium">{uploadFileName}</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2.5">
+                <div className="h-2.5 rounded-full bg-secondary transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+              </div>
+              {uploadPhase === "completed" && (
+                <div className="bg-accent border border-secondary/20 rounded-lg p-4">
+                  <p className="text-sm font-medium text-accent-foreground">
+                    ✅ Processing complete! Navigate to{" "}
+                    <button onClick={() => navigate("/deviation")} className="text-secondary underline font-semibold">Contract Deviation</button>
+                    {" "}for analysis.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═══ TAB: Bulk Upload ═══ */}
+      {activeTab === "bulk" && (
+        <div className="bg-card border rounded-xl p-8 text-center">
+          <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Bulk Upload</h3>
+          <p className="text-sm text-muted-foreground mb-4">Upload multiple contracts at once for batch processing.</p>
+          <label className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:opacity-90 font-medium text-sm">
+            Select Multiple Files
+            <input type="file" className="hidden" accept=".pdf,.docx" multiple onChange={() => toast.success("Bulk upload initiated — processing 0 contracts")} />
+          </label>
+        </div>
+      )}
+
+      {/* ═══ TAB: Start from Provider Intake ═══ */}
+      {activeTab === "intake" && (
+        <div className="bg-card border rounded-xl p-8 space-y-4">
+          <h3 className="text-lg font-semibold">Start from Provider Intake</h3>
+          <p className="text-sm text-muted-foreground">Pre-fill contract creation from an existing Provider Intake request. This pulls provider data, credentials, and service details into the contract form automatically.</p>
+          <button onClick={() => navigate("/intake")} className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:opacity-90">
+            <ArrowRight className="w-4 h-4" /> Go to Provider Intake & Triage
           </button>
         </div>
+      )}
 
-        {/* Agent Chat */}
-        {agentOpen && (
-          <div className="bg-card border rounded-xl flex flex-col h-[500px]">
-            <div className="p-4 border-b flex items-center gap-2">
-              <Bot className="w-4 h-4 text-secondary" />
-              <span className="font-semibold text-sm">Talk to Agent – Your CoAuthor</span>
+      {/* ═══ TAB: Full CoAuthor (standalone) ═══ */}
+      {activeTab === "coauthor" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Full chat panel */}
+          <div className="lg:col-span-2 bg-card border rounded-xl flex flex-col h-[600px]">
+            <div className="p-3 border-b flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bot className="w-4 h-4 text-secondary" />
+                <span className="font-semibold text-sm">Talk to Agent – Your CoAuthor</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setCoAuthorMode(coAuthorMode === "freeform" ? "guided" : "freeform")} className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
+                  {coAuthorMode === "guided" ? <ToggleRight className="w-4 h-4 text-secondary" /> : <ToggleLeft className="w-4 h-4" />}
+                  {coAuthorMode === "guided" ? "Guided Interview" : "Freeform Chat"}
+                </button>
+                <button onClick={() => setOutlineOpen(true)} className="text-muted-foreground hover:text-foreground" title="Document Outline">
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {chatMessages.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center mt-8">Ask the agent to help draft contract clauses...</p>
+
+            <div className="p-2 flex flex-wrap gap-1.5 border-b">
+              {quickPrompts.map(p => (
+                <button key={p} onClick={() => handleCoAuthorSend(p)} className="text-xs px-2.5 py-1 rounded-full bg-accent text-accent-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors">
+                  {p}
+                </button>
+              ))}
+            </div>
+
+            {coAuthorMode === "guided" && (
+              <div className="px-3 py-2 bg-accent/50 border-b flex items-center justify-between">
+                <span className="text-xs text-accent-foreground font-medium">
+                  <Zap className="w-3.5 h-3.5 inline mr-1" />Guided Interview — Step {Math.min(guidedStepIndex + 1, guidedSteps.length)} of {guidedSteps.length}
+                </span>
+                <button onClick={handleGuidedNext} className="text-xs px-3 py-1 bg-secondary text-secondary-foreground rounded font-medium">
+                  {guidedStepIndex === 0 ? "Start Interview" : "Next Step"}
+                </button>
+              </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
+              {chatMessages.length === 0 && !loading && (
+                <p className="text-sm text-muted-foreground text-center mt-8">Ask the CoAuthor to help draft your provider contract…</p>
               )}
-              {chatMessages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
-                    m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-                  }`}>
-                    <pre className="whitespace-pre-wrap font-sans">{m.text}</pre>
+              {chatMessages.map(m => (
+                <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className="max-w-[85%]">
+                    <div className={`rounded-lg px-3 py-2 text-sm ${
+                      m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                    }`}>
+                      <pre className="whitespace-pre-wrap font-sans text-sm">{m.text}</pre>
+                    </div>
+                    {m.citations && <CitationChips citations={m.citations} onJumpToSection={handleJumpToSection} />}
+                    {m.actions?.filter(a => a.type === "update_section" && a.oldText).map((a, i) => (
+                      <SuggestionDiffCard key={i} action={a} onApply={() => handleApplyAction(a)} onReject={() => toast.info("Change rejected")} />
+                    ))}
                   </div>
                 </div>
               ))}
               {loading && <div className="flex justify-start"><div className="bg-muted rounded-lg px-3 py-2 text-sm animate-pulse">Thinking...</div></div>}
+              <div ref={chatBottomRef} />
             </div>
+
             <div className="p-3 border-t flex gap-2">
+              <button onClick={() => setClauseDialogOpen(true)} className="p-2 border rounded-lg hover:bg-muted" title="Insert from Library">
+                <Library className="w-4 h-4 text-muted-foreground" />
+              </button>
               <input
                 className="flex-1 border rounded-lg px-3 py-2 text-sm bg-background"
-                placeholder="Ask agent to draft a clause..."
+                placeholder="Ask agent or use /outline, /add section, /revise section, /insert clause…"
                 value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleChat()}
+                onChange={e => setChatInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleCoAuthorSend()}
               />
-              <button onClick={handleChat} className="bg-secondary text-secondary-foreground p-2 rounded-lg hover:opacity-90">
+              <button onClick={() => handleCoAuthorSend()} className="bg-secondary text-secondary-foreground p-2 rounded-lg hover:opacity-90">
                 <Send className="w-4 h-4" />
               </button>
             </div>
           </div>
-        )}
-      </div>
 
-      {/* Generated Document Preview */}
-      {generatedDoc && (
-        <ContractDocumentPreview
-          document={generatedDoc}
-          onRegenerate={handleRegenerate}
-          onSendToRedlining={handleSendToRedlining}
-          onUpdateSections={handleUpdateSections}
-        />
+          {/* Right sidebar */}
+          <div className="space-y-4">
+            <DraftChecklistPanel items={checklist} />
+            {generatedDoc && (
+              <div className="bg-card border rounded-lg p-3">
+                <h4 className="text-xs font-semibold text-foreground mb-2">Draft Outline</h4>
+                <div className="space-y-1 max-h-[300px] overflow-y-auto">
+                  {generatedDoc.sections.map((sec, i) => (
+                    <button key={sec.id} onClick={() => handleJumpToSection(sec.headingNumber)} className="w-full text-left text-[11px] px-2 py-1 rounded hover:bg-muted/50 flex justify-between">
+                      <span className="text-foreground">{sec.headingNumber} {sec.title}</span>
+                      <span className="text-muted-foreground">Pg {Math.max(1, Math.ceil((i + 1) * 1.8))}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Document preview below */}
+          {generatedDoc && (
+            <div className="lg:col-span-3">
+              <ContractDocumentPreview
+                document={generatedDoc}
+                onRegenerate={handleRegenerate}
+                onSendToRedlining={handleSendToRedlining}
+                onUpdateSections={handleUpdateSections}
+              />
+            </div>
+          )}
+        </div>
       )}
+
+      {/* Dialogs */}
+      <ClauseInsertDialog open={clauseDialogOpen} onClose={() => setClauseDialogOpen(false)} onInsert={handleInsertFromLibrary} />
+      <OutlineDrawer open={outlineOpen} onClose={() => setOutlineOpen(false)} document={generatedDoc} onJumpToSection={handleJumpToSection} />
     </div>
   );
 }
