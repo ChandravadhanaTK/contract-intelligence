@@ -319,6 +319,28 @@ export interface HITLOverride {
   reason: string;
 }
 
+// User & Role Management
+export interface Permission {
+  module: string;
+  accessLevel: "View" | "Edit" | "Approve" | "Admin";
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  description: string;
+  permissions: Permission[];
+}
+
+export interface AppUser {
+  id: string;
+  name: string;
+  email: string;
+  roleId: string;
+  status: "Active" | "Inactive";
+  createdAt: string;
+}
+
 // Downstream mapping
 export interface DownstreamMapping {
   targetId: string;

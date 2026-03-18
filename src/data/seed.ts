@@ -1,4 +1,5 @@
 import type { Contract, StandardClause, Obligation, Clause, WorkflowInstance, DraftContract, AuditEntry, ClauseVersion, ReviewDocument, ReviewRequest, RateTableRow } from "@/types";
+import { seedRoles, seedUsers } from "./roles";
 
 const missingClauses: Clause[] = [
   { id: "c1", articleName: "Article 12", clauseName: "Network Adequacy Requirements", category: "missing", matchScore: 0, standardText: "Provider shall maintain a network of healthcare professionals sufficient to meet the needs of all enrolled members within the service area, including specialists within 30 miles.", currentText: "", deviationNotes: ["Clause entirely absent from current contract"], recommendations: ["Add network adequacy requirements per CMS guidelines"] },
@@ -220,6 +221,17 @@ export function initializeSeedData() {
     localStorage.setItem("oci_clause_versions", JSON.stringify(seedClauseVersions));
     localStorage.setItem("oci_review_documents", JSON.stringify(reviewDocuments));
     localStorage.setItem("oci_review_requests", JSON.stringify(seedReviewRequests));
+    localStorage.setItem("oci_roles", JSON.stringify(seedRoles));
+    localStorage.setItem("oci_users", JSON.stringify(seedUsers));
+    localStorage.setItem("oci_current_user_id", "user-012");
     localStorage.setItem("oci_initialized", "true");
+  }
+  // Backfill roles/users for existing installs
+  if (!localStorage.getItem("oci_roles")) {
+    localStorage.setItem("oci_roles", JSON.stringify(seedRoles));
+  }
+  if (!localStorage.getItem("oci_users")) {
+    localStorage.setItem("oci_users", JSON.stringify(seedUsers));
+    localStorage.setItem("oci_current_user_id", "user-012");
   }
 }
