@@ -12,6 +12,7 @@ import Redlining from "./pages/Redlining";
 import WorkflowPage from "./pages/WorkflowPage";
 import DownstreamFeed from "./pages/DownstreamFeed";
 import ObligationCompliance from "./pages/ObligationCompliance";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,16 +24,17 @@ const App = () => (
       <BrowserRouter>
         <AppLayout>
           <Routes>
-            <Route path="/" element={<Navigate to="/upload" replace />} />
+            <Route path="/" element={<Navigate to="/create" replace />} />
+            <Route path="/create" element={<ContractCreation />} />
             <Route path="/upload" element={<UploadContract />} />
             <Route path="/deviation" element={<ContractDeviation />} />
             <Route path="/clauses" element={<StandardClauses />} />
-            <Route path="/create" element={<ContractCreation />} />
-            <Route path="/agents" element={<AgentWorkspace />} />
             <Route path="/redlining" element={<Redlining />} />
+            <Route path="/agents" element={<AgentWorkspace />} />
             <Route path="/workflow" element={<WorkflowPage />} />
             <Route path="/downstream" element={<DownstreamFeed />} />
             <Route path="/compliance" element={<ObligationCompliance />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>

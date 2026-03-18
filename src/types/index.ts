@@ -7,6 +7,7 @@ export interface Contract {
   clauses: Clause[];
   obligations: Obligation[];
   workflow: WorkflowInstance;
+  documents?: ReviewDocument[];
 }
 
 export interface Clause {
@@ -101,4 +102,56 @@ export interface ClauseVersion {
   acceptedText: string | null;
   status: "pending" | "accepted" | "rejected";
   timestamp: string;
+}
+
+// New types for Review Dashboard
+export interface ReviewDocument {
+  id: string;
+  contractId: string;
+  name: string;
+  type: string;
+  status: "Under Review" | "Approved" | "Pending";
+  lastModified: string;
+  tableData: RateTableRow[];
+  pdfMockRef: string;
+}
+
+export interface RateTableRow {
+  category: string;
+  currentRate: string;
+  escalatedRate: string;
+  rounded: string;
+  method: string;
+  confidence: "High" | "Medium" | "Low";
+  exception?: boolean;
+}
+
+export interface ReviewRequest {
+  id: string;
+  contractId: string;
+  documentId: string;
+  jobNo: string;
+  eventType: string;
+  effectiveDate: string;
+  mpin: string;
+  tin: string;
+  status: "Manual review" | "On hold" | "Exception" | "Sent for approval";
+  loadReady: boolean;
+  checklist: ChecklistItem[];
+  createdAt: string;
+}
+
+export interface ChecklistItem {
+  id: string;
+  label: string;
+  section: "manual" | "auto";
+  checked: boolean;
+}
+
+export interface ChatMessage {
+  id: string;
+  requestId: string;
+  role: "user" | "assistant";
+  text: string;
+  time: string;
 }
