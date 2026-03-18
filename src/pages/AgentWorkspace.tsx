@@ -29,7 +29,7 @@ export default function AgentWorkspace() {
       });
     });
     setRunning(false);
-    await api.addAuditEntry({ id: `a-${Date.now()}`, timestamp: new Date().toISOString(), action: "Agents Executed", detail: `All 5 agents completed processing on ${selectedContract?.name || "contract"}`, actor: "System" });
+    await api.addAuditEntry({ id: `a-${Date.now()}`, timestamp: new Date().toISOString(), action: "Agents Executed", detail: `All 5 agents completed processing on ${selectedContractId === "all" ? "all contracts" : selectedContract?.name || "contract"}`, actor: "System" });
     toast.success("All agents completed!");
   };
 
