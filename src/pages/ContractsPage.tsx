@@ -2,7 +2,8 @@ import { useState } from "react";
 import {
   FileText, Search, ChevronRight, Calendar, Building2, User,
   CheckCircle2, Clock, AlertTriangle, Eye, Shield, Scale,
-  Hash, MapPin, Tag, Layers,
+  Hash, MapPin, Tag, Layers, ScanSearch, FileCheck, Database,
+  Table2, Brain, ImageIcon, Network, FolderTree,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
