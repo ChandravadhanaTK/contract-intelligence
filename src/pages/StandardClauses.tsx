@@ -35,6 +35,16 @@ export default function StandardClauses() {
     <div className="page-container">
       <h1 className="page-header">Standard Clauses</h1>
 
+      <div className="relative mb-4 max-w-md">
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <input
+          className="w-full border border-input rounded-lg pl-9 pr-3 py-2 text-sm bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Search clauses by name, article, or tag..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {clauses.map((c) => (
           <div
