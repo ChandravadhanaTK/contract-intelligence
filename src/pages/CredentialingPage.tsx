@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { CheckCircle, XCircle, AlertTriangle, Shield, RotateCcw } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, Shield, RotateCcw, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import type { CredentialingCheck } from "@/types";
 
@@ -16,6 +17,7 @@ const defaultChecks: Omit<CredentialingCheck, "id" | "intakeId">[] = [
 ];
 
 export default function CredentialingPage() {
+  const navigate = useNavigate();
   const [checks, setChecks] = useState<CredentialingCheck[]>([]);
   const [overrideId, setOverrideId] = useState<string | null>(null);
   const [overrideReason, setOverrideReason] = useState("");
@@ -62,6 +64,12 @@ export default function CredentialingPage() {
 
   return (
     <div className="page-container">
+      <div className="flex items-center gap-3 mb-2">
+        <button onClick={() => navigate("/create?tab=intake")} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors" title="Back to Provider Intake">
+          <ArrowLeft className="w-4 h-4" />
+          <span>Provider Intake</span>
+        </button>
+      </div>
       <h1 className="page-header">Credentialing & Provider Validation</h1>
 
       <div className="grid grid-cols-3 gap-4">
