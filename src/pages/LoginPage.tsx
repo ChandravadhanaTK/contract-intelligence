@@ -76,21 +76,6 @@ export default function LoginPage({ onLogin }: Props) {
             </button>
           </form>
 
-          <div className="border-t pt-4">
-            <p className="text-xs text-muted-foreground font-medium mb-2">Demo Credentials:</p>
-            <div className="grid grid-cols-2 gap-1.5 text-xs text-muted-foreground">
-              {staticCredentials.map((c) => (
-                <button
-                  key={c.username}
-                  onClick={() => { setUsername(c.username); setPassword(c.password); }}
-                  className="text-left px-2 py-1 rounded hover:bg-muted transition-colors"
-                >
-                  <span className="font-medium text-foreground">{c.username}</span>
-                  <br /><span className="text-[10px]">{c.password}</span>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>
