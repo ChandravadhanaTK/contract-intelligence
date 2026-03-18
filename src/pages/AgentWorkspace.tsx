@@ -41,7 +41,7 @@ export default function AgentWorkspace() {
         <h1 className="page-header">Agent Workspace</h1>
         <button
           onClick={handleRun}
-          disabled={running || !selectedContractId}
+          disabled={running}
           className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
         >
           <Play className="w-4 h-4" /> {running ? "Running..." : "Run Agents"}
