@@ -31,12 +31,12 @@ export default function IntegrityPage() {
     let stored = get<IntegrityFinding[]>("oci_integrity_findings", []);
     if (stored.length === 0) { stored = seedFindings; set("oci_integrity_findings", stored); }
     setFindings(stored);
-    const c = get<Contract[]>("oci_contracts", []);
-    setContracts(c);
-    setSelectedContract(c[0]?.id || "");
+    api.getContracts().then(c => {
+      setContracts(c);
+    });
   }, []);
 
-  const contractFindings = findings.filter(f => f.contractId === selectedContract);
+  const contractFindings = selectedContract === "all" ? findings : findings.filter(f => f.contractId === selectedContract);
   const filtered = filterSeverity === "all" ? contractFindings : contractFindings.filter(f => f.severity === filterSeverity);
   const openCount = contractFindings.filter(f => f.status === "Open").length;
   const totalCount = contractFindings.length;
