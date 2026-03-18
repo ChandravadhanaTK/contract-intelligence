@@ -1,4 +1,4 @@
-import type { Contract, StandardClause, Obligation, Clause, WorkflowInstance, DraftContract, AuditEntry, ClauseVersion } from "@/types";
+import type { Contract, StandardClause, Obligation, Clause, WorkflowInstance, DraftContract, AuditEntry, ClauseVersion, ReviewDocument, ReviewRequest, RateTableRow } from "@/types";
 
 const missingClauses: Clause[] = [
   { id: "c1", articleName: "Article 12", clauseName: "Network Adequacy Requirements", category: "missing", matchScore: 0, standardText: "Provider shall maintain a network of healthcare professionals sufficient to meet the needs of all enrolled members within the service area, including specialists within 30 miles.", currentText: "", deviationNotes: ["Clause entirely absent from current contract"], recommendations: ["Add network adequacy requirements per CMS guidelines"] },
@@ -25,7 +25,7 @@ const alignedClauses: Clause[] = Array.from({ length: 8 }, (_, i) => ({
   articleName: `Article ${i * 2 + 1}`,
   clauseName: ["Scope of Agreement", "Effective Date & Term", "Covered Services", "Provider Obligations", "Plan Obligations", "Compensation Terms", "Insurance Requirements", "Regulatory Compliance"][i],
   category: "aligned" as const,
-  matchScore: 4 + Math.round(Math.random()),
+  matchScore: 4 + (i % 2),
   standardText: `Standard clause text for ${["Scope of Agreement", "Effective Date & Term", "Covered Services", "Provider Obligations", "Plan Obligations", "Compensation Terms", "Insurance Requirements", "Regulatory Compliance"][i]}. This clause aligns with organizational standards and regulatory requirements.`,
   currentText: `Current clause text for ${["Scope of Agreement", "Effective Date & Term", "Covered Services", "Provider Obligations", "Plan Obligations", "Compensation Terms", "Insurance Requirements", "Regulatory Compliance"][i]}. Implementation matches standard guidelines.`,
   deviationNotes: [],
@@ -43,24 +43,111 @@ const obligations: Obligation[] = [
   { id: "o8", title: "PHI Breach Response Plan Review", description: "Review and update breach notification procedures", owner: "Privacy Officer", dueDate: "2025-03-01", frequency: "Annually", status: "InProgress", evidenceLinks: [] },
 ];
 
-const workflow: WorkflowInstance = {
-  id: "wf1",
-  stage: "Review",
+const makeWorkflow = (id: string, stage: "Draft" | "Review" | "Redline"): WorkflowInstance => ({
+  id,
+  stage,
   tasks: [
-    { id: "t1", name: "Initial Document Review", assignee: "Sarah Johnson", status: "Done", dueDate: "2025-01-10" },
-    { id: "t2", name: "Clause Analysis & Categorization", assignee: "AI Agents", status: "Done", dueDate: "2025-01-12" },
-    { id: "t3", name: "Legal Review of Non-Aligned Clauses", assignee: "Mark Thompson", status: "Doing", dueDate: "2025-01-20" },
-    { id: "t4", name: "Stakeholder Review Meeting", assignee: "Contract Team", status: "Todo", dueDate: "2025-01-25" },
-    { id: "t5", name: "Redline Preparation", assignee: "Emily Chen", status: "Todo", dueDate: "2025-01-30" },
-    { id: "t6", name: "Final Approval", assignee: "Director", status: "Todo", dueDate: "2025-02-05" },
+    { id: `${id}-t1`, name: "Initial Document Review", assignee: "Sarah Johnson", status: "Done", dueDate: "2025-01-10" },
+    { id: `${id}-t2`, name: "Clause Analysis & Categorization", assignee: "AI Agents", status: "Done", dueDate: "2025-01-12" },
+    { id: `${id}-t3`, name: "Legal Review of Non-Aligned Clauses", assignee: "Mark Thompson", status: stage === "Draft" ? "Todo" : "Doing", dueDate: "2025-01-20" },
+    { id: `${id}-t4`, name: "Stakeholder Review Meeting", assignee: "Contract Team", status: "Todo", dueDate: "2025-01-25" },
+    { id: `${id}-t5`, name: "Redline Preparation", assignee: "Emily Chen", status: "Todo", dueDate: "2025-01-30" },
+    { id: `${id}-t6`, name: "Final Approval", assignee: "Director", status: "Todo", dueDate: "2025-02-05" },
   ],
   history: [
     { time: "2025-01-08T09:00:00Z", stage: "Draft", actor: "System", note: "Contract uploaded and processing initiated" },
     { time: "2025-01-08T09:15:00Z", stage: "Draft", actor: "Intake Agent", note: "Metadata extracted and clauses identified" },
-    { time: "2025-01-08T09:30:00Z", stage: "Draft", actor: "Clause Matching Agent", note: "53 clauses matched against standard library" },
-    { time: "2025-01-10T14:00:00Z", stage: "Review", actor: "Sarah Johnson", note: "Moved to Review after initial analysis complete" },
-    { time: "2025-01-12T11:00:00Z", stage: "Review", actor: "Mark Thompson", note: "Legal review in progress for 4 non-aligned clauses" },
+    { time: "2025-01-10T14:00:00Z", stage: "Review", actor: "Sarah Johnson", note: "Moved to Review after initial analysis" },
   ],
+});
+
+// Rate table data for review documents
+const rateTableData1: RateTableRow[] = [
+  { category: "Primary Care Visit", currentRate: "$125.00", escalatedRate: "$131.25", rounded: "$131.00", method: "CPI-U", confidence: "High" },
+  { category: "Specialist Visit", currentRate: "$185.00", escalatedRate: "$194.25", rounded: "$194.00", method: "CPI-U", confidence: "High" },
+  { category: "Orthopedic Surgery", currentRate: "$4,500.00", escalatedRate: "$4,725.00", rounded: "$4,725.00", method: "Negotiated", confidence: "Medium" },
+  { category: "Lab Work – Basic Panel", currentRate: "$45.00", escalatedRate: "$47.25", rounded: "$47.00", method: "CPI-U", confidence: "High" },
+  { category: "Imaging – MRI", currentRate: "$850.00", escalatedRate: "$892.50", rounded: "$893.00", method: "CPI-U", confidence: "High" },
+  { category: "Physical Therapy (per session)", currentRate: "$95.00", escalatedRate: "$99.75", rounded: "$100.00", method: "CPI-U", confidence: "High" },
+  { category: "Emergency Room Visit", currentRate: "$1,200.00", escalatedRate: "$1,260.00", rounded: "$1,260.00", method: "Negotiated", confidence: "Low", exception: true },
+  { category: "Inpatient – Per Diem", currentRate: "$2,800.00", escalatedRate: "$2,940.00", rounded: "$2,940.00", method: "CPI-U", confidence: "High" },
+];
+
+const rateTableData2: RateTableRow[] = [
+  { category: "Behavioral Health – Individual", currentRate: "$110.00", escalatedRate: "$115.50", rounded: "$116.00", method: "CPI-U", confidence: "High" },
+  { category: "Behavioral Health – Group", currentRate: "$55.00", escalatedRate: "$57.75", rounded: "$58.00", method: "CPI-U", confidence: "High" },
+  { category: "Telehealth Visit", currentRate: "$75.00", escalatedRate: "$78.75", rounded: "$79.00", method: "Flat", confidence: "Medium", exception: true },
+  { category: "Preventive Care", currentRate: "$0.00", escalatedRate: "$0.00", rounded: "$0.00", method: "N/A", confidence: "High" },
+];
+
+// Review documents per contract
+const reviewDocuments: ReviewDocument[] = [
+  { id: "doc-001", contractId: "contract-001", name: "Base Agreement", type: "Agreement", status: "Under Review", lastModified: "2025-01-12", tableData: rateTableData1, pdfMockRef: "base-agreement-v2.pdf" },
+  { id: "doc-002", contractId: "contract-001", name: "Rate Appendix – Table 1C", type: "Appendix", status: "Under Review", lastModified: "2025-01-11", tableData: rateTableData1, pdfMockRef: "rate-appendix-1c.pdf" },
+  { id: "doc-003", contractId: "contract-001", name: "Fee Schedule Addendum", type: "Addendum", status: "Pending", lastModified: "2025-01-10", tableData: rateTableData2, pdfMockRef: "fee-schedule-addendum.pdf" },
+  { id: "doc-004", contractId: "contract-002", name: "Base Agreement", type: "Agreement", status: "Under Review", lastModified: "2025-01-14", tableData: rateTableData1, pdfMockRef: "southeast-base.pdf" },
+  { id: "doc-005", contractId: "contract-002", name: "Payment Appendix", type: "Appendix", status: "Pending", lastModified: "2025-01-13", tableData: rateTableData2, pdfMockRef: "southeast-payment.pdf" },
+  { id: "doc-006", contractId: "contract-003", name: "Base Agreement", type: "Agreement", status: "Approved", lastModified: "2025-01-09", tableData: rateTableData1, pdfMockRef: "midwest-base.pdf" },
+  { id: "doc-007", contractId: "contract-003", name: "Network Terms", type: "Addendum", status: "Under Review", lastModified: "2025-01-08", tableData: rateTableData2, pdfMockRef: "midwest-network.pdf" },
+  { id: "doc-008", contractId: "contract-003", name: "Quality Measures Exhibit", type: "Exhibit", status: "Pending", lastModified: "2025-01-07", tableData: rateTableData2, pdfMockRef: "midwest-quality.pdf" },
+];
+
+// Review requests with checklists
+function makeChecklist(): { id: string; label: string; section: "manual" | "auto"; checked: boolean }[] {
+  return [
+    { id: "ck1", label: "Check Rate Escalator Percentage", section: "manual", checked: false },
+    { id: "ck2", label: "Check Provider Name", section: "manual", checked: false },
+    { id: "ck3", label: "Check Payment Appendix Type", section: "manual", checked: false },
+    { id: "ck4", label: "Verify Effective Date", section: "manual", checked: false },
+    { id: "ck5", label: "Validate TIN against directory", section: "auto", checked: true },
+    { id: "ck6", label: "Cross-reference MPIN with credentialing", section: "auto", checked: true },
+    { id: "ck7", label: "Check for duplicate job submissions", section: "auto", checked: true },
+    { id: "ck8", label: "Verify fee schedule alignment", section: "auto", checked: true },
+  ];
+}
+
+const statuses: ("Manual review" | "On hold" | "Exception" | "Sent for approval")[] = ["Manual review", "On hold", "Exception", "Sent for approval"];
+
+const eventTypes = ["Rate Load", "Contract Amendment", "New Provider", "Term Extension", "Fee Update", "Network Change", "Credentialing", "Compliance Audit"];
+
+function makeRequests(contractId: string, docId: string, startIdx: number, count: number): ReviewRequest[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: `req-${contractId}-${docId}-${i}`,
+    contractId,
+    documentId: docId,
+    jobNo: `C${590127 + startIdx + i}`,
+    eventType: eventTypes[(startIdx + i) % eventTypes.length],
+    effectiveDate: `2025-0${1 + (i % 6)}-${String(10 + (i % 20)).padStart(2, "0")}`,
+    mpin: `MPN${100000 + startIdx + i}`,
+    tin: `${90 + (i % 10)}-${7000000 + startIdx + i}`,
+    status: statuses[(startIdx + i) % 4],
+    loadReady: (startIdx + i) % 3 === 0,
+    checklist: makeChecklist(),
+    createdAt: `2025-01-${String(8 + (i % 5)).padStart(2, "0")}T${String(9 + (i % 8)).padStart(2, "0")}:00:00Z`,
+  }));
+}
+
+const seedReviewRequests: ReviewRequest[] = [
+  ...makeRequests("contract-001", "doc-001", 0, 10),
+  ...makeRequests("contract-001", "doc-002", 10, 8),
+  ...makeRequests("contract-001", "doc-003", 18, 5),
+  ...makeRequests("contract-002", "doc-004", 23, 9),
+  ...makeRequests("contract-002", "doc-005", 32, 6),
+  ...makeRequests("contract-003", "doc-006", 38, 8),
+  ...makeRequests("contract-003", "doc-007", 43, 7),
+  ...makeRequests("contract-003", "doc-008", 50, 5),
+];
+
+// Chat keyword → response mapping
+export const chatAnswerMap: Record<string, string> = {
+  "rate escalator": "The rate escalator percentage is 5% annually, applied using CPI-U methodology. See Page 43, Section 4.2 of the Rate Appendix.",
+  "effective date": "The effective date for this contract is January 1, 2025 with a three-year initial term through December 31, 2027. Reference: Page 2, Section 1.1.",
+  "provider name": "The provider listed is Northeast Regional Medical Center (MPIN: MPN100000). This is confirmed on Page 1, Header and Page 15, Exhibit A.",
+  "payment appendix": "The payment appendix type is 'Table 1C – Fee Schedule' which uses a tiered rate structure based on Medicare Fee Schedule multiplied by 110%. See Page 38, Appendix C.",
+  "orthopedic": "Orthopedic services are covered under Category 3 – Surgical Specialties. The negotiated rate for orthopedic surgery is $4,725.00 (escalated from $4,500.00). Note: This rate was negotiated outside the standard CPI-U methodology. Reference: Page 45, Table 1C, Row 3.",
+  "termination": "Termination requires 180 days written notice by either party. Termination for cause requires 60 days with a cure period. See Page 22, Article 7.",
+  "compliance": "Compliance requirements include annual HEDIS data submission, quarterly claims audits, and monthly provider directory updates. See Page 50, Article 12.",
+  "default": "I can help you with details about this contract. Try asking about: rate escalator percentage, effective date, provider name, payment appendix type, orthopedic services, termination terms, or compliance requirements.",
 };
 
 export const seedContract: Contract = {
@@ -71,7 +158,32 @@ export const seedContract: Contract = {
   rawText: "",
   clauses: [...missingClauses, ...nonAlignedClauses, ...alignedClauses],
   obligations,
-  workflow,
+  workflow: makeWorkflow("wf1", "Review"),
+  documents: reviewDocuments.filter((d) => d.contractId === "contract-001"),
+};
+
+export const seedContract2: Contract = {
+  id: "contract-002",
+  name: "UHC_Provider_Agreement_2025_Southeast_Region.pdf",
+  uploadDate: "2025-01-12",
+  status: "completed",
+  rawText: "",
+  clauses: [...missingClauses.slice(0, 5), ...nonAlignedClauses.slice(0, 2), ...alignedClauses],
+  obligations: obligations.slice(0, 4),
+  workflow: makeWorkflow("wf2", "Draft"),
+  documents: reviewDocuments.filter((d) => d.contractId === "contract-002"),
+};
+
+export const seedContract3: Contract = {
+  id: "contract-003",
+  name: "UHC_Provider_Agreement_2025_Midwest_Region.pdf",
+  uploadDate: "2025-01-06",
+  status: "completed",
+  rawText: "",
+  clauses: [...missingClauses.slice(0, 3), ...nonAlignedClauses, ...alignedClauses],
+  obligations: obligations.slice(2, 7),
+  workflow: makeWorkflow("wf3", "Redline"),
+  documents: reviewDocuments.filter((d) => d.contractId === "contract-003"),
 };
 
 export const seedStandardClauses: StandardClause[] = [
@@ -101,10 +213,13 @@ export const seedClauseVersions: ClauseVersion[] = [];
 export function initializeSeedData() {
   if (!localStorage.getItem("oci_initialized")) {
     localStorage.setItem("oci_contract", JSON.stringify(seedContract));
+    localStorage.setItem("oci_contracts", JSON.stringify([seedContract, seedContract2, seedContract3]));
     localStorage.setItem("oci_standard_clauses", JSON.stringify(seedStandardClauses));
     localStorage.setItem("oci_audit_log", JSON.stringify(seedAuditLog));
     localStorage.setItem("oci_drafts", JSON.stringify(seedDrafts));
     localStorage.setItem("oci_clause_versions", JSON.stringify(seedClauseVersions));
+    localStorage.setItem("oci_review_documents", JSON.stringify(reviewDocuments));
+    localStorage.setItem("oci_review_requests", JSON.stringify(seedReviewRequests));
     localStorage.setItem("oci_initialized", "true");
   }
 }
