@@ -90,6 +90,7 @@ export interface GuidedStep {
   question: string;
   field: string;
   completed: boolean;
+  sampleAnswer?: string;
 }
 
 export const guidedSteps: GuidedStep[] = [
