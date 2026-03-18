@@ -26,7 +26,7 @@ const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: "upload", label: "Upload Contract", icon: Upload },
   { id: "bulk", label: "Bulk Upload", icon: List },
   { id: "intake", label: "Start from Provider Intake", icon: ArrowRight },
-  { id: "coauthor", label: "Talk to Agent – Your CoAuthor", icon: Bot },
+  { id: "coauthor", label: "Talk to Contract Agent – Your CoAuthor", icon: Bot },
 ];
 
 const quickPrompts = [
