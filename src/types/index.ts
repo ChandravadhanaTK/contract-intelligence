@@ -8,6 +8,8 @@ export interface Contract {
   obligations: Obligation[];
   workflow: WorkflowInstance;
   documents?: ReviewDocument[];
+  docProcessing?: ContractDocumentProcessing;
+  renewalDate?: string;
 }
 
 export interface Clause {
@@ -91,6 +93,7 @@ export interface DraftContract {
   servicesScope: string;
   clauses: { name: string; text: string }[];
   createdAt: string;
+  generatedDocument?: ContractDraftDocument;
 }
 
 export interface ClauseVersion {
@@ -104,7 +107,7 @@ export interface ClauseVersion {
   timestamp: string;
 }
 
-// New types for Review Dashboard
+// Review Dashboard
 export interface ReviewDocument {
   id: string;
   contractId: string;
@@ -154,4 +157,172 @@ export interface ChatMessage {
   role: "user" | "assistant";
   text: string;
   time: string;
+}
+
+// Provider Intake & Triage
+export interface IntakeRequest {
+  id: string;
+  providerName: string;
+  specialty: string;
+  tin: string;
+  mpin: string;
+  locations: string[];
+  products: string[];
+  requestedEffectiveDate: string;
+  contractType: string;
+  docs: string[];
+  completenessScore: number;
+  triageStatus: "New" | "Need more info" | "Ready for Credentialing" | "Ready for Drafting";
+  notes: string;
+  createdAt: string;
+}
+
+// Credentialing
+export interface CredentialingCheck {
+  id: string;
+  intakeId: string;
+  checkType: string;
+  status: "Pass" | "Fail" | "Pending" | "Overridden";
+  evidenceLink: string;
+  lastCheckedAt: string;
+  notes: string;
+  overriddenBy?: string;
+  overrideReason?: string;
+}
+
+// Document Intelligence Pipeline
+export interface ContractDocumentProcessing {
+  id: string;
+  contractId: string;
+  docType: string;
+  needsOcr: boolean;
+  layoutSummary: string;
+  extractedEntities: Record<string, string>;
+  hierarchyMap: { section: string; appendixRef: string }[];
+  confidenceByStage: Record<string, number>;
+  stageLogs: { stage: string; status: string; detail: string; timestamp: string }[];
+}
+
+// Rate/Fee Table Extraction
+export interface RateTable {
+  id: string;
+  contractId: string;
+  documentId: string;
+  tableName: string;
+  effectiveDate: string;
+  method: string;
+  confidence: number;
+  rows: RateRow[];
+}
+
+export interface RateRow {
+  id: string;
+  codeType: string;
+  code: string;
+  description: string;
+  baseRate: number;
+  multiplier: number;
+  escalator: number;
+  finalRate: number;
+  confidence: "High" | "Medium" | "Low";
+  flags: string[];
+}
+
+// Integrity
+export interface IntegrityFinding {
+  id: string;
+  contractId: string;
+  severity: "Critical" | "High" | "Medium" | "Low";
+  category: string;
+  title: string;
+  description: string;
+  sectionRef: string;
+  pageRef: string;
+  remediation: string;
+  status: "Open" | "Resolved" | "Deferred";
+}
+
+// Monitoring
+export interface ClaimsSample {
+  id: string;
+  contractId: string;
+  codeType: string;
+  code: string;
+  expected: number;
+  paid: number;
+  variance: number;
+  reason: string;
+}
+
+export interface UMSample {
+  id: string;
+  contractId: string;
+  service: string;
+  contractRule: string;
+  systemRule: string;
+  mismatchFlag: boolean;
+}
+
+export interface DisputeTicket {
+  id: string;
+  contractId: string;
+  category: string;
+  count: number;
+  codes: string[];
+  createdAt: string;
+  status: "Open" | "In Review" | "Resolved";
+}
+
+// Contract Draft Document
+export interface ContractDraftDocument {
+  id: string;
+  contractId: string;
+  title: string;
+  parties: { partyA: string; partyB: string };
+  effectiveDate: string;
+  term: string;
+  servicesScope: string;
+  paymentRateSection: string;
+  sections: ContractDocSection[];
+  exhibits: ExhibitRef[];
+  renderedText: string;
+  format: "markdown" | "html";
+  lastGeneratedAt: string;
+  version: number;
+}
+
+export interface ContractDocSection {
+  id: string;
+  order: number;
+  headingNumber: string;
+  title: string;
+  body: string;
+}
+
+export interface ExhibitRef {
+  id: string;
+  name: string;
+  description: string;
+  required: boolean;
+}
+
+// HITL Override
+export interface HITLOverride {
+  id: string;
+  sourceType: "extraction" | "integrity" | "mapping";
+  sourceId: string;
+  field: string;
+  oldValue: string;
+  newValue: string;
+  actor: string;
+  time: string;
+  reason: string;
+}
+
+// Downstream mapping
+export interface DownstreamMapping {
+  targetId: string;
+  fields: { field: string; value: string; confidence: "High" | "Medium" | "Low" }[];
+  loadReadyScore: number;
+  exceptions: { field: string; issue: string }[];
 }
