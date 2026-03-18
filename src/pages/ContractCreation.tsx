@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bot, Send, FileText, ArrowRight, Upload, BookOpen, List, Library, ToggleLeft, ToggleRight, MessageSquare, Zap, X } from "lucide-react";
+import { Bot, Send, FileText, ArrowRight, Upload, BookOpen, List, Library, ToggleLeft, ToggleRight, MessageSquare, Zap, X, CheckCircle } from "lucide-react";
 import { api } from "@/services/mockApi";
 import { toast } from "sonner";
 import type { DraftContract, ContractDraftDocument, CoAuthorMessage, StandardClause } from "@/types";
@@ -39,6 +39,145 @@ const quickPrompts = [
   "Highlight missing info",
 ];
 
+type BulkFileStatus = "pending" | "uploading" | "processing" | "completed" | "error";
+interface BulkFile { name: string; size: string; status: BulkFileStatus; progress: number; }
+
+const docPipelineStages = [
+  "Contract Type Identification", "OCR Detection", "Layout Extraction",
+  "Entity Extraction", "Clause Extraction", "Standard Matching",
+];
+
+function BulkUploadTab({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const [files, setFiles] = useState<BulkFile[]>([]);
+  const [processing, setProcessing] = useState(false);
+
+  const handleFilesSelected = (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    const newFiles: BulkFile[] = Array.from(fileList).map(f => ({
+      name: f.name,
+      size: `${(f.size / 1024).toFixed(0)} KB`,
+      status: "pending" as const,
+      progress: 0,
+    }));
+    setFiles(prev => [...prev, ...newFiles]);
+  };
+
+  const removeFile = (name: string) => setFiles(prev => prev.filter(f => f.name !== name));
+
+  const handleBulkProcess = async () => {
+    setProcessing(true);
+    for (let i = 0; i < files.length; i++) {
+      setFiles(prev => prev.map((f, j) => j === i ? { ...f, status: "uploading", progress: 10 } : f));
+      await new Promise(r => setTimeout(r, 400));
+      setFiles(prev => prev.map((f, j) => j === i ? { ...f, status: "processing", progress: 30 } : f));
+      for (let p = 30; p <= 90; p += 15) {
+        await new Promise(r => setTimeout(r, 300));
+        setFiles(prev => prev.map((f, j) => j === i ? { ...f, progress: p } : f));
+      }
+      await new Promise(r => setTimeout(r, 300));
+      setFiles(prev => prev.map((f, j) => j === i ? { ...f, status: "completed", progress: 100 } : f));
+    }
+    setProcessing(false);
+    toast.success(`${files.length} contracts processed successfully!`);
+  };
+
+  const allDone = files.length > 0 && files.every(f => f.status === "completed");
+  const hasFiles = files.length > 0;
+
+  return (
+    <div className="space-y-4">
+      {/* Drop zone */}
+      <div
+        onDrop={e => { e.preventDefault(); handleFilesSelected(e.dataTransfer.files); }}
+        onDragOver={e => e.preventDefault()}
+        className="border-2 border-dashed rounded-xl p-12 text-center hover:border-secondary transition-colors cursor-pointer bg-card"
+      >
+        <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+        <p className="text-lg font-medium mb-1">Drag & drop multiple contracts here</p>
+        <p className="text-sm text-muted-foreground mb-4">Supports PDF, DOCX files · Select multiple files at once</p>
+        <label className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:opacity-90 font-medium text-sm">
+          Select Multiple Files
+          <input type="file" className="hidden" accept=".pdf,.docx" multiple onChange={e => handleFilesSelected(e.target.files)} />
+        </label>
+      </div>
+
+      {/* Selected files list */}
+      {hasFiles && (
+        <div className="bg-card border rounded-xl overflow-hidden">
+          <div className="p-4 border-b bg-muted/50 flex items-center justify-between">
+            <h3 className="text-sm font-semibold">{files.length} File{files.length > 1 ? "s" : ""} Selected</h3>
+            <div className="flex gap-2">
+              {!processing && !allDone && (
+                <button onClick={handleBulkProcess} className="flex items-center gap-2 px-4 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium hover:opacity-90">
+                  <ArrowRight className="w-3.5 h-3.5" /> Process All
+                </button>
+              )}
+              {allDone && (
+                <button onClick={() => onNavigate("/deviation")} className="flex items-center gap-2 px-4 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-medium hover:opacity-90">
+                  <ArrowRight className="w-3.5 h-3.5" /> View Deviations
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="divide-y">
+            {files.map((f, i) => (
+              <div key={`${f.name}-${i}`} className="p-3 flex items-center gap-3">
+                <FileText className="w-4 h-4 text-secondary flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium truncate">{f.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">{f.size}</span>
+                      <span className={`status-chip ${
+                        f.status === "completed" ? "status-chip-success" :
+                        f.status === "processing" || f.status === "uploading" ? "status-chip-running" :
+                        f.status === "error" ? "status-chip-error" :
+                        "bg-muted text-muted-foreground"
+                      }`}>
+                        {f.status === "completed" ? "DONE" : f.status === "processing" ? "PROCESSING" : f.status === "uploading" ? "UPLOADING" : f.status === "error" ? "ERROR" : "PENDING"}
+                      </span>
+                      {f.status === "pending" && !processing && (
+                        <button onClick={() => removeFile(f.name)} className="text-muted-foreground hover:text-destructive">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {(f.status === "uploading" || f.status === "processing") && (
+                    <div className="w-full bg-muted rounded-full h-1.5">
+                      <div className="h-1.5 rounded-full bg-secondary transition-all duration-300" style={{ width: `${f.progress}%` }} />
+                    </div>
+                  )}
+                  {f.status === "completed" && (
+                    <div className="flex gap-1 mt-1">
+                      {docPipelineStages.map(stage => (
+                        <span key={stage} className="flex items-center gap-0.5 text-[10px] text-success">
+                          <CheckCircle className="w-2.5 h-2.5" /> {stage.split(" ")[0]}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {allDone && (
+        <div className="bg-accent border border-secondary/20 rounded-lg p-4">
+          <p className="text-sm font-medium text-accent-foreground">
+            ✅ All {files.length} contracts processed! Navigate to{" "}
+            <button onClick={() => onNavigate("/deviation")} className="text-secondary underline font-semibold">Contract Deviation</button>,{" "}
+            <button onClick={() => onNavigate("/integrity")} className="text-secondary underline font-semibold">Integrity Validation</button>, or{" "}
+            <button onClick={() => onNavigate("/rates")} className="text-secondary underline font-semibold">Rate Tables</button>.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ContractCreation() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabId>("create");
@@ -54,6 +193,7 @@ export default function ContractCreation() {
   const [loading, setLoading] = useState(false);
   const [standardClauses, setStandardClauses] = useState<StandardClause[]>([]);
   const [guidedStepIndex, setGuidedStepIndex] = useState(0);
+  const [guidedUserInput, setGuidedUserInput] = useState("");
   const [clauseDialogOpen, setClauseDialogOpen] = useState(false);
   const [outlineOpen, setOutlineOpen] = useState(false);
   // Pending action for human-in-the-loop
@@ -250,6 +390,7 @@ export default function ContractCreation() {
       setChatMessages(withAgent);
 
       if (step.sampleAnswer) {
+        setGuidedUserInput(step.sampleAnswer);
         await new Promise(r => setTimeout(r, 600));
         const userMsg: CoAuthorMessage = {
           id: `guided-user-${Date.now()}`, draftId,
@@ -263,7 +404,7 @@ export default function ContractCreation() {
         const confirmMsg: CoAuthorMessage = {
           id: `guided-confirm-${Date.now()}`, draftId,
           role: "assistant",
-          text: `✅ Got it — I've captured your input for **${step.field}**. ${guidedStepIndex + 1 < guidedSteps.length ? "Click **Next Step** to continue." : "🎉 All steps complete! Click **\"Draft full contract from inputs\"** to generate the full contract."}`,
+          text: `✅ Got it — I've captured your input for **${step.field}**. ${guidedStepIndex + 1 < guidedSteps.length ? "Click **Next Step** to continue or edit the answer above and **Submit** your own." : "🎉 All steps complete! Click **\"Draft full contract from inputs\"** to generate the full contract."}`,
           time: new Date().toISOString(),
         };
         setChatMessages([...withUser, confirmMsg]);
@@ -271,7 +412,34 @@ export default function ContractCreation() {
       }
 
       setGuidedStepIndex(prev => prev + 1);
+      setGuidedUserInput("");
     }
+  };
+
+  const handleGuidedUserSubmit = async () => {
+    if (!guidedUserInput.trim()) return;
+    const draftId = savedDraftId || "draft-coauthor";
+    const stepIdx = Math.max(0, guidedStepIndex - 1);
+    const step = guidedSteps[stepIdx];
+    const userMsg: CoAuthorMessage = {
+      id: `guided-human-${Date.now()}`, draftId,
+      role: "user", text: guidedUserInput,
+      time: new Date().toISOString(),
+    };
+    const updated = [...chatMessages, userMsg];
+    setChatMessages(updated);
+
+    await new Promise(r => setTimeout(r, 400));
+    const confirmMsg: CoAuthorMessage = {
+      id: `guided-human-confirm-${Date.now()}`, draftId,
+      role: "assistant",
+      text: `✅ Got it — I've captured your custom input for **${step?.field || "this step"}**. ${guidedStepIndex < guidedSteps.length ? "Click **Next Step** to continue." : "🎉 All steps complete! Click **\"Draft full contract from inputs\"** to generate."}`,
+      time: new Date().toISOString(),
+    };
+    const withConfirm = [...updated, confirmMsg];
+    setChatMessages(withConfirm);
+    set("oci_coauthor_messages", withConfirm);
+    setGuidedUserInput("");
   };
 
   const handleApplyAction = (action: any) => {
@@ -366,14 +534,34 @@ export default function ContractCreation() {
       </div>
 
       {coAuthorMode === "guided" && (
-        <div className="px-3 py-2 bg-accent/50 border-b flex items-center justify-between">
-          <span className={`${fullSize ? "text-xs" : "text-[10px]"} text-accent-foreground font-medium`}>
-            <Zap className="w-3 h-3 inline mr-1" />
-            Guided Interview — Step {Math.min(guidedStepIndex + 1, guidedSteps.length)} of {guidedSteps.length}
-          </span>
-          <button onClick={handleGuidedNext} className={`${fullSize ? "text-xs px-3 py-1" : "text-[10px] px-2 py-0.5"} bg-secondary text-secondary-foreground rounded font-medium`}>
-            {guidedStepIndex === 0 ? "Start" : "Next Step"}
-          </button>
+        <div className="px-3 py-2 bg-accent/50 border-b space-y-2">
+          <div className="flex items-center justify-between">
+            <span className={`${fullSize ? "text-xs" : "text-[10px]"} text-accent-foreground font-medium`}>
+              <Zap className="w-3 h-3 inline mr-1" />
+              Guided Interview — Step {Math.min(guidedStepIndex + 1, guidedSteps.length)} of {guidedSteps.length}
+            </span>
+            <button onClick={handleGuidedNext} className={`${fullSize ? "text-xs px-3 py-1" : "text-[10px] px-2 py-0.5"} bg-secondary text-secondary-foreground rounded font-medium`}>
+              {guidedStepIndex === 0 ? "Start" : "Next Step"}
+            </button>
+          </div>
+          {guidedStepIndex > 0 && guidedStepIndex <= guidedSteps.length && (
+            <div className="flex items-center gap-1.5">
+              <input
+                className={`flex-1 border rounded-lg px-2 py-1 ${fullSize ? "text-xs" : "text-[10px]"} bg-background`}
+                placeholder="Type your own answer or edit the sample..."
+                value={guidedUserInput}
+                onChange={e => setGuidedUserInput(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter" && guidedUserInput.trim()) handleGuidedUserSubmit(); }}
+              />
+              <button
+                onClick={handleGuidedUserSubmit}
+                disabled={!guidedUserInput.trim()}
+                className={`${fullSize ? "text-xs px-2 py-1" : "text-[10px] px-1.5 py-0.5"} bg-primary text-primary-foreground rounded font-medium disabled:opacity-50`}
+              >
+                Submit
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -548,15 +736,7 @@ export default function ContractCreation() {
 
       {/* ═══ TAB: Bulk Upload ═══ */}
       {activeTab === "bulk" && (
-        <div className="bg-card border rounded-xl p-8 text-center">
-          <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Bulk Upload</h3>
-          <p className="text-sm text-muted-foreground mb-4">Upload multiple contracts at once for batch processing.</p>
-          <label className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:opacity-90 font-medium text-sm">
-            Select Multiple Files
-            <input type="file" className="hidden" accept=".pdf,.docx" multiple onChange={() => toast.success("Bulk upload initiated — processing 0 contracts")} />
-          </label>
-        </div>
+        <BulkUploadTab onNavigate={navigate} />
       )}
 
       {/* ═══ TAB: Start from Provider Intake ═══ */}

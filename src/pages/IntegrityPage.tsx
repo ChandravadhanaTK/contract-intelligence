@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, AlertTriangle, CheckCircle, ArrowRight } from "lucide-react";
+import { Shield, AlertTriangle, CheckCircle, ArrowRight, ArrowLeft, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import type { IntegrityFinding, Contract } from "@/types";
+import { api } from "@/services/mockApi";
 
 function get<T>(key: string, fb: T): T { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; }
 function set(key: string, v: unknown) { localStorage.setItem(key, JSON.stringify(v)); }
 
 const seedFindings: IntegrityFinding[] = [
-  { id: "if-1", contractId: "contract-001", severity: "Critical", category: "Missing Signatures", title: "Provider signature block incomplete", description: "The signature block on page 48 is missing the Provider representative signature and date fields.", sectionRef: "Section 14.0", pageRef: "Page 48", remediation: "Add complete signature block with name, title, and date fields", status: "Open" },
+  { id: "if-1", contractId: "all", severity: "Critical", category: "Missing Signatures", title: "Provider signature block incomplete", description: "The signature block on page 48 is missing the Provider representative signature and date fields.", sectionRef: "Section 14.0", pageRef: "Page 48", remediation: "Add complete signature block with name, title, and date fields", status: "Open" },
   { id: "if-2", contractId: "contract-001", severity: "High", category: "Cross-Reference Mismatch", title: "Appendix C referenced but not attached", description: "Section 3.2 references 'Exhibit C – Reporting & Quality' but the exhibit is not included in the document package.", sectionRef: "Section 3.2", pageRef: "Page 12", remediation: "Attach Exhibit C or update cross-reference", status: "Open" },
   { id: "if-3", contractId: "contract-001", severity: "High", category: "Product List Mismatch", title: "Rate table products don't match services scope", description: "Rate Table 1C includes 'Behavioral Health' services not listed in the Services Scope (Section 3.1).", sectionRef: "Section 3.1 vs Exhibit A", pageRef: "Page 8, 38", remediation: "Add Behavioral Health to Services Scope or remove from rate table", status: "Open" },
   { id: "if-4", contractId: "contract-001", severity: "Medium", category: "Conflicting Terms", title: "Termination notice period conflict", description: "Section 7.1 states 180 days notice but the Summary of Terms on Page 2 states 90 days.", sectionRef: "Section 7.1 vs Summary", pageRef: "Page 2, 22", remediation: "Align both references to 180 days", status: "Open" },
@@ -23,19 +24,19 @@ export default function IntegrityPage() {
   const navigate = useNavigate();
   const [findings, setFindings] = useState<IntegrityFinding[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
-  const [selectedContract, setSelectedContract] = useState("");
+  const [selectedContract, setSelectedContract] = useState("all");
   const [filterSeverity, setFilterSeverity] = useState<string>("all");
 
   useEffect(() => {
     let stored = get<IntegrityFinding[]>("oci_integrity_findings", []);
     if (stored.length === 0) { stored = seedFindings; set("oci_integrity_findings", stored); }
     setFindings(stored);
-    const c = get<Contract[]>("oci_contracts", []);
-    setContracts(c);
-    setSelectedContract(c[0]?.id || "");
+    api.getContracts().then(c => {
+      setContracts(c);
+    });
   }, []);
 
-  const contractFindings = findings.filter(f => f.contractId === selectedContract);
+  const contractFindings = selectedContract === "all" ? findings : findings.filter(f => f.contractId === selectedContract);
   const filtered = filterSeverity === "all" ? contractFindings : contractFindings.filter(f => f.severity === filterSeverity);
   const openCount = contractFindings.filter(f => f.status === "Open").length;
   const totalCount = contractFindings.length;
@@ -68,16 +69,32 @@ export default function IntegrityPage() {
 
   const severityColor = (s: string) => s === "Critical" ? "status-chip-error" : s === "High" ? "status-chip-warning" : s === "Medium" ? "status-chip-info" : "bg-muted text-muted-foreground";
 
+  const severityCounts = {
+    Critical: contractFindings.filter(f => f.severity === "Critical").length,
+    High: contractFindings.filter(f => f.severity === "High").length,
+    Medium: contractFindings.filter(f => f.severity === "Medium").length,
+    Low: contractFindings.filter(f => f.severity === "Low").length,
+  };
+
   return (
     <div className="page-container">
-      <h1 className="page-header">Contract Integrity Validation</h1>
+      <div className="flex items-center gap-3">
+        <button onClick={() => navigate(-1)} className="p-2 rounded-lg border hover:bg-muted transition-colors">
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <h1 className="page-header !mb-0">Contract Integrity Validation</h1>
+      </div>
 
       <div className="flex flex-wrap gap-4 items-end">
         <div>
           <label className="text-xs font-medium text-muted-foreground block mb-1">Contract</label>
-          <select className="border rounded-lg px-3 py-2 text-sm bg-background min-w-[300px]" value={selectedContract} onChange={e => setSelectedContract(e.target.value)}>
-            {contracts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          <div className="relative">
+            <select className="border rounded-lg px-3 py-2 text-sm bg-background min-w-[300px] appearance-none pr-8" value={selectedContract} onChange={e => setSelectedContract(e.target.value)}>
+              <option value="all">All Contracts</option>
+              {contracts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            <ChevronDown className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
+          </div>
         </div>
         <div>
           <label className="text-xs font-medium text-muted-foreground block mb-1">Severity</label>
@@ -85,6 +102,35 @@ export default function IntegrityPage() {
             <option value="all">All</option><option value="Critical">Critical</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option>
           </select>
         </div>
+      </div>
+
+      {/* Severity Breakdown Bar */}
+      <div className="bg-card border rounded-lg p-4">
+        <h3 className="text-xs font-semibold text-muted-foreground mb-3">Severity Breakdown</h3>
+        <div className="flex gap-3 mb-3">
+          {(["Critical", "High", "Medium", "Low"] as const).map(sev => (
+            <button
+              key={sev}
+              onClick={() => setFilterSeverity(filterSeverity === sev ? "all" : sev)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${filterSeverity === sev ? "ring-2 ring-secondary" : ""} ${
+                sev === "Critical" ? "bg-destructive/10 text-destructive border-destructive/20" :
+                sev === "High" ? "bg-warning/10 text-warning border-warning/20" :
+                sev === "Medium" ? "bg-primary/10 text-primary border-primary/20" :
+                "bg-muted text-muted-foreground border-border"
+              }`}
+            >
+              <span className="font-bold">{severityCounts[sev]}</span> {sev}
+            </button>
+          ))}
+        </div>
+        {contractFindings.length > 0 && (
+          <div className="w-full h-3 rounded-full bg-muted flex overflow-hidden">
+            {severityCounts.Critical > 0 && <div className="h-full bg-destructive" style={{ width: `${(severityCounts.Critical / contractFindings.length) * 100}%` }} />}
+            {severityCounts.High > 0 && <div className="h-full bg-warning" style={{ width: `${(severityCounts.High / contractFindings.length) * 100}%` }} />}
+            {severityCounts.Medium > 0 && <div className="h-full bg-primary" style={{ width: `${(severityCounts.Medium / contractFindings.length) * 100}%` }} />}
+            {severityCounts.Low > 0 && <div className="h-full bg-muted-foreground/30" style={{ width: `${(severityCounts.Low / contractFindings.length) * 100}%` }} />}
+          </div>
+        )}
       </div>
 
       {/* Integrity Score */}

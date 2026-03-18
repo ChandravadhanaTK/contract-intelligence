@@ -8,16 +8,15 @@ export default function AgentWorkspace() {
   const [logs, setLogs] = useState<AgentLog[]>([]);
   const [running, setRunning] = useState(false);
   const [contracts, setContracts] = useState<Contract[]>([]);
-  const [selectedContractId, setSelectedContractId] = useState<string>("");
+  const [selectedContractId, setSelectedContractId] = useState<string>("all");
 
   useEffect(() => {
     api.getContracts().then(c => {
       setContracts(c);
-      if (c.length > 0) setSelectedContractId(c[0].id);
     });
   }, []);
 
-  const selectedContract = contracts.find(c => c.id === selectedContractId);
+  const selectedContract = selectedContractId === "all" ? null : contracts.find(c => c.id === selectedContractId);
 
   const handleRun = async () => {
     setRunning(true);
@@ -30,7 +29,7 @@ export default function AgentWorkspace() {
       });
     });
     setRunning(false);
-    await api.addAuditEntry({ id: `a-${Date.now()}`, timestamp: new Date().toISOString(), action: "Agents Executed", detail: `All 5 agents completed processing on ${selectedContract?.name || "contract"}`, actor: "System" });
+    await api.addAuditEntry({ id: `a-${Date.now()}`, timestamp: new Date().toISOString(), action: "Agents Executed", detail: `All 5 agents completed processing on ${selectedContractId === "all" ? "all contracts" : selectedContract?.name || "contract"}`, actor: "System" });
     toast.success("All agents completed!");
   };
 
@@ -42,7 +41,7 @@ export default function AgentWorkspace() {
         <h1 className="page-header">Agent Workspace</h1>
         <button
           onClick={handleRun}
-          disabled={running || !selectedContractId}
+          disabled={running}
           className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
         >
           <Play className="w-4 h-4" /> {running ? "Running..." : "Run Agents"}
@@ -52,13 +51,14 @@ export default function AgentWorkspace() {
       {/* Document selector */}
       <div className="bg-card border rounded-lg p-4 flex items-center gap-3 flex-wrap">
         <FileText className="w-4 h-4 text-secondary" />
-        <span className="text-sm font-medium text-foreground">Document:</span>
+        <span className="text-sm font-medium text-foreground">Contract:</span>
         <div className="relative flex-1 max-w-md">
           <select
             value={selectedContractId}
             onChange={e => setSelectedContractId(e.target.value)}
             className="w-full border rounded-lg px-3 py-2 text-sm bg-background appearance-none pr-8"
           >
+            <option value="all">All Contracts</option>
             {contracts.map(c => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -67,6 +67,9 @@ export default function AgentWorkspace() {
         </div>
         {selectedContract && (
           <span className="text-xs text-muted-foreground">Uploaded: {selectedContract.uploadDate} · Status: {selectedContract.status}</span>
+        )}
+        {selectedContractId === "all" && (
+          <span className="text-xs text-muted-foreground">Agents will run across all {contracts.length} contracts</span>
         )}
       </div>
 
@@ -101,7 +104,7 @@ export default function AgentWorkspace() {
 
         <div className="bg-card border rounded-lg overflow-hidden">
           <div className="p-4 border-b bg-muted/50">
-            <h3 className="font-semibold text-sm">Run Logs {selectedContract ? `— ${selectedContract.name}` : ""}</h3>
+            <h3 className="font-semibold text-sm">Run Logs {selectedContractId === "all" ? "— All Contracts" : selectedContract ? `— ${selectedContract.name}` : ""}</h3>
           </div>
           <div className="p-4 max-h-[500px] overflow-y-auto font-mono text-xs space-y-1">
             {logs.length === 0 && <p className="text-muted-foreground">Click "Run Agents" to start...</p>}
