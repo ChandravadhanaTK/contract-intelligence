@@ -81,8 +81,8 @@ export default function Dashboard() {
           <h1 className="page-header">Welcome {currentUser?.name || "User"}</h1>
           <p className="text-sm text-muted-foreground mt-1">Here are your highlights for the day</p>
         </div>
-        <button onClick={() => setTalkToContract(!talkToContract)} className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90">
-          <MessageSquare className="w-4 h-4" /> Talk to Contract
+        <button onClick={() => setTalkToContract(!talkToContract)} className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90" title="Your AI Contract CoAuthor to write contracts faster and smarter">
+          <MessageSquare className="w-4 h-4" /> Talk to Contract Agent – Your CoAuthor
         </button>
       </div>
 
