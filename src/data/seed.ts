@@ -221,6 +221,17 @@ export function initializeSeedData() {
     localStorage.setItem("oci_clause_versions", JSON.stringify(seedClauseVersions));
     localStorage.setItem("oci_review_documents", JSON.stringify(reviewDocuments));
     localStorage.setItem("oci_review_requests", JSON.stringify(seedReviewRequests));
+    localStorage.setItem("oci_roles", JSON.stringify(seedRoles));
+    localStorage.setItem("oci_users", JSON.stringify(seedUsers));
+    localStorage.setItem("oci_current_user_id", "user-012");
     localStorage.setItem("oci_initialized", "true");
+  }
+  // Backfill roles/users for existing installs
+  if (!localStorage.getItem("oci_roles")) {
+    localStorage.setItem("oci_roles", JSON.stringify(seedRoles));
+  }
+  if (!localStorage.getItem("oci_users")) {
+    localStorage.setItem("oci_users", JSON.stringify(seedUsers));
+    localStorage.setItem("oci_current_user_id", "user-012");
   }
 }

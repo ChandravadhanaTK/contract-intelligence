@@ -2,7 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   Upload, GitCompare, BookOpen, FilePlus, Bot, Pencil,
   Workflow, Send, ShieldCheck, FileText, ChevronLeft, ChevronRight,
-  LayoutDashboard,
+  LayoutDashboard, Users,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -17,6 +17,7 @@ const navItems = [
   { label: "Downstream Feed", path: "/downstream", icon: Send },
   { label: "Obligation Compliance", path: "/compliance", icon: ShieldCheck },
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+  { label: "User Management", path: "/users", icon: Users },
 ];
 
 export function AppSidebar() {
