@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Search } from "lucide-react";
 import { api } from "@/services/mockApi";
 import type { StandardClause } from "@/types";
 import { toast } from "sonner";
