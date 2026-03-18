@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bot, Send, FileText, ArrowRight, Upload, BookOpen, List, Library, ToggleLeft, ToggleRight, MessageSquare, Zap, X, CheckCircle } from "lucide-react";
+import { Bot, Send, FileText, ArrowRight, Upload, BookOpen, List, Library, ToggleLeft, ToggleRight, MessageSquare, Zap, X, CheckCircle, Shield, UserCheck, Database, Users, Building2, FileSearch, ChevronRight } from "lucide-react";
 import { api } from "@/services/mockApi";
 import { toast } from "sonner";
 import type { DraftContract, ContractDraftDocument, CoAuthorMessage, StandardClause } from "@/types";
