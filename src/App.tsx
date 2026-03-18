@@ -31,7 +31,7 @@ const App = () => (
       <BrowserRouter>
         <AppLayout>
           <Routes>
-            <Route path="/" element={<Navigate to="/create" replace />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/create" element={<ContractCreation />} />
             <Route path="/upload" element={<UploadContract />} />
             <Route path="/deviation" element={<ContractDeviation />} />
