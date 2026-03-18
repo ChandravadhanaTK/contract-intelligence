@@ -234,4 +234,10 @@ export function initializeSeedData() {
     localStorage.setItem("oci_users", JSON.stringify(seedUsers));
     localStorage.setItem("oci_current_user_id", "user-012");
   }
+  // Backfill new users (Raj Srirangam)
+  const existingUsers = JSON.parse(localStorage.getItem("oci_users") || "[]");
+  if (!existingUsers.find((u: any) => u.id === "user-013")) {
+    existingUsers.push({ id: "user-013", name: "Raj Srirangam", email: "raj.srirangam@optum.com", roleId: "role-platform-admin", status: "Active", createdAt: "2024-05-15T09:00:00Z" });
+    localStorage.setItem("oci_users", JSON.stringify(existingUsers));
+  }
 }

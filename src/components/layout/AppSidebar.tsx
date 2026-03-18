@@ -7,8 +7,8 @@ import {
 import { useState } from "react";
 
 const navItems = [
+  { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { label: "Contract Creation", path: "/create", icon: FilePlus },
-  { label: "Upload Contract", path: "/upload", icon: Upload },
   { label: "Contract Deviation", path: "/deviation", icon: GitCompare },
   { label: "Standard Clauses", path: "/clauses", icon: BookOpen },
   { label: "Redlining", path: "/redlining", icon: Pencil },
@@ -16,7 +16,6 @@ const navItems = [
   { label: "Workflow", path: "/workflow", icon: Workflow },
   { label: "Downstream Feed", path: "/downstream", icon: Send },
   { label: "Obligation Compliance", path: "/compliance", icon: ShieldCheck },
-  { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { label: "User Management", path: "/users", icon: Users },
 ];
 
