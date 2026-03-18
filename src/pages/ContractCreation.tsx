@@ -251,6 +251,7 @@ export default function ContractCreation() {
       setChatMessages(withAgent);
 
       if (step.sampleAnswer) {
+        setGuidedUserInput(step.sampleAnswer);
         await new Promise(r => setTimeout(r, 600));
         const userMsg: CoAuthorMessage = {
           id: `guided-user-${Date.now()}`, draftId,
@@ -264,7 +265,7 @@ export default function ContractCreation() {
         const confirmMsg: CoAuthorMessage = {
           id: `guided-confirm-${Date.now()}`, draftId,
           role: "assistant",
-          text: `✅ Got it — I've captured your input for **${step.field}**. ${guidedStepIndex + 1 < guidedSteps.length ? "Click **Next Step** to continue." : "🎉 All steps complete! Click **\"Draft full contract from inputs\"** to generate the full contract."}`,
+          text: `✅ Got it — I've captured your input for **${step.field}**. ${guidedStepIndex + 1 < guidedSteps.length ? "Click **Next Step** to continue or edit the answer above and **Submit** your own." : "🎉 All steps complete! Click **\"Draft full contract from inputs\"** to generate the full contract."}`,
           time: new Date().toISOString(),
         };
         setChatMessages([...withUser, confirmMsg]);
@@ -272,7 +273,34 @@ export default function ContractCreation() {
       }
 
       setGuidedStepIndex(prev => prev + 1);
+      setGuidedUserInput("");
     }
+  };
+
+  const handleGuidedUserSubmit = async () => {
+    if (!guidedUserInput.trim()) return;
+    const draftId = savedDraftId || "draft-coauthor";
+    const stepIdx = Math.max(0, guidedStepIndex - 1);
+    const step = guidedSteps[stepIdx];
+    const userMsg: CoAuthorMessage = {
+      id: `guided-human-${Date.now()}`, draftId,
+      role: "user", text: guidedUserInput,
+      time: new Date().toISOString(),
+    };
+    const updated = [...chatMessages, userMsg];
+    setChatMessages(updated);
+
+    await new Promise(r => setTimeout(r, 400));
+    const confirmMsg: CoAuthorMessage = {
+      id: `guided-human-confirm-${Date.now()}`, draftId,
+      role: "assistant",
+      text: `✅ Got it — I've captured your custom input for **${step?.field || "this step"}**. ${guidedStepIndex < guidedSteps.length ? "Click **Next Step** to continue." : "🎉 All steps complete! Click **\"Draft full contract from inputs\"** to generate."}`,
+      time: new Date().toISOString(),
+    };
+    const withConfirm = [...updated, confirmMsg];
+    setChatMessages(withConfirm);
+    set("oci_coauthor_messages", withConfirm);
+    setGuidedUserInput("");
   };
 
   const handleApplyAction = (action: any) => {
