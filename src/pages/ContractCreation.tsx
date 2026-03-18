@@ -54,6 +54,7 @@ export default function ContractCreation() {
   const [loading, setLoading] = useState(false);
   const [standardClauses, setStandardClauses] = useState<StandardClause[]>([]);
   const [guidedStepIndex, setGuidedStepIndex] = useState(0);
+  const [guidedUserInput, setGuidedUserInput] = useState("");
   const [clauseDialogOpen, setClauseDialogOpen] = useState(false);
   const [outlineOpen, setOutlineOpen] = useState(false);
   // Pending action for human-in-the-loop
