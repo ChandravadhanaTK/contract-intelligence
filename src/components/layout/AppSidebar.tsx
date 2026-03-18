@@ -8,6 +8,7 @@ import { useState } from "react";
 
 const navItems = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+  { label: "Contracts", path: "/contracts", icon: FolderOpen },
   { label: "Contract Creation", path: "/create", icon: FilePlus },
   { label: "Contract Deviation", path: "/deviation", icon: GitCompare },
   { label: "Standard Clauses", path: "/clauses", icon: BookOpen },

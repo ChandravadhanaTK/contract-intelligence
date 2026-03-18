@@ -69,6 +69,7 @@ const App = () => {
               <Route path="/downstream" element={<DownstreamFeed />} />
               <Route path="/compliance" element={<ObligationCompliance />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/contracts" element={<ContractsPage />} />
               <Route path="/users" element={<UserManagement />} />
               <Route path="/intake" element={<IntakePage />} />
               <Route path="/credentialing" element={<CredentialingPage />} />
