@@ -6,6 +6,73 @@ import type { IntakeRequest } from "@/types";
 
 const requiredDocs = ["W-9 Form", "State License", "DEA Certificate", "Malpractice Insurance", "CAQH Profile", "NPI Verification"];
 
+const sampleIntakes: IntakeRequest[] = [
+  {
+    id: "intake-sample-1",
+    providerName: "Northwell Health Medical Group",
+    specialty: "Multi-Specialty",
+    tin: "11-2345678",
+    mpin: "MPN100201",
+    locations: ["New York, NY", "Long Island, NY", "Westchester, NY"],
+    products: ["Commercial HMO", "Medicare Advantage", "Medicaid Managed Care"],
+    requestedEffectiveDate: "2026-07-01",
+    contractType: "Facility",
+    docs: ["W-9 Form", "State License", "DEA Certificate", "Malpractice Insurance", "CAQH Profile", "NPI Verification"],
+    completenessScore: 100,
+    triageStatus: "Ready for Credentialing",
+    notes: "Large multi-site health system. Priority onboarding requested by regional VP.",
+    createdAt: "2026-03-10T09:15:00Z",
+  },
+  {
+    id: "intake-sample-2",
+    providerName: "Dr. Maria Santos, MD – Cardiology",
+    specialty: "Cardiology",
+    tin: "22-9876543",
+    mpin: "MPN100302",
+    locations: ["Houston, TX"],
+    products: ["Commercial PPO", "Medicare Advantage"],
+    requestedEffectiveDate: "2026-06-01",
+    contractType: "Specialty",
+    docs: ["W-9 Form", "State License", "Malpractice Insurance", "NPI Verification"],
+    completenessScore: 67,
+    triageStatus: "Need more info",
+    notes: "Missing DEA Certificate and CAQH Profile. Follow-up email sent 3/12.",
+    createdAt: "2026-03-08T14:30:00Z",
+  },
+  {
+    id: "intake-sample-3",
+    providerName: "Summit Behavioral Health Associates",
+    specialty: "Behavioral Health",
+    tin: "33-4567890",
+    mpin: "MPN100403",
+    locations: ["Denver, CO", "Boulder, CO"],
+    products: ["Commercial HMO", "Medicaid Managed Care"],
+    requestedEffectiveDate: "2026-08-01",
+    contractType: "Standard",
+    docs: ["W-9 Form", "State License", "DEA Certificate"],
+    completenessScore: 50,
+    triageStatus: "New",
+    notes: "New behavioral health group expanding into CO market. Requires parity compliance review.",
+    createdAt: "2026-03-15T11:00:00Z",
+  },
+  {
+    id: "intake-sample-4",
+    providerName: "Pacific Coast Imaging Centers",
+    specialty: "Radiology",
+    tin: "44-1122334",
+    mpin: "MPN100504",
+    locations: ["San Diego, CA", "Los Angeles, CA", "San Francisco, CA"],
+    products: ["Commercial PPO", "Commercial HMO", "Medicare Advantage"],
+    requestedEffectiveDate: "2026-05-15",
+    contractType: "Ancillary",
+    docs: ["W-9 Form", "State License", "DEA Certificate", "Malpractice Insurance", "CAQH Profile"],
+    completenessScore: 83,
+    triageStatus: "Ready for Drafting",
+    notes: "Multi-location imaging network. Fee schedule negotiation pending for advanced imaging (MRI/CT).",
+    createdAt: "2026-03-05T08:45:00Z",
+  },
+];
+
 function get<T>(key: string, fb: T): T { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; }
 function set(key: string, v: unknown) { localStorage.setItem(key, JSON.stringify(v)); }
 
