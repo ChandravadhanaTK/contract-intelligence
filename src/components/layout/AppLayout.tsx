@@ -1,9 +1,14 @@
 import { AppSidebar } from "./AppSidebar";
 import { AuditLogDrawer } from "../AuditLogDrawer";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { ChevronDown, Activity } from "lucide-react";
+import { ChevronDown, Activity, LogOut } from "lucide-react";
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+interface Props {
+  children: React.ReactNode;
+  onLogout: () => void;
+}
+
+export function AppLayout({ children, onLogout }: Props) {
   const { currentUser, currentRole, users, switchUser } = useCurrentUser();
 
   return (
@@ -13,7 +18,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="h-12 flex items-center justify-between px-6 border-b bg-card">
           <div />
           <div className="flex items-center gap-3">
-            {/* User/Role Switcher */}
             <div className="relative flex items-center gap-2">
               <div className="flex items-center gap-1.5">
                 <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
@@ -40,6 +44,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <Activity className="w-3.5 h-3.5 animate-pulse" />
             </div>
             <AuditLogDrawer />
+            <button onClick={onLogout} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground" title="Sign Out">
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto">
