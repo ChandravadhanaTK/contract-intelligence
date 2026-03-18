@@ -51,13 +51,14 @@ export default function AgentWorkspace() {
       {/* Document selector */}
       <div className="bg-card border rounded-lg p-4 flex items-center gap-3 flex-wrap">
         <FileText className="w-4 h-4 text-secondary" />
-        <span className="text-sm font-medium text-foreground">Document:</span>
+        <span className="text-sm font-medium text-foreground">Contract:</span>
         <div className="relative flex-1 max-w-md">
           <select
             value={selectedContractId}
             onChange={e => setSelectedContractId(e.target.value)}
             className="w-full border rounded-lg px-3 py-2 text-sm bg-background appearance-none pr-8"
           >
+            <option value="all">All Contracts</option>
             {contracts.map(c => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -66,6 +67,9 @@ export default function AgentWorkspace() {
         </div>
         {selectedContract && (
           <span className="text-xs text-muted-foreground">Uploaded: {selectedContract.uploadDate} · Status: {selectedContract.status}</span>
+        )}
+        {selectedContractId === "all" && (
+          <span className="text-xs text-muted-foreground">Agents will run across all {contracts.length} contracts</span>
         )}
       </div>
 

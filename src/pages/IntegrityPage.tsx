@@ -69,16 +69,32 @@ export default function IntegrityPage() {
 
   const severityColor = (s: string) => s === "Critical" ? "status-chip-error" : s === "High" ? "status-chip-warning" : s === "Medium" ? "status-chip-info" : "bg-muted text-muted-foreground";
 
+  const severityCounts = {
+    Critical: contractFindings.filter(f => f.severity === "Critical").length,
+    High: contractFindings.filter(f => f.severity === "High").length,
+    Medium: contractFindings.filter(f => f.severity === "Medium").length,
+    Low: contractFindings.filter(f => f.severity === "Low").length,
+  };
+
   return (
     <div className="page-container">
-      <h1 className="page-header">Contract Integrity Validation</h1>
+      <div className="flex items-center gap-3">
+        <button onClick={() => navigate(-1)} className="p-2 rounded-lg border hover:bg-muted transition-colors">
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <h1 className="page-header !mb-0">Contract Integrity Validation</h1>
+      </div>
 
       <div className="flex flex-wrap gap-4 items-end">
         <div>
           <label className="text-xs font-medium text-muted-foreground block mb-1">Contract</label>
-          <select className="border rounded-lg px-3 py-2 text-sm bg-background min-w-[300px]" value={selectedContract} onChange={e => setSelectedContract(e.target.value)}>
-            {contracts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          <div className="relative">
+            <select className="border rounded-lg px-3 py-2 text-sm bg-background min-w-[300px] appearance-none pr-8" value={selectedContract} onChange={e => setSelectedContract(e.target.value)}>
+              <option value="all">All Contracts</option>
+              {contracts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            <ChevronDown className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
+          </div>
         </div>
         <div>
           <label className="text-xs font-medium text-muted-foreground block mb-1">Severity</label>
@@ -86,6 +102,35 @@ export default function IntegrityPage() {
             <option value="all">All</option><option value="Critical">Critical</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option>
           </select>
         </div>
+      </div>
+
+      {/* Severity Breakdown Bar */}
+      <div className="bg-card border rounded-lg p-4">
+        <h3 className="text-xs font-semibold text-muted-foreground mb-3">Severity Breakdown</h3>
+        <div className="flex gap-3 mb-3">
+          {(["Critical", "High", "Medium", "Low"] as const).map(sev => (
+            <button
+              key={sev}
+              onClick={() => setFilterSeverity(filterSeverity === sev ? "all" : sev)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${filterSeverity === sev ? "ring-2 ring-secondary" : ""} ${
+                sev === "Critical" ? "bg-destructive/10 text-destructive border-destructive/20" :
+                sev === "High" ? "bg-warning/10 text-warning border-warning/20" :
+                sev === "Medium" ? "bg-primary/10 text-primary border-primary/20" :
+                "bg-muted text-muted-foreground border-border"
+              }`}
+            >
+              <span className="font-bold">{severityCounts[sev]}</span> {sev}
+            </button>
+          ))}
+        </div>
+        {contractFindings.length > 0 && (
+          <div className="w-full h-3 rounded-full bg-muted flex overflow-hidden">
+            {severityCounts.Critical > 0 && <div className="h-full bg-destructive" style={{ width: `${(severityCounts.Critical / contractFindings.length) * 100}%` }} />}
+            {severityCounts.High > 0 && <div className="h-full bg-warning" style={{ width: `${(severityCounts.High / contractFindings.length) * 100}%` }} />}
+            {severityCounts.Medium > 0 && <div className="h-full bg-primary" style={{ width: `${(severityCounts.Medium / contractFindings.length) * 100}%` }} />}
+            {severityCounts.Low > 0 && <div className="h-full bg-muted-foreground/30" style={{ width: `${(severityCounts.Low / contractFindings.length) * 100}%` }} />}
+          </div>
+        )}
       </div>
 
       {/* Integrity Score */}

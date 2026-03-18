@@ -366,14 +366,34 @@ export default function ContractCreation() {
       </div>
 
       {coAuthorMode === "guided" && (
-        <div className="px-3 py-2 bg-accent/50 border-b flex items-center justify-between">
-          <span className={`${fullSize ? "text-xs" : "text-[10px]"} text-accent-foreground font-medium`}>
-            <Zap className="w-3 h-3 inline mr-1" />
-            Guided Interview — Step {Math.min(guidedStepIndex + 1, guidedSteps.length)} of {guidedSteps.length}
-          </span>
-          <button onClick={handleGuidedNext} className={`${fullSize ? "text-xs px-3 py-1" : "text-[10px] px-2 py-0.5"} bg-secondary text-secondary-foreground rounded font-medium`}>
-            {guidedStepIndex === 0 ? "Start" : "Next Step"}
-          </button>
+        <div className="px-3 py-2 bg-accent/50 border-b space-y-2">
+          <div className="flex items-center justify-between">
+            <span className={`${fullSize ? "text-xs" : "text-[10px]"} text-accent-foreground font-medium`}>
+              <Zap className="w-3 h-3 inline mr-1" />
+              Guided Interview — Step {Math.min(guidedStepIndex + 1, guidedSteps.length)} of {guidedSteps.length}
+            </span>
+            <button onClick={handleGuidedNext} className={`${fullSize ? "text-xs px-3 py-1" : "text-[10px] px-2 py-0.5"} bg-secondary text-secondary-foreground rounded font-medium`}>
+              {guidedStepIndex === 0 ? "Start" : "Next Step"}
+            </button>
+          </div>
+          {guidedStepIndex > 0 && guidedStepIndex <= guidedSteps.length && (
+            <div className="flex items-center gap-1.5">
+              <input
+                className={`flex-1 border rounded-lg px-2 py-1 ${fullSize ? "text-xs" : "text-[10px]"} bg-background`}
+                placeholder="Type your own answer or edit the sample..."
+                value={guidedUserInput}
+                onChange={e => setGuidedUserInput(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter" && guidedUserInput.trim()) handleGuidedUserSubmit(); }}
+              />
+              <button
+                onClick={handleGuidedUserSubmit}
+                disabled={!guidedUserInput.trim()}
+                className={`${fullSize ? "text-xs px-2 py-1" : "text-[10px] px-1.5 py-0.5"} bg-primary text-primary-foreground rounded font-medium disabled:opacity-50`}
+              >
+                Submit
+              </button>
+            </div>
+          )}
         </div>
       )}
 
