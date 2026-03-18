@@ -355,6 +355,11 @@ export default function ContractsPage() {
           </div>
 
           <ScrollArea className="flex-1">
+            {/* ── Ingestion Tab ── */}
+            <TabsContent value="ingestion" className="p-5 m-0 space-y-4">
+              <ContractIngestionDetail contract={selected} />
+            </TabsContent>
+
             {/* ── Document Tab ── */}
             <TabsContent value="document" className="p-5 m-0 space-y-4">
               {selected.documentSections.map((section, idx) => {
