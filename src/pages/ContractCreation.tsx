@@ -1,10 +1,18 @@
-import { useState } from "react";
-import { Bot, Send } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Bot, Send, FileText, ArrowRight } from "lucide-react";
 import { api } from "@/services/mockApi";
 import { toast } from "sonner";
 import type { DraftContract } from "@/types";
+import { generateOptumStandardContractDoc } from "@/services/contractDocGenerator";
+import { ContractDocumentPreview } from "@/components/ContractDocumentPreview";
+import type { ContractDraftDocument } from "@/types";
+
+function get<T>(key: string, fb: T): T { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; }
+function set(key: string, v: unknown) { localStorage.setItem(key, JSON.stringify(v)); }
 
 export default function ContractCreation() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "", parties: "", effectiveDate: "", term: "", paymentRate: "", servicesScope: "",
   });
@@ -12,17 +20,100 @@ export default function ContractCreation() {
   const [chatMessages, setChatMessages] = useState<{ role: "user" | "agent"; text: string }[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [generatedDoc, setGeneratedDoc] = useState<ContractDraftDocument | null>(null);
+  const [savedDraftId, setSavedDraftId] = useState<string | null>(null);
+
+  // Load existing generated doc on mount
+  useEffect(() => {
+    const docs = get<ContractDraftDocument[]>("oci_generated_docs", []);
+    if (docs.length > 0) setGeneratedDoc(docs[docs.length - 1]);
+  }, []);
 
   const handleSave = async () => {
+    const draftId = savedDraftId || `draft-${Date.now()}`;
     const draft: DraftContract = {
-      id: `draft-${Date.now()}`,
+      id: draftId,
       ...form,
       clauses: [],
       createdAt: new Date().toISOString(),
     };
+
+    // Generate the document
+    const doc = generateOptumStandardContractDoc({
+      contractId: draftId,
+      name: form.name,
+      parties: form.parties,
+      effectiveDate: form.effectiveDate,
+      term: form.term,
+      paymentRate: form.paymentRate,
+      servicesScope: form.servicesScope,
+    });
+
+    draft.generatedDocument = doc;
     await api.saveDraft(draft);
-    await api.addAuditEntry({ id: `a-${Date.now()}`, timestamp: new Date().toISOString(), action: "Draft Created", detail: `Contract "${form.name}" drafted`, actor: "Current User" });
-    toast.success("Contract draft saved!");
+
+    // Persist generated doc
+    const docs = get<ContractDraftDocument[]>("oci_generated_docs", []);
+    const idx = docs.findIndex(d => d.contractId === draftId);
+    if (idx >= 0) docs[idx] = doc; else docs.push(doc);
+    set("oci_generated_docs", docs);
+
+    setGeneratedDoc(doc);
+    setSavedDraftId(draftId);
+
+    await api.addAuditEntry({ id: `a-${Date.now()}`, timestamp: new Date().toISOString(), action: "Draft Created", detail: `Contract "${form.name}" drafted with generated document`, actor: "ChandravadhanaTK" });
+    toast.success("Contract draft saved with generated document!");
+  };
+
+  const handleRegenerate = () => {
+    if (!savedDraftId) return;
+    const doc = generateOptumStandardContractDoc({
+      contractId: savedDraftId,
+      name: form.name,
+      parties: form.parties,
+      effectiveDate: form.effectiveDate,
+      term: form.term,
+      paymentRate: form.paymentRate,
+      servicesScope: form.servicesScope,
+    });
+    doc.version = (generatedDoc?.version || 0) + 1;
+    setGeneratedDoc(doc);
+    const docs = get<ContractDraftDocument[]>("oci_generated_docs", []);
+    const idx = docs.findIndex(d => d.contractId === savedDraftId);
+    if (idx >= 0) docs[idx] = doc; else docs.push(doc);
+    set("oci_generated_docs", docs);
+    toast.success("Document regenerated");
+  };
+
+  const handleSendToRedlining = () => {
+    if (!generatedDoc) return;
+    // Create clause versions for redlining
+    const versions = get<any[]>("oci_clause_versions", []);
+    generatedDoc.sections.forEach(sec => {
+      versions.push({
+        id: `cv-doc-${sec.id}-${Date.now()}`,
+        clauseId: `doc-section-${sec.id}`,
+        contractId: generatedDoc.contractId,
+        originalText: sec.body,
+        proposedText: sec.body,
+        acceptedText: null,
+        status: "pending",
+        timestamp: new Date().toISOString(),
+      });
+    });
+    set("oci_clause_versions", versions);
+    toast.success("Sent to Redlining");
+    navigate("/redlining");
+  };
+
+  const handleUpdateSections = (sections: ContractDraftDocument["sections"]) => {
+    if (!generatedDoc) return;
+    const updated = { ...generatedDoc, sections };
+    setGeneratedDoc(updated);
+    const docs = get<ContractDraftDocument[]>("oci_generated_docs", []);
+    const idx = docs.findIndex(d => d.id === generatedDoc.id);
+    if (idx >= 0) docs[idx] = updated;
+    set("oci_generated_docs", docs);
   };
 
   const handleChat = async () => {
@@ -49,11 +140,16 @@ export default function ContractCreation() {
 
   return (
     <div className="page-container">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="page-header">Contract Creation</h1>
-        <button onClick={() => setAgentOpen(!agentOpen)} className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90">
-          <Bot className="w-4 h-4" /> Talk to Agent – Your CoAuthor
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => navigate("/intake")} className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium hover:bg-muted">
+            <FileText className="w-4 h-4" /> Start from Provider Intake
+          </button>
+          <button onClick={() => setAgentOpen(!agentOpen)} className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90">
+            <Bot className="w-4 h-4" /> Talk to Agent – Your CoAuthor
+          </button>
+        </div>
       </div>
 
       <div className={`grid gap-6 ${agentOpen ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"}`}>
@@ -68,7 +164,7 @@ export default function ContractCreation() {
           {field("Payment / Rate Section", "paymentRate", "text", true)}
           {field("Services Scope", "servicesScope", "text", true)}
           <button onClick={handleSave} className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-medium text-sm hover:opacity-90">
-            Save Draft
+            Save Draft & Generate Document
           </button>
         </div>
 
@@ -109,6 +205,16 @@ export default function ContractCreation() {
           </div>
         )}
       </div>
+
+      {/* Generated Document Preview */}
+      {generatedDoc && (
+        <ContractDocumentPreview
+          document={generatedDoc}
+          onRegenerate={handleRegenerate}
+          onSendToRedlining={handleSendToRedlining}
+          onUpdateSections={handleUpdateSections}
+        />
+      )}
     </div>
   );
 }
