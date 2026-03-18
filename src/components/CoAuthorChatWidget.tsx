@@ -58,9 +58,9 @@ export function CoAuthorChatWidget({ requestId }: Props) {
 
   return (
     <div className="flex flex-col h-full border rounded-lg bg-card overflow-hidden">
-      <div className="p-3 border-b flex items-center gap-2 bg-muted/50">
+      <div className="p-3 border-b flex items-center gap-2 bg-muted/50" title="Your AI Contract CoAuthor to write contracts faster and smarter">
         <Bot className="w-4 h-4 text-secondary" />
-        <span className="font-semibold text-sm">Talk to Agent – Your CoAuthor</span>
+        <span className="font-semibold text-sm">Talk to Contract Agent – Your CoAuthor</span>
       </div>
 
       {/* Quick prompts */}

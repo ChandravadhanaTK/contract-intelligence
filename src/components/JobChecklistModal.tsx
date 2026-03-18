@@ -69,7 +69,7 @@ export function JobChecklistModal({ request, onClose, onUpdate }: Props) {
           <div className="bg-success/10 rounded-lg p-4">
             <h3 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-success" />
-              Done by Talk to Agent – Your CoAuthor
+              Done by Talk to Contract Agent – Your CoAuthor
             </h3>
             <p className="text-xs text-muted-foreground mb-3">These tasks have been automatically completed by the AI agent.</p>
             <div className="space-y-2">

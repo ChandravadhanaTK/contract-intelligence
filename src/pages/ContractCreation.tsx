@@ -510,9 +510,9 @@ export default function ContractCreation() {
   const renderChatPanel = (fullSize: boolean) => (
     <div className={`bg-card border rounded-xl flex flex-col ${fullSize ? "h-[600px]" : "h-[520px]"}`}>
       <div className="p-3 border-b flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" title="Your AI Contract CoAuthor to write contracts faster and smarter">
           <Bot className="w-4 h-4 text-secondary" />
-          <span className={`font-semibold ${fullSize ? "text-sm" : "text-xs"}`}>Talk to Agent – Your CoAuthor</span>
+          <span className={`font-semibold ${fullSize ? "text-sm" : "text-xs"}`}>Talk to Contract Agent – Your CoAuthor</span>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setCoAuthorMode(coAuthorMode === "freeform" ? "guided" : "freeform")} className={`flex items-center gap-1 ${fullSize ? "text-xs" : "text-[10px]"} font-medium text-muted-foreground hover:text-foreground`} title="Toggle mode">
