@@ -184,15 +184,41 @@ export default function ContractCreation() {
     setLoading(false);
   };
 
-  const handleGuidedNext = () => {
+  const handleGuidedNext = async () => {
     if (guidedStepIndex < guidedSteps.length) {
       const step = guidedSteps[guidedStepIndex];
+      const draftId = savedDraftId || "draft-coauthor";
       const agentMsg: CoAuthorMessage = {
-        id: `guided-${Date.now()}`, draftId: savedDraftId || "draft-coauthor",
+        id: `guided-${Date.now()}`, draftId,
         role: "assistant", text: `**Step ${guidedStepIndex + 1} of ${guidedSteps.length}:** ${step.question}`,
         time: new Date().toISOString(),
       };
-      setChatMessages(prev => [...prev, agentMsg]);
+      const withAgent = [...chatMessages, agentMsg];
+      setChatMessages(withAgent);
+
+      // Auto-populate sample answer after a short delay
+      if (step.sampleAnswer) {
+        await new Promise(r => setTimeout(r, 600));
+        const userMsg: CoAuthorMessage = {
+          id: `guided-user-${Date.now()}`, draftId,
+          role: "user", text: step.sampleAnswer,
+          time: new Date().toISOString(),
+        };
+        const withUser = [...withAgent, userMsg];
+        setChatMessages(withUser);
+
+        // Agent confirmation after another delay
+        await new Promise(r => setTimeout(r, 500));
+        const confirmMsg: CoAuthorMessage = {
+          id: `guided-confirm-${Date.now()}`, draftId,
+          role: "assistant",
+          text: `✅ Got it — I've captured your input for **${step.field}**. ${guidedStepIndex + 1 < guidedSteps.length ? "Click **Next Step** to continue." : "🎉 All steps complete! Click **\"Draft full contract from inputs\"** to generate the full contract."}`,
+          time: new Date().toISOString(),
+        };
+        setChatMessages([...withUser, confirmMsg]);
+        set("oci_coauthor_messages", [...withUser, confirmMsg]);
+      }
+
       setGuidedStepIndex(prev => prev + 1);
     }
   };
