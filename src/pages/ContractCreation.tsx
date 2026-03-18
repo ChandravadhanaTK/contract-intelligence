@@ -548,15 +548,7 @@ export default function ContractCreation() {
 
       {/* ═══ TAB: Bulk Upload ═══ */}
       {activeTab === "bulk" && (
-        <div className="bg-card border rounded-xl p-8 text-center">
-          <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Bulk Upload</h3>
-          <p className="text-sm text-muted-foreground mb-4">Upload multiple contracts at once for batch processing.</p>
-          <label className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg cursor-pointer hover:opacity-90 font-medium text-sm">
-            Select Multiple Files
-            <input type="file" className="hidden" accept=".pdf,.docx" multiple onChange={() => toast.success("Bulk upload initiated — processing 0 contracts")} />
-          </label>
-        </div>
+        <BulkUploadTab onNavigate={navigate} />
       )}
 
       {/* ═══ TAB: Start from Provider Intake ═══ */}
