@@ -22,6 +22,7 @@ import RatesPage from "./pages/RatesPage";
 import MonitoringPage from "./pages/MonitoringPage";
 import RenewalsPage from "./pages/RenewalsPage";
 import UserManagement from "./pages/UserManagement";
+import ContractsPage from "./pages/ContractsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
