@@ -2,7 +2,8 @@ import { useState } from "react";
 import {
   FileText, Search, ChevronRight, Calendar, Building2, User,
   CheckCircle2, Clock, AlertTriangle, Eye, Shield, Scale,
-  Hash, MapPin, Tag, Layers,
+  Hash, MapPin, Tag, Layers, ScanSearch, FileCheck, Database,
+  Table2, Brain, ImageIcon, Network, FolderTree,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -199,6 +200,105 @@ const obligationStatusColors = {
   overdue: "bg-red-100 text-red-700",
 };
 
+/* ─── Contract Ingestion Detail ─── */
+const ingestionStages = [
+  { name: "Contract Type Identification", desc: "Classify as delegate or non-delegate contract", icon: FileCheck, detail: "" },
+  { name: "Contract Preprocessing", desc: "Normalize document format, remove artifacts, standardize encoding", icon: ScanSearch, detail: "" },
+  { name: "Contract Hierarchy Classification", desc: "Map parent-child relationships between sections, exhibits, and amendments", icon: FolderTree, detail: "" },
+  { name: "Document Content Classification", desc: "Categorize sections by type: terms, rates, compliance, operational", icon: FileText, detail: "" },
+  { name: "OCR Detection of Tables & Images", desc: "Detect and extract embedded tables, images, and scanned content", icon: ImageIcon, detail: "" },
+  { name: "Layout Extraction", desc: "Parse document structure — headers, footers, columns, page breaks", icon: Layers, detail: "" },
+  { name: "Entity Extraction", desc: "Extract key entities: parties, TINs, dates, addresses, NPIs", icon: Brain, detail: "" },
+  { name: "Data Extraction", desc: "Pull structured data fields from unstructured contract text", icon: Database, detail: "" },
+  { name: "Rate / Fee Table Extraction", desc: "Identify and parse rate schedules, fee tables, and reimbursement grids", icon: Table2, detail: "" },
+];
+
+function getIngestionForContract(c: Contract) {
+  const isDelegate = c.type === "Facility" || c.name.toLowerCase().includes("network");
+  return ingestionStages.map((s, i) => {
+    const completed = c.phase !== "Intake" && c.phase !== "Drafting";
+    const inProgress = (c.phase === "Drafting" && i >= 6);
+    let detail = "";
+    if (s.name === "Contract Type Identification") detail = isDelegate ? "Identified as Delegate Contract" : "Identified as Non-Delegate Contract";
+    else if (s.name === "Contract Preprocessing") detail = `Processed ${c.documentSections.length} sections, normalized encoding`;
+    else if (s.name === "Contract Hierarchy Classification") detail = `Mapped ${c.documentSections.length} top-level sections`;
+    else if (s.name === "Document Content Classification") detail = `${c.clauses.length} clause sections, ${c.obligations.length} compliance sections identified`;
+    else if (s.name === "OCR Detection of Tables & Images") detail = c.type === "Ancillary" ? "2 tables detected via OCR" : "Document is digitally native — OCR not required";
+    else if (s.name === "Layout Extraction") detail = `Found ${c.documentSections.length} sections, ${Math.ceil(c.clauses.length / 2)} tables`;
+    else if (s.name === "Entity Extraction") detail = `TIN: ${c.tin}, Effective: ${c.effectiveDate}, State: ${c.state}`;
+    else if (s.name === "Data Extraction") detail = `Extracted ${4 + c.clauses.length} structured fields`;
+    else if (s.name === "Rate / Fee Table Extraction") detail = `${Math.ceil(c.clauses.filter(cl => cl.article.includes("IV")).length + 1)} rate tables identified`;
+    return { ...s, detail, status: inProgress ? "in-progress" as const : completed ? "done" as const : i < 5 ? "done" as const : "pending" as const };
+  });
+}
+
+function ContractIngestionDetail({ contract }: { contract: Contract }) {
+  const stages = getIngestionForContract(contract);
+  const isDelegate = contract.type === "Facility" || contract.name.toLowerCase().includes("network");
+  return (
+    <div className="space-y-4">
+      {/* Contract type badge */}
+      <div className="flex items-center gap-3 p-4 rounded-lg border border-border bg-card">
+        <Network className="w-5 h-5 text-primary" />
+        <div>
+          <p className="text-sm font-semibold text-foreground">Contract Type Classification</p>
+          <p className="text-xs text-muted-foreground">
+            This contract has been identified as a{" "}
+            <span className={`font-bold ${isDelegate ? "text-primary" : "text-secondary"}`}>
+              {isDelegate ? "Delegate Contract" : "Non-Delegate Contract"}
+            </span>
+          </p>
+        </div>
+        <Badge variant="outline" className={`ml-auto text-xs ${isDelegate ? "bg-primary/10 text-primary border-primary/30" : "bg-secondary/10 text-secondary border-secondary/30"}`}>
+          {isDelegate ? "Delegate" : "Non-Delegate"}
+        </Badge>
+      </div>
+
+      {/* Pipeline stages */}
+      <div className="space-y-2">
+        <h3 className="text-sm font-bold text-foreground">Contract Ingestion Pipeline</h3>
+        {stages.map((stage, idx) => (
+          <div key={stage.name} className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${
+            stage.status === "done" ? "border-emerald-200 bg-emerald-50/50" :
+            stage.status === "in-progress" ? "border-amber-200 bg-amber-50/50" :
+            "border-border bg-card"
+          }`}>
+            <div className={`mt-0.5 flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+              stage.status === "done" ? "bg-emerald-100 text-emerald-700" :
+              stage.status === "in-progress" ? "bg-amber-100 text-amber-700 animate-pulse" :
+              "bg-muted text-muted-foreground"
+            }`}>
+              {stage.status === "done" ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <stage.icon className="w-3.5 h-3.5 text-muted-foreground" />
+                <p className="text-sm font-semibold text-foreground">{stage.name}</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">{stage.desc}</p>
+              {stage.detail && stage.status === "done" && (
+                <p className="text-xs text-emerald-700 mt-1 font-medium">✓ {stage.detail}</p>
+              )}
+              {stage.status === "in-progress" && (
+                <div className="w-full bg-muted rounded-full h-1 mt-2">
+                  <div className="h-1 rounded-full bg-amber-400 animate-pulse" style={{ width: "60%" }} />
+                </div>
+              )}
+            </div>
+            <Badge variant="outline" className={`text-[10px] flex-shrink-0 border-0 ${
+              stage.status === "done" ? "bg-emerald-100 text-emerald-700" :
+              stage.status === "in-progress" ? "bg-amber-100 text-amber-700" :
+              "bg-muted text-muted-foreground"
+            }`}>
+              {stage.status === "done" ? "Complete" : stage.status === "in-progress" ? "Processing" : "Pending"}
+            </Badge>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ContractsPage() {
   const [selectedId, setSelectedId] = useState(CONTRACTS[0].id);
   const [search, setSearch] = useState("");
@@ -336,6 +436,7 @@ export default function ContractsPage() {
           <div className="px-5 border-b border-border bg-card">
             <TabsList className="bg-transparent p-0 h-auto gap-0">
               {[
+                { value: "ingestion", label: "Contract Ingestion", icon: Layers },
                 { value: "document", label: "Contract Document", icon: FileText },
                 { value: "clauses", label: "Clause Extraction", icon: Scale },
                 { value: "obligations", label: "Obligation Extraction", icon: Shield },
@@ -353,6 +454,11 @@ export default function ContractsPage() {
           </div>
 
           <ScrollArea className="flex-1">
+            {/* ── Ingestion Tab ── */}
+            <TabsContent value="ingestion" className="p-5 m-0 space-y-4">
+              <ContractIngestionDetail contract={selected} />
+            </TabsContent>
+
             {/* ── Document Tab ── */}
             <TabsContent value="document" className="p-5 m-0 space-y-4">
               {selected.documentSections.map((section, idx) => {
