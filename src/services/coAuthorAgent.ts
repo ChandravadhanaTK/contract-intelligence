@@ -93,15 +93,15 @@ export interface GuidedStep {
 }
 
 export const guidedSteps: GuidedStep[] = [
-  { id: "g1", question: "Let's start by confirming the contracting parties. Who is Party A (Plan) and Party B (Provider)?", field: "parties", completed: false },
-  { id: "g2", question: "What type of contract is this? (Facility / Professional / Ancillary)", field: "contractType", completed: false },
-  { id: "g3", question: "Which products/lines of business should be covered? (Commercial / Medicare Advantage / Medicaid)", field: "products", completed: false },
-  { id: "g4", question: "Please describe the services scope — specialties, locations, and service types.", field: "servicesScope", completed: false },
-  { id: "g5", question: "What payment model should we use? (FFS, % of Medicare, Case Rate, Per Diem)", field: "paymentModel", completed: false },
-  { id: "g6", question: "Should we include rate escalator terms? If yes, specify percentage, schedule, and effective date.", field: "escalator", completed: false },
-  { id: "g7", question: "What termination notice period? (30 / 60 / 90 / 180 days)", field: "termination", completed: false },
-  { id: "g8", question: "Which exhibits should be required? (Fee Schedule, Quality Reporting, BAA, Service Area)", field: "exhibits", completed: false },
-  { id: "g9", question: "Who needs to sign? Specify signature roles (e.g., VP Network, Medical Director, Provider CEO).", field: "signatures", completed: false },
+  { id: "g1", question: "Let's start by confirming the contracting parties. Who is Party A (Plan) and Party B (Provider)?", field: "parties", completed: false, sampleAnswer: "Party A: UnitedHealthcare Insurance Company. Party B: Mercy Health System – Springfield Regional Medical Center." },
+  { id: "g2", question: "What type of contract is this? (Facility / Professional / Ancillary)", field: "contractType", completed: false, sampleAnswer: "Facility – Inpatient and Outpatient Hospital Services." },
+  { id: "g3", question: "Which products/lines of business should be covered? (Commercial / Medicare Advantage / Medicaid)", field: "products", completed: false, sampleAnswer: "Commercial HMO/PPO, Medicare Advantage (HMO-POS), and Medicaid Managed Care." },
+  { id: "g4", question: "Please describe the services scope — specialties, locations, and service types.", field: "servicesScope", completed: false, sampleAnswer: "Cardiology, Orthopedics, General Surgery, Emergency Medicine, Radiology, and Lab Services at Springfield Regional Medical Center (main campus) and 3 satellite outpatient clinics." },
+  { id: "g5", question: "What payment model should we use? (FFS, % of Medicare, Case Rate, Per Diem)", field: "paymentModel", completed: false, sampleAnswer: "Blended model: Inpatient – DRG-based case rates at 115% of Medicare; Outpatient – Fee-for-Service at 140% of Medicare OPPS; ED – per-visit flat rate of $385." },
+  { id: "g6", question: "Should we include rate escalator terms? If yes, specify percentage, schedule, and effective date.", field: "escalator", completed: false, sampleAnswer: "Yes. 2.5% annual escalator tied to CPI-U, effective January 1 of each contract year, with a 4% cap." },
+  { id: "g7", question: "What termination notice period? (30 / 60 / 90 / 180 days)", field: "termination", completed: false, sampleAnswer: "180 days without cause. 60 days for cause with a 30-day cure period. Immediate termination for license revocation or federal exclusion." },
+  { id: "g8", question: "Which exhibits should be required? (Fee Schedule, Quality Reporting, BAA, Service Area)", field: "exhibits", completed: false, sampleAnswer: "Exhibit A – Fee Schedule (DRG & OPPS rates), Exhibit B – Service Area Map, Exhibit C – Quality Performance Metrics & P4P Incentives, Exhibit D – HIPAA BAA, Exhibit E – Credentialing Requirements." },
+  { id: "g9", question: "Who needs to sign? Specify signature roles (e.g., VP Network, Medical Director, Provider CEO).", field: "signatures", completed: false, sampleAnswer: "Plan: VP of Network Management, Chief Medical Officer. Provider: CEO of Mercy Health System, VP of Managed Care, Medical Director." },
 ];
 
 // ─── Process message ───
