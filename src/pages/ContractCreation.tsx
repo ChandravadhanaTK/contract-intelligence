@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bot, Send, FileText, ArrowRight, Upload, BookOpen, List, Library, ToggleLeft, ToggleRight, MessageSquare, Zap } from "lucide-react";
+import { Bot, Send, FileText, ArrowRight, Upload, BookOpen, List, Library, ToggleLeft, ToggleRight, MessageSquare, Zap, X } from "lucide-react";
 import { api } from "@/services/mockApi";
 import { toast } from "sonner";
 import type { DraftContract, ContractDraftDocument, CoAuthorMessage, StandardClause } from "@/types";
@@ -44,6 +44,7 @@ export default function ContractCreation() {
   const [activeTab, setActiveTab] = useState<TabId>("create");
   const [form, setForm] = useState({ name: "", parties: "", effectiveDate: "", term: "", paymentRate: "", servicesScope: "" });
   const [generatedDoc, setGeneratedDoc] = useState<ContractDraftDocument | null>(null);
+  const [showDocPreview, setShowDocPreview] = useState(true);
   const [savedDraftId, setSavedDraftId] = useState<string | null>(null);
 
   // CoAuthor state
@@ -55,6 +56,8 @@ export default function ContractCreation() {
   const [guidedStepIndex, setGuidedStepIndex] = useState(0);
   const [clauseDialogOpen, setClauseDialogOpen] = useState(false);
   const [outlineOpen, setOutlineOpen] = useState(false);
+  // Pending action for human-in-the-loop
+  const [pendingUpdate, setPendingUpdate] = useState<{ sections?: any[]; exhibits?: any[]; message: CoAuthorMessage } | null>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   // Upload state
@@ -87,6 +90,7 @@ export default function ContractCreation() {
     if (idx >= 0) docs[idx] = doc; else docs.push(doc);
     set("oci_generated_docs", docs);
     setGeneratedDoc(doc);
+    setShowDocPreview(true);
     setSavedDraftId(draftId);
     await api.addAuditEntry({ id: `a-${Date.now()}`, timestamp: new Date().toISOString(), action: "Draft Created", detail: `Contract "${form.name}" drafted with generated document`, actor: "System" });
     toast.success("Contract draft saved with generated document!");
@@ -125,6 +129,37 @@ export default function ContractCreation() {
     set("oci_generated_docs", docs);
   };
 
+  const applyDocumentUpdate = (sections?: any[], exhibits?: any[]) => {
+    const draftId = savedDraftId || "draft-coauthor";
+    if (sections) {
+      const doc = generatedDoc ? {
+        ...generatedDoc,
+        sections,
+        version: (generatedDoc.version || 0) + 1,
+        lastGeneratedAt: new Date().toISOString(),
+      } : {
+        id: `doc-gen-${draftId}`, contractId: draftId, title: form.name || "Provider Services Agreement",
+        parties: { partyA: form.parties.split(/[,&]/)[0]?.trim() || "Plan", partyB: form.parties.split(/[,&]/)[1]?.trim() || "Provider" },
+        effectiveDate: form.effectiveDate || "01/01/2025", term: form.term || "3 years",
+        servicesScope: form.servicesScope, paymentRateSection: form.paymentRate,
+        sections,
+        exhibits: exhibits || [],
+        renderedText: "", format: "markdown" as const, lastGeneratedAt: new Date().toISOString(), version: 1,
+      };
+      setGeneratedDoc(doc);
+      setShowDocPreview(true);
+      const docs = get<ContractDraftDocument[]>("oci_generated_docs", []);
+      const idx = docs.findIndex(d => d.contractId === draftId);
+      if (idx >= 0) docs[idx] = doc; else docs.push(doc);
+      set("oci_generated_docs", docs);
+      if (!savedDraftId) setSavedDraftId(draftId);
+    }
+    if (exhibits && generatedDoc) {
+      const doc = { ...generatedDoc, exhibits };
+      setGeneratedDoc(doc);
+    }
+  };
+
   const handleCoAuthorSend = async (text?: string) => {
     const msg = text || chatInput;
     if (!msg.trim()) return;
@@ -143,32 +178,17 @@ export default function ContractCreation() {
     setChatMessages(allMsgs);
     set("oci_coauthor_messages", allMsgs);
 
-    // Apply document updates
-    if (response.updatedSections) {
-      const doc = generatedDoc ? {
-        ...generatedDoc,
-        sections: response.updatedSections,
-        version: (generatedDoc.version || 0) + 1,
-        lastGeneratedAt: new Date().toISOString(),
-      } : {
-        id: `doc-gen-${draftId}`, contractId: draftId, title: form.name || "Provider Services Agreement",
-        parties: { partyA: form.parties.split(/[,&]/)[0]?.trim() || "Plan", partyB: form.parties.split(/[,&]/)[1]?.trim() || "Provider" },
-        effectiveDate: form.effectiveDate || "01/01/2025", term: form.term || "3 years",
-        servicesScope: form.servicesScope, paymentRateSection: form.paymentRate,
-        sections: response.updatedSections,
-        exhibits: response.updatedExhibits || [],
-        renderedText: "", format: "markdown" as const, lastGeneratedAt: new Date().toISOString(), version: 1,
+    // Human-in-the-loop: if there are document updates, ask permission first
+    if (response.updatedSections || response.updatedExhibits) {
+      const confirmMsg: CoAuthorMessage = {
+        id: `ca-confirm-${Date.now()}`, draftId, role: "assistant",
+        text: "📝 **Can I add this to the document?** I'd like to update the Generated Contract Document with the changes above. Reply **Yes** to apply or **No** to skip.",
+        time: new Date().toISOString(),
       };
-      setGeneratedDoc(doc);
-      const docs = get<ContractDraftDocument[]>("oci_generated_docs", []);
-      const idx = docs.findIndex(d => d.contractId === draftId);
-      if (idx >= 0) docs[idx] = doc; else docs.push(doc);
-      set("oci_generated_docs", docs);
-      if (!savedDraftId) setSavedDraftId(draftId);
-    }
-    if (response.updatedExhibits && generatedDoc) {
-      const doc = { ...generatedDoc, exhibits: response.updatedExhibits };
-      setGeneratedDoc(doc);
+      const withConfirm = [...allMsgs, confirmMsg];
+      setChatMessages(withConfirm);
+      set("oci_coauthor_messages", withConfirm);
+      setPendingUpdate({ sections: response.updatedSections, exhibits: response.updatedExhibits, message: response.message });
     }
 
     // Audit log
@@ -184,6 +204,39 @@ export default function ContractCreation() {
     setLoading(false);
   };
 
+  // Handle user confirmation for pending updates
+  const handleUserConfirmation = async (confirmed: boolean) => {
+    if (!pendingUpdate) return;
+    const draftId = savedDraftId || "draft-coauthor";
+
+    if (confirmed) {
+      applyDocumentUpdate(pendingUpdate.sections, pendingUpdate.exhibits);
+      const confirmMsg: CoAuthorMessage = {
+        id: `ca-applied-${Date.now()}`, draftId, role: "assistant",
+        text: "✅ **Done!** The document has been updated. You can see the changes in the Generated Provider Contract Document below.",
+        time: new Date().toISOString(),
+      };
+      setChatMessages(prev => {
+        const updated = [...prev, confirmMsg];
+        set("oci_coauthor_messages", updated);
+        return updated;
+      });
+      toast.success("Document updated successfully");
+    } else {
+      const skipMsg: CoAuthorMessage = {
+        id: `ca-skipped-${Date.now()}`, draftId, role: "assistant",
+        text: "⏭️ Understood — I've skipped updating the document. The suggested content is still available in our chat above if you need it later.",
+        time: new Date().toISOString(),
+      };
+      setChatMessages(prev => {
+        const updated = [...prev, skipMsg];
+        set("oci_coauthor_messages", updated);
+        return updated;
+      });
+    }
+    setPendingUpdate(null);
+  };
+
   const handleGuidedNext = async () => {
     if (guidedStepIndex < guidedSteps.length) {
       const step = guidedSteps[guidedStepIndex];
@@ -196,7 +249,6 @@ export default function ContractCreation() {
       const withAgent = [...chatMessages, agentMsg];
       setChatMessages(withAgent);
 
-      // Auto-populate sample answer after a short delay
       if (step.sampleAnswer) {
         await new Promise(r => setTimeout(r, 600));
         const userMsg: CoAuthorMessage = {
@@ -207,7 +259,6 @@ export default function ContractCreation() {
         const withUser = [...withAgent, userMsg];
         setChatMessages(withUser);
 
-        // Agent confirmation after another delay
         await new Promise(r => setTimeout(r, 500));
         const confirmMsg: CoAuthorMessage = {
           id: `guided-confirm-${Date.now()}`, draftId,
@@ -270,7 +321,7 @@ export default function ContractCreation() {
       needsOcr: false, layoutSummary: "14 sections, 3 tables", extractedEntities: { TIN: "90-7000000" },
       hierarchyMap: [{ section: "Section 3.1", appendixRef: "Exhibit B" }],
       confidenceByStage: { "Contract Type": 98, Layout: 95 },
-      stageLogs: docProcessingStages.map((s, i) => ({ stage: s.stage, status: "Done", detail: s.detail, timestamp: new Date().toISOString() })),
+      stageLogs: docProcessingStages.map((s) => ({ stage: s.stage, status: "Done", detail: s.detail, timestamp: new Date().toISOString() })),
     };
     await api.saveContract({ ...seedContract, name, uploadDate: new Date().toISOString().split("T")[0], status: "completed", docProcessing: processing });
     toast.success("Contract uploaded and processed!");
@@ -284,6 +335,97 @@ export default function ContractCreation() {
       ) : (
         <input type={type} className="w-full border rounded-lg px-3 py-1.5 text-xs bg-background" value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} />
       )}
+    </div>
+  );
+
+  // Render chat panel (shared between create tab and coauthor tab)
+  const renderChatPanel = (fullSize: boolean) => (
+    <div className={`bg-card border rounded-xl flex flex-col ${fullSize ? "h-[600px]" : "h-[520px]"}`}>
+      <div className="p-3 border-b flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Bot className="w-4 h-4 text-secondary" />
+          <span className={`font-semibold ${fullSize ? "text-sm" : "text-xs"}`}>Talk to Agent – Your CoAuthor</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setCoAuthorMode(coAuthorMode === "freeform" ? "guided" : "freeform")} className={`flex items-center gap-1 ${fullSize ? "text-xs" : "text-[10px]"} font-medium text-muted-foreground hover:text-foreground`} title="Toggle mode">
+            {coAuthorMode === "guided" ? <ToggleRight className="w-3.5 h-3.5 text-secondary" /> : <ToggleLeft className="w-3.5 h-3.5" />}
+            {coAuthorMode === "guided" ? "Guided" : "Freeform"}
+          </button>
+          <button onClick={() => setOutlineOpen(true)} className="text-muted-foreground hover:text-foreground" title="Outline">
+            <List className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="p-2 flex flex-wrap gap-1 border-b">
+        {quickPrompts.map(p => (
+          <button key={p} onClick={() => handleCoAuthorSend(p)} className={`${fullSize ? "text-xs px-2.5 py-1" : "text-[10px] px-2 py-0.5"} rounded-full bg-accent text-accent-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors`}>
+            {p}
+          </button>
+        ))}
+      </div>
+
+      {coAuthorMode === "guided" && (
+        <div className="px-3 py-2 bg-accent/50 border-b flex items-center justify-between">
+          <span className={`${fullSize ? "text-xs" : "text-[10px]"} text-accent-foreground font-medium`}>
+            <Zap className="w-3 h-3 inline mr-1" />
+            Guided Interview — Step {Math.min(guidedStepIndex + 1, guidedSteps.length)} of {guidedSteps.length}
+          </span>
+          <button onClick={handleGuidedNext} className={`${fullSize ? "text-xs px-3 py-1" : "text-[10px] px-2 py-0.5"} bg-secondary text-secondary-foreground rounded font-medium`}>
+            {guidedStepIndex === 0 ? "Start" : "Next Step"}
+          </button>
+        </div>
+      )}
+
+      <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
+        {chatMessages.length === 0 && !loading && (
+          <p className={`${fullSize ? "text-sm" : "text-[10px]"} text-muted-foreground text-center mt-6`}>Ask the CoAuthor to help draft your contract…</p>
+        )}
+        {chatMessages.map(m => (
+          <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div className={`max-w-[${fullSize ? "85" : "90"}%]`}>
+              <div className={`rounded-lg px-3 py-2 ${fullSize ? "text-sm" : "text-xs"} ${
+                m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+              }`}>
+                <pre className={`whitespace-pre-wrap font-sans ${fullSize ? "text-sm" : "text-xs"}`}>{m.text}</pre>
+              </div>
+              {m.citations && <CitationChips citations={m.citations} onJumpToSection={handleJumpToSection} />}
+              {m.actions?.filter(a => a.type === "update_section" && a.oldText).map((a, i) => (
+                <SuggestionDiffCard key={i} action={a} onApply={() => handleApplyAction(a)} onReject={() => toast.info("Change rejected")} />
+              ))}
+            </div>
+          </div>
+        ))}
+        {/* Human-in-the-loop buttons */}
+        {pendingUpdate && (
+          <div className="flex gap-2 justify-center py-2">
+            <button onClick={() => handleUserConfirmation(true)} className="px-4 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-medium hover:opacity-90">
+              ✅ Yes, update document
+            </button>
+            <button onClick={() => handleUserConfirmation(false)} className="px-4 py-1.5 border rounded-lg text-xs font-medium hover:bg-muted">
+              ❌ No, skip
+            </button>
+          </div>
+        )}
+        {loading && <div className="flex justify-start"><div className={`bg-muted rounded-lg px-3 py-2 ${fullSize ? "text-sm" : "text-xs"} animate-pulse`}>Thinking...</div></div>}
+        <div ref={chatBottomRef} />
+      </div>
+
+      <div className="p-2 border-t flex gap-1.5">
+        <button onClick={() => setClauseDialogOpen(true)} className="p-1.5 border rounded-lg hover:bg-muted" title="Insert from Library">
+          <Library className="w-3.5 h-3.5 text-muted-foreground" />
+        </button>
+        <input
+          className={`flex-1 border rounded-lg px-3 py-1.5 ${fullSize ? "text-sm" : "text-xs"} bg-background`}
+          placeholder="Ask agent or use /commands…"
+          value={chatInput}
+          onChange={e => setChatInput(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && handleCoAuthorSend()}
+        />
+        <button onClick={() => handleCoAuthorSend()} className="bg-secondary text-secondary-foreground p-1.5 rounded-lg hover:opacity-90">
+          <Send className="w-3.5 h-3.5" />
+        </button>
+      </div>
     </div>
   );
 
@@ -310,7 +452,7 @@ export default function ContractCreation() {
       {/* ═══ TAB: Contract Creation ═══ */}
       {activeTab === "create" && (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Left: Form */}
             <div className="bg-card border rounded-xl p-4 space-y-3">
               <h3 className="text-sm font-semibold">Contract Details</h3>
@@ -327,89 +469,7 @@ export default function ContractCreation() {
               </button>
             </div>
 
-            {/* Center: CoAuthor Chat */}
-            <div className="bg-card border rounded-xl flex flex-col h-[520px]">
-              <div className="p-3 border-b flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Bot className="w-4 h-4 text-secondary" />
-                  <span className="font-semibold text-xs">Talk to Agent – Your CoAuthor</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setCoAuthorMode(coAuthorMode === "freeform" ? "guided" : "freeform")} className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground" title="Toggle mode">
-                    {coAuthorMode === "guided" ? <ToggleRight className="w-3.5 h-3.5 text-secondary" /> : <ToggleLeft className="w-3.5 h-3.5" />}
-                    {coAuthorMode === "guided" ? "Guided" : "Freeform"}
-                  </button>
-                  <button onClick={() => setOutlineOpen(true)} className="text-muted-foreground hover:text-foreground" title="Outline">
-                    <List className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Quick prompts */}
-              <div className="p-2 flex flex-wrap gap-1 border-b">
-                {quickPrompts.map(p => (
-                  <button key={p} onClick={() => handleCoAuthorSend(p)} className="text-[10px] px-2 py-0.5 rounded-full bg-accent text-accent-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors">
-                    {p}
-                  </button>
-                ))}
-              </div>
-
-              {/* Guided mode banner */}
-              {coAuthorMode === "guided" && (
-                <div className="px-3 py-2 bg-accent/50 border-b flex items-center justify-between">
-                  <span className="text-[10px] text-accent-foreground font-medium">
-                    <Zap className="w-3 h-3 inline mr-1" />
-                    Guided Interview — Step {Math.min(guidedStepIndex + 1, guidedSteps.length)} of {guidedSteps.length}
-                  </span>
-                  <button onClick={handleGuidedNext} className="text-[10px] px-2 py-0.5 bg-secondary text-secondary-foreground rounded font-medium">
-                    {guidedStepIndex === 0 ? "Start" : "Next Step"}
-                  </button>
-                </div>
-              )}
-
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
-                {chatMessages.length === 0 && !loading && (
-                  <p className="text-[10px] text-muted-foreground text-center mt-6">Ask the CoAuthor to help draft your contract…</p>
-                )}
-                {chatMessages.map(m => (
-                  <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className="max-w-[90%]">
-                      <div className={`rounded-lg px-3 py-2 text-xs ${
-                        m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-                      }`}>
-                        <pre className="whitespace-pre-wrap font-sans text-xs">{m.text}</pre>
-                      </div>
-                      {m.citations && <CitationChips citations={m.citations} onJumpToSection={handleJumpToSection} />}
-                      {m.actions?.filter(a => a.type === "update_section" && a.oldText).map((a, i) => (
-                        <SuggestionDiffCard key={i} action={a} onApply={() => handleApplyAction(a)} onReject={() => toast.info("Change rejected")} />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                {loading && <div className="flex justify-start"><div className="bg-muted rounded-lg px-3 py-2 text-xs animate-pulse">Thinking...</div></div>}
-                <div ref={chatBottomRef} />
-              </div>
-
-              {/* Input */}
-              <div className="p-2 border-t flex gap-1.5">
-                <button onClick={() => setClauseDialogOpen(true)} className="p-1.5 border rounded-lg hover:bg-muted" title="Insert from Library">
-                  <Library className="w-3.5 h-3.5 text-muted-foreground" />
-                </button>
-                <input
-                  className="flex-1 border rounded-lg px-3 py-1.5 text-xs bg-background"
-                  placeholder="Ask agent or use /commands…"
-                  value={chatInput}
-                  onChange={e => setChatInput(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && handleCoAuthorSend()}
-                />
-                <button onClick={() => handleCoAuthorSend()} className="bg-secondary text-secondary-foreground p-1.5 rounded-lg hover:opacity-90">
-                  <Send className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Right: Draft Checklist + Draft Outline */}
+            {/* Right: Checklist */}
             <div className="space-y-4">
               <DraftChecklistPanel items={checklist} />
               {generatedDoc && (
@@ -433,12 +493,13 @@ export default function ContractCreation() {
           </div>
 
           {/* Generated Document Preview */}
-          {generatedDoc && (
+          {generatedDoc && showDocPreview && (
             <ContractDocumentPreview
               document={generatedDoc}
               onRegenerate={handleRegenerate}
               onSendToRedlining={handleSendToRedlining}
               onUpdateSections={handleUpdateSections}
+              onClose={() => setShowDocPreview(false)}
             />
           )}
         </>
@@ -502,7 +563,7 @@ export default function ContractCreation() {
       {activeTab === "intake" && (
         <div className="bg-card border rounded-xl p-8 space-y-4">
           <h3 className="text-lg font-semibold">Start from Provider Intake</h3>
-          <p className="text-sm text-muted-foreground">Pre-fill contract creation from an existing Provider Intake request. This pulls provider data, credentials, and service details into the contract form automatically.</p>
+          <p className="text-sm text-muted-foreground">Pre-fill contract creation from an existing Provider Intake request.</p>
           <button onClick={() => navigate("/intake")} className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:opacity-90">
             <ArrowRight className="w-4 h-4" /> Go to Provider Intake & Triage
           </button>
@@ -512,84 +573,10 @@ export default function ContractCreation() {
       {/* ═══ TAB: Full CoAuthor (standalone) ═══ */}
       {activeTab === "coauthor" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Full chat panel */}
-          <div className="lg:col-span-2 bg-card border rounded-xl flex flex-col h-[600px]">
-            <div className="p-3 border-b flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bot className="w-4 h-4 text-secondary" />
-                <span className="font-semibold text-sm">Talk to Agent – Your CoAuthor</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => setCoAuthorMode(coAuthorMode === "freeform" ? "guided" : "freeform")} className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
-                  {coAuthorMode === "guided" ? <ToggleRight className="w-4 h-4 text-secondary" /> : <ToggleLeft className="w-4 h-4" />}
-                  {coAuthorMode === "guided" ? "Guided Interview" : "Freeform Chat"}
-                </button>
-                <button onClick={() => setOutlineOpen(true)} className="text-muted-foreground hover:text-foreground" title="Document Outline">
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-2 flex flex-wrap gap-1.5 border-b">
-              {quickPrompts.map(p => (
-                <button key={p} onClick={() => handleCoAuthorSend(p)} className="text-xs px-2.5 py-1 rounded-full bg-accent text-accent-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors">
-                  {p}
-                </button>
-              ))}
-            </div>
-
-            {coAuthorMode === "guided" && (
-              <div className="px-3 py-2 bg-accent/50 border-b flex items-center justify-between">
-                <span className="text-xs text-accent-foreground font-medium">
-                  <Zap className="w-3.5 h-3.5 inline mr-1" />Guided Interview — Step {Math.min(guidedStepIndex + 1, guidedSteps.length)} of {guidedSteps.length}
-                </span>
-                <button onClick={handleGuidedNext} className="text-xs px-3 py-1 bg-secondary text-secondary-foreground rounded font-medium">
-                  {guidedStepIndex === 0 ? "Start Interview" : "Next Step"}
-                </button>
-              </div>
-            )}
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
-              {chatMessages.length === 0 && !loading && (
-                <p className="text-sm text-muted-foreground text-center mt-8">Ask the CoAuthor to help draft your provider contract…</p>
-              )}
-              {chatMessages.map(m => (
-                <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className="max-w-[85%]">
-                    <div className={`rounded-lg px-3 py-2 text-sm ${
-                      m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-                    }`}>
-                      <pre className="whitespace-pre-wrap font-sans text-sm">{m.text}</pre>
-                    </div>
-                    {m.citations && <CitationChips citations={m.citations} onJumpToSection={handleJumpToSection} />}
-                    {m.actions?.filter(a => a.type === "update_section" && a.oldText).map((a, i) => (
-                      <SuggestionDiffCard key={i} action={a} onApply={() => handleApplyAction(a)} onReject={() => toast.info("Change rejected")} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-              {loading && <div className="flex justify-start"><div className="bg-muted rounded-lg px-3 py-2 text-sm animate-pulse">Thinking...</div></div>}
-              <div ref={chatBottomRef} />
-            </div>
-
-            <div className="p-3 border-t flex gap-2">
-              <button onClick={() => setClauseDialogOpen(true)} className="p-2 border rounded-lg hover:bg-muted" title="Insert from Library">
-                <Library className="w-4 h-4 text-muted-foreground" />
-              </button>
-              <input
-                className="flex-1 border rounded-lg px-3 py-2 text-sm bg-background"
-                placeholder="Ask agent or use /outline, /add section, /revise section, /insert clause…"
-                value={chatInput}
-                onChange={e => setChatInput(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleCoAuthorSend()}
-              />
-              <button onClick={() => handleCoAuthorSend()} className="bg-secondary text-secondary-foreground p-2 rounded-lg hover:opacity-90">
-                <Send className="w-4 h-4" />
-              </button>
-            </div>
+          <div className="lg:col-span-2">
+            {renderChatPanel(true)}
           </div>
 
-          {/* Right sidebar */}
           <div className="space-y-4">
             <DraftChecklistPanel items={checklist} />
             {generatedDoc && (
@@ -608,13 +595,14 @@ export default function ContractCreation() {
           </div>
 
           {/* Document preview below */}
-          {generatedDoc && (
+          {generatedDoc && showDocPreview && (
             <div className="lg:col-span-3">
               <ContractDocumentPreview
                 document={generatedDoc}
                 onRegenerate={handleRegenerate}
                 onSendToRedlining={handleSendToRedlining}
                 onUpdateSections={handleUpdateSections}
+                onClose={() => setShowDocPreview(false)}
               />
             </div>
           )}

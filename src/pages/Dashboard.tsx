@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Eye, ArrowRight, MessageSquare, Calendar, Shield, AlertTriangle } from "lucide-react";
 import { api } from "@/services/mockApi";
 import type { ReviewRequest, Contract } from "@/types";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 function get<T>(key: string, fb: T): T { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; }
@@ -22,6 +23,7 @@ const requestsByType = [
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { currentUser } = useCurrentUser();
   const [requests, setRequests] = useState<ReviewRequest[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [talkToContract, setTalkToContract] = useState(false);
@@ -40,11 +42,8 @@ export default function Dashboard() {
   const exceptionCount = requests.filter((r) => r.status === "Exception").length;
   const loadReadyCount = requests.filter((r) => r.loadReady).length;
 
-  // Renewals count
   const renewals = get<any[]>("oci_renewals", []);
   const renewalsDue30 = renewals.filter((r: any) => r.daysUntil <= 30).length;
-
-  // Disputes count
   const disputes = get<any[]>("oci_disputes", []);
   const openDisputes = disputes.filter((d: any) => d.status === "Open").length;
 
@@ -59,7 +58,7 @@ export default function Dashboard() {
   ];
 
   const handleView = async (h: typeof highlights[0]) => {
-    await api.addAuditEntry({ id: `a-${Date.now()}`, timestamp: new Date().toISOString(), action: "Dashboard View Click", detail: `Navigated to ${h.route} with filter: ${h.filter}`, actor: "ChandravadhanaTK" });
+    await api.addAuditEntry({ id: `a-${Date.now()}`, timestamp: new Date().toISOString(), action: "Dashboard View Click", detail: `Navigated to ${h.route} with filter: ${h.filter}`, actor: currentUser?.name || "System" });
     if (h.filter) navigate(`${h.route}?filter=${encodeURIComponent(h.filter)}`);
     else navigate(h.route);
   };
@@ -79,7 +78,7 @@ export default function Dashboard() {
     <div className="page-container">
       <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
         <div>
-          <h1 className="page-header">Welcome ChandravadhanaTK</h1>
+          <h1 className="page-header">Welcome {currentUser?.name || "User"}</h1>
           <p className="text-sm text-muted-foreground mt-1">Here are your highlights for the day</p>
         </div>
         <button onClick={() => setTalkToContract(!talkToContract)} className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90">
@@ -88,7 +87,6 @@ export default function Dashboard() {
       </div>
 
       <div className={`grid gap-6 ${talkToContract ? "grid-cols-1 lg:grid-cols-3" : "grid-cols-1 lg:grid-cols-2"}`}>
-        {/* Highlights */}
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-foreground">Highlights</h2>
           {highlights.map((h) => (
@@ -102,8 +100,6 @@ export default function Dashboard() {
               </button>
             </div>
           ))}
-
-          {/* Contract Lineage */}
           <div className="bg-card border rounded-lg p-4">
             <h3 className="text-sm font-semibold mb-3">Contract Lineage</h3>
             <div className="flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
@@ -117,7 +113,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Charts */}
         <div className="space-y-6">
           <div className="bg-card border rounded-lg p-5">
             <h3 className="text-sm font-semibold mb-4">Manual Review Requests – Monthly Trend</h3>
@@ -149,7 +144,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Talk to Contract panel */}
         {talkToContract && (
           <div className="bg-card border rounded-xl flex flex-col h-[600px]">
             <div className="p-3 border-b flex items-center gap-2">

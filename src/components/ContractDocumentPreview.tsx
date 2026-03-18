@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, Pencil, RefreshCw, Download, Copy, Send } from "lucide-react";
+import { Eye, Pencil, RefreshCw, Download, Copy, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import type { ContractDraftDocument } from "@/types";
 
@@ -8,9 +8,10 @@ interface Props {
   onRegenerate: () => void;
   onSendToRedlining: () => void;
   onUpdateSections: (sections: ContractDraftDocument["sections"]) => void;
+  onClose?: () => void;
 }
 
-export function ContractDocumentPreview({ document, onRegenerate, onSendToRedlining, onUpdateSections }: Props) {
+export function ContractDocumentPreview({ document, onRegenerate, onSendToRedlining, onUpdateSections, onClose }: Props) {
   const [editMode, setEditMode] = useState(false);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
@@ -51,7 +52,6 @@ export function ContractDocumentPreview({ document, onRegenerate, onSendToRedlin
 
   return (
     <div className="bg-card border rounded-xl">
-      {/* Toolbar */}
       <div className="flex items-center justify-between p-4 border-b flex-wrap gap-2">
         <h3 className="text-sm font-semibold text-foreground">Generated Provider Contract Document (Optum Standard)</h3>
         <div className="flex gap-2 flex-wrap">
@@ -70,10 +70,14 @@ export function ContractDocumentPreview({ document, onRegenerate, onSendToRedlin
           <button onClick={onSendToRedlining} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground">
             <Send className="w-3 h-3" /> Send to Redlining
           </button>
+          {onClose && (
+            <button onClick={onClose} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border bg-background hover:bg-destructive hover:text-destructive-foreground transition-colors">
+              <X className="w-3 h-3" /> Close
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Document body */}
       <div className="p-6 max-h-[600px] overflow-y-auto">
         <div className="prose prose-sm max-w-none">
           <h1 className="text-xl font-bold text-primary border-b-2 border-secondary pb-2 mb-6">PROVIDER SERVICES AGREEMENT</h1>
@@ -81,7 +85,7 @@ export function ContractDocumentPreview({ document, onRegenerate, onSendToRedlin
           <hr className="my-4" />
 
           {document.sections.map((sec) => (
-            <div key={sec.id} className="mb-6">
+            <div key={sec.id} className="mb-6" data-section={sec.headingNumber}>
               <h3 className="text-sm font-bold text-primary mb-2">{sec.headingNumber} {sec.title}</h3>
               {editMode && editingSectionId === sec.id ? (
                 <div className="space-y-2">
