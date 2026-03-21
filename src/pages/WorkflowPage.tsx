@@ -19,7 +19,12 @@ const statusChipClass: Record<string, string> = {
   "Sent for approval": "status-chip-info",
 };
 
-export default function WorkflowPage() {
+interface WorkflowPageProps {
+  embedded?: boolean;
+  initialTab?: "workflow" | "review" | "hitl" | "agents";
+}
+
+export default function WorkflowPage({ embedded = false, initialTab }: WorkflowPageProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [contracts, setContracts] = useState<Contract[]>([]);
@@ -31,7 +36,7 @@ export default function WorkflowPage() {
   const [showLoadReady, setShowLoadReady] = useState(false);
   const [checklistReq, setChecklistReq] = useState<ReviewRequest | null>(null);
   const [workspaceReq, setWorkspaceReq] = useState<ReviewRequest | null>(null);
-  const [activeTab, setActiveTab] = useState<"workflow" | "review" | "hitl" | "agents">("review");
+  const [activeTab, setActiveTab] = useState<"workflow" | "review" | "hitl" | "agents">(initialTab || "review");
 
   // Agent workspace state
   const [agentLogs, setAgentLogs] = useState<AgentLog[]>([]);
