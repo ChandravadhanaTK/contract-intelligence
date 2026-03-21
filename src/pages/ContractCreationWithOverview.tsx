@@ -179,7 +179,7 @@ export default function ContractCreationWithOverview() {
           <ContractCreation embedded initialTab="intake" />
         </TabsContent>
         <TabsContent value="coauthor">
-          <ContractCreation embedded initialTab="coauthor" />
+          <ContractPilotTab />
         </TabsContent>
       </Tabs>
     </div>
