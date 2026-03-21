@@ -1,10 +1,11 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Upload, GitCompare, BookOpen, Bot, Pencil,
   Workflow, Send, ShieldCheck, FileText, ChevronLeft, ChevronRight,
   LayoutDashboard, Users, FolderOpen, Shield, ClipboardList,
 } from "lucide-react";
 import { useState } from "react";
+import optumLogo from "@/assets/optum-logo.png";
 
 const navItems = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
@@ -20,6 +21,7 @@ const navItems = [
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <aside
@@ -28,10 +30,12 @@ export function AppSidebar() {
       } min-h-screen`}
     >
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
-        <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center flex-shrink-0">
-          <FileText className="w-4 h-4 text-sidebar-primary-foreground" />
-        </div>
+      <div
+        className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border cursor-pointer"
+        onClick={() => navigate("/dashboard")}
+        title="Go to Home"
+      >
+        <img src={optumLogo} alt="Optum" className="w-8 h-8 rounded-lg flex-shrink-0" />
         {!collapsed && (
           <div className="overflow-hidden">
             <h1 className="text-sm font-bold text-sidebar-primary-foreground leading-tight">Optum</h1>
