@@ -5,10 +5,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLayout } from "@/components/layout/AppLayout";
 import LoginPage from "./pages/LoginPage";
-import UploadContract from "./pages/UploadContract";
 import ContractDeviation from "./pages/ContractDeviation";
 import StandardClauses from "./pages/StandardClauses";
-import ContractCreation from "./pages/ContractCreation";
 import AgentWorkspace from "./pages/AgentWorkspace";
 import Redlining from "./pages/Redlining";
 import WorkflowPage from "./pages/WorkflowPage";
@@ -24,7 +22,7 @@ import RenewalsPage from "./pages/RenewalsPage";
 import UserManagement from "./pages/UserManagement";
 import ContractsPage from "./pages/ContractsPage";
 import ContractViewerPage from "./pages/ContractViewerPage";
-import DigitizationPage from "./pages/DigitizationPage";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,8 +59,9 @@ const App = () => {
           <AppLayout onLogout={handleLogout}>
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/create" element={<ContractCreation />} />
-              <Route path="/upload" element={<UploadContract />} />
+              <Route path="/create" element={<Navigate to="/contracts?tab=creation" replace />} />
+              <Route path="/upload" element={<Navigate to="/contracts?tab=upload" replace />} />
+              <Route path="/digitization" element={<Navigate to="/contracts?tab=digitize" replace />} />
               <Route path="/deviation" element={<ContractDeviation />} />
               <Route path="/clauses" element={<StandardClauses />} />
               <Route path="/redlining" element={<Redlining />} />
@@ -73,7 +72,6 @@ const App = () => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/contracts" element={<ContractsPage />} />
               <Route path="/contracts/:id" element={<ContractViewerPage />} />
-              <Route path="/digitization" element={<DigitizationPage />} />
               <Route path="/users" element={<UserManagement />} />
               <Route path="/intake" element={<IntakePage />} />
               <Route path="/credentialing" element={<CredentialingPage />} />

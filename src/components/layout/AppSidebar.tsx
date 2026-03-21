@@ -1,15 +1,14 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  Upload, GitCompare, BookOpen, FilePlus, Bot, Pencil,
+  Upload, GitCompare, BookOpen, Bot, Pencil,
   Workflow, Send, ShieldCheck, FileText, ChevronLeft, ChevronRight,
-  LayoutDashboard, Users, FolderOpen, ScanLine,
+  LayoutDashboard, Users, FolderOpen,
 } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { label: "Contracts", path: "/contracts", icon: FolderOpen },
-  { label: "Contract Creation", path: "/create", icon: FilePlus },
   { label: "Standard Clauses", path: "/clauses", icon: BookOpen },
   { label: "Contract Deviation", path: "/deviation", icon: GitCompare },
   { label: "Redlining", path: "/redlining", icon: Pencil },
@@ -17,7 +16,7 @@ const navItems = [
   { label: "Workflow", path: "/workflow", icon: Workflow },
   { label: "Downstream Feed", path: "/downstream", icon: Send },
   { label: "Obligation Tracker", path: "/compliance", icon: ShieldCheck },
-  { label: "Digitization", path: "/digitization", icon: ScanLine },
+  
   { label: "User Management", path: "/users", icon: Users },
 ];
 
