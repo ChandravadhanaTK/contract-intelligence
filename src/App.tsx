@@ -34,6 +34,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => {
+  useGlobalAuditTracker();
   const [loggedIn, setLoggedIn] = useState(() => localStorage.getItem("oci_logged_in") === "true");
 
   const handleLogin = (userId: string) => {
