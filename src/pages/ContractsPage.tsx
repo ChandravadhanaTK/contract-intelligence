@@ -212,53 +212,10 @@ function AuditLogTab() {
 
 /* ── Main ContractsPage ── */
 export default function ContractsPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = (searchParams.get("tab") as TabId) || "contracts";
-
-  const setActiveTab = (tab: TabId) => {
-    setSearchParams({ tab });
-  };
-
-  const unreadCount = seedNotifications.filter(n => !n.read).length;
-
   return (
     <div className="page-container">
       <h1 className="page-header">Contracts</h1>
-
-      {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-border mb-6 overflow-x-auto">
-        {tabs.map(tab => {
-          const isActive = activeTab === tab.id;
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                isActive
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {!tab.iconOnly && <span>{tab.label}</span>}
-              {tab.id === "notifications" && unreadCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Tab content */}
-      {activeTab === "contracts" && <ContractsRepository />}
-      {activeTab === "digitize" && <DigitizationPage />}
-      {activeTab === "creation" && <ContractCreation />}
-      {activeTab === "upload" && <UploadContract />}
-      {activeTab === "notifications" && <NotificationsPanel />}
-      {activeTab === "audit" && <AuditLogTab />}
+      <ContractsRepository />
     </div>
   );
 }

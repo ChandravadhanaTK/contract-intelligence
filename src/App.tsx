@@ -22,6 +22,9 @@ import RenewalsPage from "./pages/RenewalsPage";
 import UserManagement from "./pages/UserManagement";
 import ContractsPage from "./pages/ContractsPage";
 import ContractViewerPage from "./pages/ContractViewerPage";
+import ContractCreation from "./pages/ContractCreation";
+import UploadContract from "./pages/UploadContract";
+import DigitizationPage from "./pages/DigitizationPage";
 
 import NotFound from "./pages/NotFound";
 
@@ -59,9 +62,9 @@ const App = () => {
           <AppLayout onLogout={handleLogout}>
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/create" element={<Navigate to="/contracts?tab=creation" replace />} />
-              <Route path="/upload" element={<Navigate to="/contracts?tab=upload" replace />} />
-              <Route path="/digitization" element={<Navigate to="/contracts?tab=digitize" replace />} />
+              <Route path="/create" element={<ContractCreation />} />
+              <Route path="/upload" element={<UploadContract />} />
+              <Route path="/digitization" element={<DigitizationPage />} />
               <Route path="/deviation" element={<ContractDeviation />} />
               <Route path="/clauses" element={<StandardClauses />} />
               <Route path="/redlining" element={<Redlining />} />

@@ -5,7 +5,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   ChevronDown, LogOut, Search, Bell, Upload, ScanLine, Sparkles, X,
-  FileText, BookOpen, ClipboardList, Send, Bot,
+  FileText, BookOpen, ClipboardList, Send, Bot, FilePlus,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
 
@@ -234,10 +234,8 @@ export function AppLayout({ children, onLogout }: Props) {
       <AppSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-12 flex items-center justify-between px-4 border-b bg-card gap-3">
-          {/* Left: page title */}
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-sm font-semibold text-foreground truncate">{pageTitle}</span>
-          </div>
+          {/* Left: spacer */}
+          <div className="flex items-center gap-2 min-w-0" />
 
           {/* Center: Search */}
           <div className="flex-1 max-w-md mx-4">
@@ -255,10 +253,13 @@ export function AppLayout({ children, onLogout }: Props) {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <button onClick={() => navigate("/contracts?tab=digitize")} className="px-3 py-1.5 text-xs font-medium border rounded-lg hover:bg-muted transition-colors flex items-center gap-1.5">
+            <button onClick={() => navigate("/digitization")} className="px-3 py-1.5 text-xs font-medium border rounded-lg hover:bg-muted transition-colors flex items-center gap-1.5">
               <ScanLine className="w-3.5 h-3.5" /> Digitize Legacy
             </button>
-            <button onClick={() => navigate("/contracts?tab=upload")} className="px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-colors flex items-center gap-1.5">
+            <button onClick={() => navigate("/create")} className="px-3 py-1.5 text-xs font-medium border rounded-lg hover:bg-muted transition-colors flex items-center gap-1.5">
+              <FilePlus className="w-3.5 h-3.5" /> Contract Creation
+            </button>
+            <button onClick={() => navigate("/upload")} className="px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-colors flex items-center gap-1.5">
               <Upload className="w-3.5 h-3.5" /> Upload Contracts
             </button>
 
