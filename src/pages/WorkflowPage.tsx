@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Search, Eye, Pencil, MessageSquare, ArrowRight, Shield } from "lucide-react";
+import { Search, Eye, Pencil, MessageSquare, ArrowRight, Shield, Play, FileText, ChevronDown } from "lucide-react";
 import { api } from "@/services/mockApi";
 import { Timeline } from "@/components/Timeline";
 import { JobChecklistModal } from "@/components/JobChecklistModal";
 import { ReviewWorkspace } from "@/components/ReviewWorkspace";
 import { toast } from "sonner";
-import type { Contract, ReviewDocument, ReviewRequest, WorkflowStage, IntegrityFinding } from "@/types";
+import type { Contract, ReviewDocument, ReviewRequest, WorkflowStage, IntegrityFinding, AgentLog } from "@/types";
 
 function get<T>(key: string, fb: T): T { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; }
 
