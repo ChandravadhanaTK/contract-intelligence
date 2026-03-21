@@ -19,7 +19,7 @@ export default function ContractsPage() {
             <ScanLine className="w-3.5 h-3.5" /> Digitize Legacy
           </TabsTrigger>
           <TabsTrigger value="creation" className="flex items-center gap-1.5 text-xs">
-            <FileText className="w-3.5 h-3.5" /> Contract Creation
+            <FileText className="w-3.5 h-3.5" /> NewGen Contract Creation
           </TabsTrigger>
         </TabsList>
 

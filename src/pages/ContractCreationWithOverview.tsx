@@ -70,6 +70,7 @@ export default function ContractCreationWithOverview() {
             <div>
               <h1 className="page-header">NewGen Contract Digitization</h1>
               <p className="text-sm text-muted-foreground mt-1">OCR + AI pipeline for creating payer contracts into structured data</p>
+              <div className="mt-4" />
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
                 {kpiCards.map(kpi => (
                   <div key={kpi.label} className="kpi-card flex items-start gap-3">
