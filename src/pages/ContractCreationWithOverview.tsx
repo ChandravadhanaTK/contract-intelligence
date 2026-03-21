@@ -561,6 +561,7 @@ function UploadContractTab() {
 
 export default function ContractCreationWithOverview() {
   const [subTab, setSubTab] = useState("newgen");
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-6">
