@@ -3,9 +3,28 @@ import { FileText, PenLine, Users, Eye, CheckCircle2, Globe, ArrowDownToLine, Cl
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 import WorkflowPage from "./WorkflowPage";
 import ContractCreation from "./ContractCreation";
+
+const complianceScoreData = [
+  { name: "Compliant", value: 24 },
+  { name: "Review", value: 9 },
+  { name: "Non-Compliant", value: 5 },
+  { name: "Overdue", value: 4 },
+];
+const complianceScoreColors = ["hsl(142, 71%, 45%)", "hsl(38, 92%, 50%)", "hsl(0, 84%, 60%)", "hsl(0, 72%, 50%)"];
+const complianceTotal = complianceScoreData.reduce((a, b) => a + b.value, 0);
+const compliancePercent = Math.round((complianceScoreData[0].value / complianceTotal) * 100);
+
+const categoryCompliance = [
+  { category: "Payment Terms", compliant: 8, total: 10 },
+  { category: "Termination", compliant: 6, total: 7 },
+  { category: "HIPAA", compliant: 5, total: 5 },
+  { category: "Liability", compliant: 3, total: 6 },
+  { category: "Confidentiality", compliant: 7, total: 8 },
+  { category: "Dispute Res.", compliant: 4, total: 6 },
+];
 
 const complianceMetrics = [
   { label: "Fully Signed", value: 18, icon: <CheckCircle2 className="w-4 h-4" />, accent: "bg-emerald-100 text-emerald-700", subtitle: "Execution complete" },
