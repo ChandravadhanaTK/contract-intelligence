@@ -97,7 +97,7 @@ export default function ContractCreationWithOverview() {
       <Tabs value={subTab} onValueChange={setSubTab}>
         <TabsList className="bg-muted/60 flex-wrap h-auto gap-1 p-1">
           <TabsTrigger value="newgen" className="flex items-center gap-1.5 text-xs">
-            <Zap className="w-3.5 h-3.5" /> NewGen Contract Digitization
+            <Zap className="w-3.5 h-3.5" /> Dashboard
           </TabsTrigger>
           <TabsTrigger value="review" className="flex items-center gap-1.5 text-xs">
             <ClipboardList className="w-3.5 h-3.5" /> Review Contract
