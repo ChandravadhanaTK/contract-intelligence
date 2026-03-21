@@ -368,6 +368,7 @@ export default function ContractCreation() {
   const [outlineOpen, setOutlineOpen] = useState(false);
   // Pending action for human-in-the-loop
   const [pendingUpdate, setPendingUpdate] = useState<{ sections?: any[]; exhibits?: any[]; message: CoAuthorMessage } | null>(null);
+  const [pendingGuidedGeneration, setPendingGuidedGeneration] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   // Upload state
