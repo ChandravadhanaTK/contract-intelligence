@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FileText, Search, Upload, ScanLine, Eye, RefreshCw, MoreHorizontal,
-  CheckCircle2, Clock, AlertTriangle, XCircle, Loader2, X,
+  CheckCircle2, Clock, AlertTriangle, XCircle, Loader2, X, ChevronLeft,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
 import type { DigitizationDocument } from "@/data/seed";
