@@ -88,7 +88,7 @@ export default function Dashboard() {
             <h3 className="text-sm font-semibold">Compliance & Obligations</h3>
             <div className="flex items-center gap-3">
               <span className="text-lg font-bold text-foreground">{compliancePct}%</span>
-              <button onClick={() => navigate("/compliance")} className="text-xs text-secondary font-medium hover:underline flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></button>
+              <button onClick={() => navigate("/obligation-tracker")} className="text-xs text-secondary font-medium hover:underline flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></button>
             </div>
           </div>
           <div className="space-y-2.5">
@@ -106,7 +106,7 @@ export default function Dashboard() {
         <div className="bg-card border rounded-lg p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold">Payer Performance</h3>
-            <button onClick={() => navigate("/contracts")} className="text-xs text-secondary font-medium hover:underline flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></button>
+            <button onClick={() => navigate("/compliance-hub")} className="text-xs text-secondary font-medium hover:underline flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
@@ -145,7 +145,10 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Provider Families */}
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold">Provider Families</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Provider Families</h3>
+            <button onClick={() => navigate("/contracts")} className="text-xs text-secondary font-medium hover:underline flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></button>
+          </div>
           {seedProviderFamilies.map(pf => (
             <div key={pf.id} className="bg-card border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate("/contracts")}>
               <p className="text-sm font-semibold text-foreground">{pf.name}</p>

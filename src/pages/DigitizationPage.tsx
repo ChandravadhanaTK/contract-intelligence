@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FileText, Search, Upload, ScanLine, Eye, RefreshCw, MoreHorizontal,
-  CheckCircle2, Clock, AlertTriangle, XCircle, Loader2,
+  CheckCircle2, Clock, AlertTriangle, XCircle, Loader2, X,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
 import type { DigitizationDocument } from "@/data/seed";
@@ -20,6 +20,90 @@ const statusColors: Record<string, string> = {
 
 const pipelineStages = ["Queued", "OCR Scanning", "AI Extraction", "Needs Review", "Completed"];
 const pipelineColors = ["bg-muted-foreground", "bg-amber-400", "bg-secondary", "bg-blue-500", "bg-emerald-500"];
+
+// Deterministic OCR page progress per doc
+function getOcrPageProgress(doc: DigitizationDocument): { scanned: number; total: number } | null {
+  if (doc.status !== "OCR Scanning") return null;
+  const scanned = Math.round(doc.pages * (doc.progress / 100));
+  return { scanned, total: doc.pages };
+}
+
+/* ── Contract Viewer Modal ── */
+function ContractViewerModal({ open, onClose, doc }: { open: boolean; onClose: () => void; doc: DigitizationDocument | null }) {
+  if (!open || !doc) return null;
+
+  const mockContent = [
+    `PROVIDER SERVICES AGREEMENT`,
+    ``,
+    `Payer: ${doc.payer}`,
+    `Document: ${doc.name}`,
+    `Type: ${doc.type}`,
+    `Pages: ${doc.pages}`,
+    `OCR Score: ${doc.ocrScore > 0 ? `${doc.ocrScore}%` : "Not yet scanned"}`,
+    ``,
+    `ARTICLE I — SCOPE OF AGREEMENT`,
+    `This Agreement is entered into between ${doc.payer} ("Plan") and the Provider for the delivery of Covered Services to enrolled Members within the designated Service Area.`,
+    ``,
+    `ARTICLE II — TERM`,
+    `This Agreement shall be effective upon execution and continue for a period of three (3) years unless terminated earlier pursuant to Article VII.`,
+    ``,
+    `ARTICLE III — PROVIDER OBLIGATIONS`,
+    `Provider shall deliver all medically necessary services in accordance with accepted standards of medical practice and applicable regulatory requirements.`,
+    ``,
+    `ARTICLE IV — COMPENSATION`,
+    `Reimbursement shall be in accordance with the Fee Schedule attached as Exhibit A.`,
+    ``,
+    `[Document continues for ${doc.pages} pages...]`,
+  ].join("\n");
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <div className="relative bg-card border rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col z-10">
+        <div className="p-4 border-b flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-bold">{doc.name}</h2>
+            <p className="text-xs text-muted-foreground">{doc.payer} • {doc.type} • {doc.pages} pages</p>
+          </div>
+          <button onClick={onClose}><X className="w-4 h-4" /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-6">
+          <pre className="text-sm text-foreground whitespace-pre-wrap font-sans leading-relaxed">{mockContent}</pre>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── More Actions Menu ── */
+function MoreActionsMenu({ doc, onViewContract, onViewCompliance }: {
+  doc: DigitizationDocument;
+  onViewContract: () => void;
+  onViewCompliance: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button className="p-1 hover:bg-muted rounded" title="More" onClick={() => setOpen(!open)}>
+        <MoreHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full mt-1 bg-card border rounded-lg shadow-xl z-50 py-1 w-48">
+            <button onClick={() => { setOpen(false); onViewContract(); }} className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted flex items-center gap-2">
+              <Eye className="w-3 h-3" /> View Contract
+            </button>
+            <button onClick={() => { setOpen(false); onViewCompliance(); }} className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted flex items-center gap-2">
+              <CheckCircle2 className="w-3 h-3" /> View Compliance Details
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 function UploadModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [payer, setPayer] = useState("");
@@ -45,8 +129,6 @@ function UploadModal({ open, onClose }: { open: boolean; onClose: () => void }) 
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="relative bg-card border rounded-xl shadow-2xl w-full max-w-lg p-6 space-y-5 z-10">
         <h2 className="text-lg font-bold text-foreground">Upload Legacy Contracts</h2>
-
-        {/* Drop zone */}
         <div
           className="border-2 border-dashed rounded-lg p-8 text-center hover:border-secondary transition-colors cursor-pointer"
           onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) setFileName(f.name); }}
@@ -60,8 +142,6 @@ function UploadModal({ open, onClose }: { open: boolean; onClose: () => void }) 
             <input type="file" className="hidden" accept=".pdf,.tiff,.tif,.png" onChange={e => { const f = e.target.files?.[0]; if (f) setFileName(f.name); }} />
           </label>
         </div>
-
-        {/* Dropdowns */}
         <div className="space-y-3">
           <div>
             <label className="text-xs font-medium text-foreground block mb-1">Payer</label>
@@ -84,18 +164,11 @@ function UploadModal({ open, onClose }: { open: boolean; onClose: () => void }) 
             </select>
           </div>
         </div>
-
-        {/* Disclaimer */}
         <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer">
           <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="mt-0.5 rounded" />
           All uploaded documents are encrypted at rest (AES-256) and processed in a secure environment.
         </label>
-
-        <button
-          onClick={handleSubmit}
-          disabled={!fileName || !agreed}
-          className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <button onClick={handleSubmit} disabled={!fileName || !agreed} className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed">
           Start Digitization Pipeline
         </button>
       </div>
@@ -108,6 +181,8 @@ export default function DigitizationPage() {
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [search, setSearch] = useState("");
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [viewingDoc, setViewingDoc] = useState<DigitizationDocument | null>(null);
+  const navigate = useNavigate();
 
   const loadDocs = () => {
     api.getDigitizationQueue(statusFilter).then(results => {
@@ -122,6 +197,29 @@ export default function DigitizationPage() {
 
   useEffect(() => { loadDocs(); }, [statusFilter, search]);
 
+  const handleRetry = async (doc: DigitizationDocument) => {
+    toast.info(`Retrying ${doc.name}...`);
+    // Simulate retry: reset to Queued, then progress
+    const allDocs = JSON.parse(localStorage.getItem("oci_digitization_docs") || "[]") as DigitizationDocument[];
+    const idx = allDocs.findIndex(d => d.id === doc.id);
+    if (idx >= 0) {
+      allDocs[idx] = { ...allDocs[idx], status: "OCR Scanning", progress: 10, ocrScore: 0 };
+      localStorage.setItem("oci_digitization_docs", JSON.stringify(allDocs));
+    }
+    loadDocs();
+    // Simulate progress after delay
+    setTimeout(() => {
+      const allDocs2 = JSON.parse(localStorage.getItem("oci_digitization_docs") || "[]") as DigitizationDocument[];
+      const idx2 = allDocs2.findIndex(d => d.id === doc.id);
+      if (idx2 >= 0) {
+        allDocs2[idx2] = { ...allDocs2[idx2], status: "AI Extraction", progress: 55, ocrScore: 78 };
+        localStorage.setItem("oci_digitization_docs", JSON.stringify(allDocs2));
+      }
+      loadDocs();
+      toast.success(`${doc.name} retry in progress`);
+    }, 2000);
+  };
+
   const total = docs.length;
   const completed = docs.filter(d => d.status === "Completed").length;
   const processing = docs.filter(d => ["OCR Scanning", "AI Extraction"].includes(d.status)).length;
@@ -131,7 +229,6 @@ export default function DigitizationPage() {
     ? Math.round(docs.filter(d => d.ocrScore > 0).reduce((a, d) => a + d.ocrScore, 0) / docs.filter(d => d.ocrScore > 0).length)
     : 0;
 
-  // Pipeline bar counts
   const pipelineCounts = pipelineStages.map(s => docs.filter(d => d.status === s).length);
   const pipelineTotal = pipelineCounts.reduce((a, b) => a + b, 0) || 1;
 
@@ -217,38 +314,55 @@ export default function DigitizationPage() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {docs.map(d => (
-                <tr key={d.id} className="hover:bg-muted/20">
-                  <td className="p-3 text-xs font-medium truncate max-w-[200px]">{d.name}</td>
-                  <td className="p-3 text-xs">{d.payer}</td>
-                  <td className="p-3 text-xs">{d.type}</td>
-                  <td className="p-3 text-xs">{d.source}</td>
-                  <td className="p-3 text-xs text-right">{d.pages}</td>
-                  <td className="p-3"><span className={`status-chip ${statusColors[d.status] || "bg-muted"}`}>{d.status}</span></td>
-                  <td className="p-3 text-xs text-right">{d.ocrScore > 0 ? `${d.ocrScore}%` : "—"}</td>
-                  <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-muted rounded-full h-2">
-                        <div className={`h-2 rounded-full transition-all ${d.status === "Failed" ? "bg-destructive" : "bg-secondary"}`} style={{ width: `${d.progress}%` }} />
+              {docs.map(d => {
+                const ocrProgress = getOcrPageProgress(d);
+                return (
+                  <tr key={d.id} className="hover:bg-muted/20">
+                    <td className="p-3 text-xs font-medium truncate max-w-[200px]">{d.name}</td>
+                    <td className="p-3 text-xs">{d.payer}</td>
+                    <td className="p-3 text-xs">{d.type}</td>
+                    <td className="p-3 text-xs">{d.source}</td>
+                    <td className="p-3 text-xs text-right">{d.pages}</td>
+                    <td className="p-3">
+                      <span className={`status-chip ${statusColors[d.status] || "bg-muted"}`}>{d.status}</span>
+                      {ocrProgress && (
+                        <p className="text-[10px] text-amber-600 mt-0.5">{ocrProgress.scanned}/{ocrProgress.total} pages scanned</p>
+                      )}
+                    </td>
+                    <td className="p-3 text-xs text-right">{d.ocrScore > 0 ? `${d.ocrScore}%` : "—"}</td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-muted rounded-full h-2">
+                          <div className={`h-2 rounded-full transition-all ${d.status === "Failed" ? "bg-destructive" : "bg-secondary"}`} style={{ width: `${d.progress}%` }} />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground w-8 text-right">{d.progress}%</span>
                       </div>
-                      <span className="text-[10px] text-muted-foreground w-8 text-right">{d.progress}%</span>
-                    </div>
-                  </td>
-                  <td className="p-3 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <button className="p-1 hover:bg-muted rounded" title="View"><Eye className="w-3.5 h-3.5 text-muted-foreground" /></button>
-                      <button className="p-1 hover:bg-muted rounded" title="Retry"><RefreshCw className="w-3.5 h-3.5 text-muted-foreground" /></button>
-                      <button className="p-1 hover:bg-muted rounded" title="More"><MoreHorizontal className="w-3.5 h-3.5 text-muted-foreground" /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="p-3 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <button className="p-1 hover:bg-muted rounded" title="View Contract" onClick={() => setViewingDoc(d)}>
+                          <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+                        </button>
+                        <button className="p-1 hover:bg-muted rounded" title="Retry" onClick={() => handleRetry(d)}>
+                          <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
+                        </button>
+                        <MoreActionsMenu
+                          doc={d}
+                          onViewContract={() => setViewingDoc(d)}
+                          onViewCompliance={() => navigate(`/compliance-hub?tab=overview`)}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
 
       <UploadModal open={uploadOpen} onClose={() => { setUploadOpen(false); loadDocs(); }} />
+      <ContractViewerModal open={!!viewingDoc} onClose={() => setViewingDoc(null)} doc={viewingDoc} />
     </div>
   );
 }
