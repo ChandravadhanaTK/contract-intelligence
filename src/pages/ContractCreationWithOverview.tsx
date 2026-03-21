@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { FileText, PenLine, Users, Eye, CheckCircle2, Globe, ArrowDownToLine, GitBranch, ClipboardList, UserCheck, Bot, Zap } from "lucide-react";
+import { FileText, PenLine, Users, Eye, CheckCircle2, Globe, ArrowDownToLine, GitBranch, ClipboardList, UserCheck, Bot, Zap, Upload, List, ArrowRight } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import WorkflowPage from "./WorkflowPage";
+import ContractCreation from "./ContractCreation";
 
 const kpiCards = [
   { label: "Total Documents", value: 42, icon: <FileText className="w-4 h-4" />, accent: "bg-primary/10 text-primary" },
