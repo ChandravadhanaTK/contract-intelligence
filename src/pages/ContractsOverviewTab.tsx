@@ -36,19 +36,6 @@ const docCompliance: Record<string, number> = {
   "fd-13": 35, "fd-14": 40,
 };
 
-const docExtractedClauses: Record<string, number> = {
-  "fd-1": 90, "fd-2": 100, "fd-3": 58, "fd-4": 95,
-  "fd-5": 82, "fd-6": 97, "fd-7": 40, "fd-8": 68,
-  "fd-9": 100, "fd-10": 62, "fd-11": 38, "fd-12": 50,
-  "fd-13": 30, "fd-14": 35,
-};
-
-const docIntelligence: Record<string, number> = {
-  "fd-1": 84, "fd-2": 100, "fd-3": 72, "fd-4": 89,
-  "fd-5": 74, "fd-6": 93, "fd-7": 50, "fd-8": 76,
-  "fd-9": 100, "fd-10": 74, "fd-11": 46, "fd-12": 60,
-  "fd-13": 40, "fd-14": 45,
-};
 
 type SortBy = "Recent" | "Name" | "Docs";
 
@@ -239,33 +226,19 @@ export default function ContractsOverviewTab() {
                             ))}
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           {(() => {
-                            const ec = docExtractedClauses[doc.id] || 0;
-                            const intel = docIntelligence[doc.id] || 0;
-                            const barColor = (v: number) => v >= 80 ? "bg-emerald-500" : v >= 60 ? "bg-amber-500" : "bg-red-500";
-                            const dotColor = (v: number) => v >= 80 ? "bg-emerald-500" : v >= 60 ? "bg-amber-500" : "bg-red-500";
+                            const score = compliance;
+                            const barColor = score >= 80 ? "bg-emerald-500" : score >= 60 ? "bg-amber-500" : "bg-red-500";
+                            const dotColor = score >= 80 ? "bg-emerald-500" : score >= 60 ? "bg-amber-500" : "bg-red-500";
                             return (
-                              <>
-                                <div className="flex flex-col gap-0.5 items-end">
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-[9px] text-muted-foreground whitespace-nowrap">Clauses</span>
-                                    <div className="w-10 bg-muted rounded-full h-1.5">
-                                      <div className={`h-1.5 rounded-full ${barColor(ec)}`} style={{ width: `${ec}%` }} />
-                                    </div>
-                                    <span className={`w-2 h-2 rounded-full ${dotColor(ec)}`} />
-                                    <span className="text-[10px] font-medium text-muted-foreground w-7">{ec}%</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-[9px] text-muted-foreground whitespace-nowrap">Intelligence</span>
-                                    <div className="w-10 bg-muted rounded-full h-1.5">
-                                      <div className={`h-1.5 rounded-full ${barColor(intel)}`} style={{ width: `${intel}%` }} />
-                                    </div>
-                                    <span className={`w-2 h-2 rounded-full ${dotColor(intel)}`} />
-                                    <span className="text-[10px] font-medium text-muted-foreground w-7">{intel}%</span>
-                                  </div>
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-14 bg-muted rounded-full h-1.5">
+                                  <div className={`h-1.5 rounded-full ${barColor}`} style={{ width: `${score}%` }} />
                                 </div>
-                              </>
+                                <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+                                <span className="text-[11px] font-medium text-muted-foreground w-8">{score}%</span>
+                              </div>
                             );
                           })()}
                         </div>

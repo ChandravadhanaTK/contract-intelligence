@@ -43,6 +43,12 @@ const extractedClauses: ExtractedClause[] = [
   { id: "ec-10", name: "Dispute Resolution", sectionId: "s3", sectionRef: "2.2", pageRef: "Page 8", category: "Legal", confidence: "Low", alignment: "nonAligned", summary: "Binding arbitration without progressive escalation" },
 ];
 
+// Map section IDs to confidence percentages
+const sectionConfidence: Record<string, number> = {
+  "s1": 96, "s2": 94, "s3": 78, "s4": 91, "s5": 88,
+  "s6": 82, "s7": 85, "s8": 97, "s9": 72, "s10": 65,
+};
+
 const mockSections = [
   { id: "s1", sectionNum: "", title: "OPTUMHEALTH CARE SOLUTIONS, LLC\nPROVIDER AGREEMENT", isTitle: true, content: "THIS AGREEMENT (\"Agreement\") is entered into by and between OptumHealth Care Solutions, LLC. (\"Optum\") and the undersigned person (\"Individual\") or entity (\"Group\"), (Individual and Group are also individually and collectively referred to as \"Provider\"), and sets forth the terms and conditions under which Provider shall participate in one or more networks developed by Optum to render Covered Services to Members. This Agreement supersedes and replaces any existing provider agreements between the parties related to the provision of Covered Services.\n\nThrough contracts with Providers of health care services, Optum maintains one or more networks of providers that are available to Members. Provider is a provider of health care services.\n\nOptum wishes to arrange to make Provider's services available to Members. Provider wishes to provide such services, under the terms and conditions set forth in this Agreement.\n\nThe parties therefore enter into this Agreement." },
   { id: "s2", sectionNum: "SECTION 1", title: "Definitions", content: "The following terms when used in this Agreement have the meanings set forth below:\n\n1.1\t\"Benefit Contract\" is a benefit plan that includes health care coverage, is sponsored, issued or administered by Plan and contains the terms and conditions of a Member's coverage, including applicable copayments, deductibles, and limits on coverage for services rendered outside specified networks.\n\n1.2\t\"Covered Service\" is a health care service or product for which a Member is entitled to receive coverage from a Payer, including the terms of the Member's Benefit Contract with that Payer.\n\n1.3\t\"Customary Charge\" is the fee for health care services charged by Provider that does not exceed the fee Provider would ordinarily charge another person regardless of whether the person is a Member.\n\n1.4\t\"Emergency Services\" are services provided for a medical condition manifesting itself by acute symptoms of sufficient severity, including severe pain, such that the absence of immediate medical attention could reasonably be expected to result in any of the following:\n\n\t(1) Placing the patient's health in serious jeopardy;\n\t(2) Serious impairment to bodily functions;\n\t(3) Serious dysfunction of any bodily organ or part.\n\n1.5\t\"Member\" is a person eligible and enrolled to receive coverage from a Payer for Covered Services.\n\n1.6\t\"Member Expenses\" are any amounts that are the Member's responsibility to pay Provider in accordance with Member's Benefit Contract.\n\n1.7\t\"Participating Provider\" is an Optum contracted and credentialed health care professional, duly licensed and qualified under the laws of the jurisdiction in which Covered Services are provided.\n\n1.8\t\"Payer\" is an entity or person obligated to a Member to provide reimbursement for Covered Services.\n\n1.9\t\"Plan\" is the entity or person authorized by Optum to access one or more networks of Participating Providers developed by Optum.\n\n1.10\t\"Plan Summary\" is a written summary that identifies the Plan, the applicable fee schedule and specific unique requirements for the particular Plan.\n\n1.11\t\"Protocols\" are the programs and administrative procedures adopted by Optum or a Plan to be followed by Provider and Participating Providers in providing services and doing business with Optum and Plans under this Agreement." },
@@ -247,13 +253,26 @@ export default function ContractViewerPage() {
                     }
                   }}
                 >
-                  {/* Section header */}
+                  {/* Section header with confidence */}
                   {(section as any).isTitle ? (
                     <h1 className="text-center font-bold text-sm text-foreground mb-6 uppercase leading-snug whitespace-pre-line tracking-wide">{section.title}</h1>
                   ) : (
-                    <div className="text-center mb-4 mt-8">
-                      <p className="font-bold text-sm text-foreground uppercase tracking-wide">{(section as any).sectionNum}</p>
-                      <p className="font-bold text-sm text-foreground">{section.title}</p>
+                    <div className="flex items-center justify-between mb-4 mt-8">
+                      <div className="text-center flex-1">
+                        <p className="font-bold text-sm text-foreground uppercase tracking-wide">{(section as any).sectionNum}</p>
+                        <p className="font-bold text-sm text-foreground">{section.title}</p>
+                      </div>
+                      {sectionConfidence[section.id] !== undefined && (() => {
+                        const conf = sectionConfidence[section.id];
+                        const color = conf >= 80 ? "text-emerald-700 bg-emerald-50 border-emerald-200" : conf >= 60 ? "text-amber-700 bg-amber-50 border-amber-200" : "text-red-700 bg-red-50 border-red-200";
+                        const dotColor = conf >= 80 ? "bg-emerald-500" : conf >= 60 ? "bg-amber-500" : "bg-red-500";
+                        return (
+                          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-[10px] font-semibold ${color}`} style={{ fontFamily: "'Inter', sans-serif" }}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
+                            {conf}%
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
 
