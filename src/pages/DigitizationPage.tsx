@@ -271,7 +271,7 @@ export default function DigitizationPage({ onBack }: { onBack?: () => void }) {
 
       {/* Pipeline status bar */}
       <div className="bg-card border rounded-lg p-5">
-        <h3 className="text-sm font-semibold mb-3">Digitization Pipeline</h3>
+        <h3 className="text-sm font-semibold mb-3">Legacy Contract Digitization Pipeline</h3>
         <div className="w-full h-4 rounded-full bg-muted flex overflow-hidden">
           {pipelineStages.map((stage, i) => {
             const width = (pipelineCounts[i] / pipelineTotal) * 100;
