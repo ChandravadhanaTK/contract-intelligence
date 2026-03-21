@@ -36,19 +36,6 @@ const docCompliance: Record<string, number> = {
   "fd-13": 35, "fd-14": 40,
 };
 
-const docExtractedClauses: Record<string, number> = {
-  "fd-1": 90, "fd-2": 100, "fd-3": 58, "fd-4": 95,
-  "fd-5": 82, "fd-6": 97, "fd-7": 40, "fd-8": 68,
-  "fd-9": 100, "fd-10": 62, "fd-11": 38, "fd-12": 50,
-  "fd-13": 30, "fd-14": 35,
-};
-
-const docIntelligence: Record<string, number> = {
-  "fd-1": 84, "fd-2": 100, "fd-3": 72, "fd-4": 89,
-  "fd-5": 74, "fd-6": 93, "fd-7": 50, "fd-8": 76,
-  "fd-9": 100, "fd-10": 74, "fd-11": 46, "fd-12": 60,
-  "fd-13": 40, "fd-14": 45,
-};
 
 type SortBy = "Recent" | "Name" | "Docs";
 
