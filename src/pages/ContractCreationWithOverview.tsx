@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { FileText, PenLine, Users, Eye, CheckCircle2, Globe, ArrowDownToLine, ClipboardList, UserCheck, Bot, Zap, Upload, ArrowRight, Shield, AlertTriangle, TrendingDown, Send, ToggleLeft, ToggleRight, List, Library, BookOpen, GitCommit, History, Check, X, Edit3, MessageSquare } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { FileText, PenLine, Users, Eye, CheckCircle2, Globe, ArrowDownToLine, ClipboardList, UserCheck, Bot, Zap, Upload, ArrowRight, Shield, AlertTriangle, TrendingDown, Send, ToggleLeft, ToggleRight, List, Library, BookOpen, GitCommit, History, Check, X, Edit3, MessageSquare, Clock, BarChart3 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -480,13 +481,9 @@ function ContractPilotTab() {
 }
 
 const kpiCards = [
-  { label: "Total Documents", value: 42, icon: <FileText className="w-4 h-4" />, accent: "bg-primary/10 text-primary" },
-  { label: "Draft", value: 12, icon: <PenLine className="w-4 h-4" />, accent: "bg-amber-100 text-amber-700" },
-  { label: "Collaboration", value: 8, icon: <Users className="w-4 h-4" />, accent: "bg-blue-100 text-blue-700" },
-  { label: "Review", value: 7, icon: <Eye className="w-4 h-4" />, accent: "bg-violet-100 text-violet-700" },
-  { label: "Approved", value: 5, icon: <CheckCircle2 className="w-4 h-4" />, accent: "bg-orange-100 text-orange-700" },
-  { label: "Published", value: 6, icon: <Globe className="w-4 h-4" />, accent: "bg-emerald-100 text-emerald-700" },
-  { label: "Processed to Downstream", value: 4, icon: <ArrowDownToLine className="w-4 h-4" />, accent: "bg-teal-100 text-teal-700" },
+  { label: "Total Documents", value: 42, icon: <FileText className="w-4 h-4" />, accent: "bg-primary/10 text-primary", route: "/contracts" },
+  { label: "Deviation Score", value: "3.2%", icon: <TrendingDown className="w-4 h-4" />, accent: "bg-red-100 text-red-700", route: "/deviation" },
+  { label: "Avg Creation Time", value: "4.2d", icon: <Clock className="w-4 h-4" />, accent: "bg-violet-100 text-violet-700", route: "/workflow" },
 ];
 
 const pipelineStages = ["Draft", "Collaboration", "Review", "Approval", "Published", "Downstream"];
@@ -564,6 +561,7 @@ function UploadContractTab() {
 
 export default function ContractCreationWithOverview() {
   const [subTab, setSubTab] = useState("newgen");
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-6">
@@ -598,9 +596,9 @@ export default function ContractCreationWithOverview() {
               <h1 className="page-header">NewGen Contract Digitization</h1>
               <p className="text-sm text-muted-foreground mt-1">OCR + AI pipeline for creating payer contracts into structured data</p>
               <div className="mt-4" />
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {kpiCards.map(kpi => (
-                  <div key={kpi.label} className="kpi-card flex items-start gap-3">
+                  <div key={kpi.label} className="kpi-card flex items-start gap-3 cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all" onClick={() => navigate(kpi.route)}>
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${kpi.accent}`}>
                       {kpi.icon}
                     </div>
@@ -611,35 +609,6 @@ export default function ContractCreationWithOverview() {
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* Compliance metrics row — 3 KPI cards + 1 consolidated graph card */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {complianceMetrics.filter(m => m.label !== "Deviation Score").map(metric => (
-                <div key={metric.label} className="kpi-card flex items-start gap-3">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${metric.accent}`}>
-                    {metric.icon}
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground font-medium">{metric.label}</p>
-                    <p className="text-xl font-bold text-foreground">{metric.value}</p>
-                    {metric.subtitle && <p className="text-[10px] text-muted-foreground">{metric.subtitle}</p>}
-                  </div>
-                </div>
-              ))}
-              {/* Deviation Score card */}
-              {complianceMetrics.filter(m => m.label === "Deviation Score").map(metric => (
-                <div key={metric.label} className="kpi-card flex items-start gap-3">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${metric.accent}`}>
-                    {metric.icon}
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground font-medium">{metric.label}</p>
-                    <p className="text-xl font-bold text-foreground">{metric.value}</p>
-                    {metric.subtitle && <p className="text-[10px] text-muted-foreground">{metric.subtitle}</p>}
-                  </div>
-                </div>
-              ))}
             </div>
 
             {/* Consolidated Compliance Overview card */}
