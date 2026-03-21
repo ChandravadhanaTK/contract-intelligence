@@ -1,5 +1,6 @@
 import type { Contract, StandardClause, AuditEntry, DraftContract, ClauseVersion, AgentLog, ReviewDocument, ReviewRequest, ChatMessage } from "@/types";
 import { chatAnswerMap } from "@/data/seed";
+import type { DigitizationDocument, TrackerObligation, ContractFamily, RedlineClauseGroup } from "@/data/seed";
 
 function delay(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
@@ -21,7 +22,6 @@ export const api = {
   saveContract: async (c: Contract) => {
     await delay(50);
     set("oci_contract", c);
-    // Also update in contracts list
     const contracts = get<Contract[]>("oci_contracts", []);
     const idx = contracts.findIndex((x) => x.id === c.id);
     if (idx >= 0) contracts[idx] = c;
@@ -68,13 +68,11 @@ export const api = {
     if (idx >= 0) versions[idx] = v; else versions.push(v);
     set("oci_clause_versions", versions);
   },
-  // Review Documents
   getReviewDocuments: async (contractId?: string): Promise<ReviewDocument[]> => {
     await delay(100);
     const docs = get<ReviewDocument[]>("oci_review_documents", []);
     return contractId ? docs.filter((d) => d.contractId === contractId) : docs;
   },
-  // Review Requests
   getReviewRequests: async (contractId?: string, documentId?: string): Promise<ReviewRequest[]> => {
     await delay(100);
     let reqs = get<ReviewRequest[]>("oci_review_requests", []);
@@ -88,7 +86,6 @@ export const api = {
     if (idx >= 0) reqs[idx] = req;
     set("oci_review_requests", reqs);
   },
-  // Chat messages per request
   getChatMessages: async (requestId: string): Promise<ChatMessage[]> => {
     await delay(50);
     return get<ChatMessage[]>(`oci_chat_${requestId}`, []);
@@ -106,7 +103,6 @@ export const api = {
     }
     return chatAnswerMap["default"];
   },
-  // Checklist persistence
   saveChecklist: async (requestId: string, checklist: { id: string; label: string; section: "manual" | "auto"; checked: boolean }[]) => {
     const reqs = get<ReviewRequest[]>("oci_review_requests", []);
     const idx = reqs.findIndex((r) => r.id === requestId);
@@ -115,7 +111,6 @@ export const api = {
       set("oci_review_requests", reqs);
     }
   },
-  // Agent simulation
   simulateAgents: async (onLog: (log: AgentLog) => void): Promise<void> => {
     const agents = [
       { name: "Intake Agent", messages: ["Extracting contract metadata...", "Identifying 53 clauses from document...", "Metadata extraction complete."] },
@@ -142,9 +137,99 @@ export const api = {
     await delay(1500);
     return `Based on your requirements, here is a draft clause:\n\n"The Provider shall deliver all medically necessary services as outlined in Exhibit A, maintaining compliance with applicable federal and state regulations. Services shall be rendered within the designated service area and meet quality standards as defined in the Quality Improvement Program."\n\nThis clause covers the key elements of scope, compliance, and quality. Shall I refine any specific aspect?`;
   },
-  // Workflow selection persistence
   getSelectedContract: (): string | null => localStorage.getItem("oci_selected_contract"),
   setSelectedContract: (id: string) => localStorage.setItem("oci_selected_contract", id),
   getSelectedDocument: (): string | null => localStorage.getItem("oci_selected_document"),
   setSelectedDocument: (id: string) => localStorage.setItem("oci_selected_document", id),
+
+  // ─── New APIs ───
+  getDigitizationQueue: async (statusFilter?: string): Promise<DigitizationDocument[]> => {
+    await delay(100);
+    let docs = get<DigitizationDocument[]>("oci_digitization_docs", []);
+    if (statusFilter && statusFilter !== "All Statuses") {
+      docs = docs.filter(d => d.status === statusFilter);
+    }
+    return docs;
+  },
+  digitizeLegacyUpload: async (fileName: string, payer: string, contractType: string, source: string): Promise<DigitizationDocument> => {
+    await delay(500);
+    const docs = get<DigitizationDocument[]>("oci_digitization_docs", []);
+    const hash = fileName.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+    const newDoc: DigitizationDocument = {
+      id: `dig-${Date.now()}`,
+      name: fileName,
+      payer,
+      type: contractType === "Auto-detect" ? "Provider Agreement" : contractType,
+      source,
+      pages: 20 + (hash % 40),
+      status: "Queued",
+      ocrScore: 0,
+      progress: 0,
+    };
+    docs.push(newDoc);
+    set("oci_digitization_docs", docs);
+    return newDoc;
+  },
+  getContractFamilies: async (statusFilter?: string, search?: string): Promise<ContractFamily[]> => {
+    await delay(100);
+    let fams = get<ContractFamily[]>("oci_contract_families", []);
+    if (statusFilter && statusFilter !== "All Statuses") {
+      fams = fams.filter(f => f.status === statusFilter);
+    }
+    if (search) {
+      const s = search.toLowerCase();
+      fams = fams.filter(f =>
+        f.name.toLowerCase().includes(s) ||
+        f.documents.some(d => d.name.toLowerCase().includes(s) || d.tags.some(t => t.toLowerCase().includes(s)))
+      );
+    }
+    return fams;
+  },
+  getTrackerObligations: async (statusFilter?: string, categoryFilter?: string): Promise<TrackerObligation[]> => {
+    await delay(100);
+    let obs = get<TrackerObligation[]>("oci_tracker_obligations", []);
+    if (statusFilter && statusFilter !== "All Statuses") {
+      obs = obs.filter(o => o.status === statusFilter);
+    }
+    if (categoryFilter && categoryFilter !== "All Categories") {
+      obs = obs.filter(o => o.category === categoryFilter);
+    }
+    return obs;
+  },
+  getRedlineGroups: async (): Promise<RedlineClauseGroup[]> => {
+    await delay(100);
+    return get<RedlineClauseGroup[]>("oci_redline_groups", []);
+  },
+  saveRedlineGroups: async (groups: RedlineClauseGroup[]) => {
+    await delay(50);
+    set("oci_redline_groups", groups);
+  },
+  globalSearch: async (query: string): Promise<{ contracts: { id: string; name: string; match: string }[]; clauses: { id: string; name: string; match: string }[]; obligations: { id: string; name: string; match: string }[] }> => {
+    await delay(300);
+    const q = query.toLowerCase();
+    const families = get<ContractFamily[]>("oci_contract_families", []);
+    const standardClauses = get<{ id: string; clauseName: string; tags: string[] }[]>("oci_standard_clauses", []);
+    const trackerObs = get<TrackerObligation[]>("oci_tracker_obligations", []);
+
+    const contractResults = families
+      .flatMap(f => f.documents.filter(d => d.name.toLowerCase().includes(q) || d.tags.some(t => t.toLowerCase().includes(q))))
+      .slice(0, 5)
+      .map(d => ({ id: d.id, name: d.name, match: d.type }));
+
+    const clauseResults = standardClauses
+      .filter(c => c.clauseName.toLowerCase().includes(q) || c.tags.some(t => t.toLowerCase().includes(q)))
+      .slice(0, 5)
+      .map(c => ({ id: c.id, name: c.clauseName, match: c.tags.join(", ") }));
+
+    const obligationResults = trackerObs
+      .filter(o => o.title.toLowerCase().includes(q) || o.contract.toLowerCase().includes(q))
+      .slice(0, 5)
+      .map(o => ({ id: o.id, name: o.title, match: o.contract }));
+
+    return { contracts: contractResults, clauses: clauseResults, obligations: obligationResults };
+  },
+  getNotifications: async () => {
+    await delay(50);
+    return get<{ id: string; text: string; time: string; read: boolean }[]>("oci_notifications", []);
+  },
 };
