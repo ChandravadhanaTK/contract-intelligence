@@ -149,7 +149,7 @@ export default function WorkflowPage({ embedded = false, initialTab }: WorkflowP
 
   if (workspaceReq) {
     return (
-      <div className="page-container">
+      <div className={embedded ? "space-y-4" : "page-container"}>
         <h1 className="page-header">Review Workspace – {workspaceReq.jobNo}</h1>
         <ReviewWorkspace request={workspaceReq} document={currentDoc || null} onBack={() => setWorkspaceReq(null)} onRequestUpdate={handleRequestUpdate} />
       </div>
@@ -157,18 +157,22 @@ export default function WorkflowPage({ embedded = false, initialTab }: WorkflowP
   }
 
   return (
-    <div className="page-container">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="page-header">Workflow Automation</h1>
-        <div className="flex gap-2">
-          <button onClick={() => navigate("/intake")} className="flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-medium hover:bg-muted">
-            <ArrowRight className="w-3 h-3" /> View Intake & Triage
-          </button>
-          <button onClick={() => navigate("/credentialing")} className="flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-medium hover:bg-muted">
-            <Shield className="w-3 h-3" /> Credentialing Gate
-          </button>
-        </div>
-      </div>
+    <div className={embedded ? "space-y-4" : "page-container"}>
+      {!embedded && (
+        <>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h1 className="page-header">Workflow Automation</h1>
+            <div className="flex gap-2">
+              <button onClick={() => navigate("/intake")} className="flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-medium hover:bg-muted">
+                <ArrowRight className="w-3 h-3" /> View Intake & Triage
+              </button>
+              <button onClick={() => navigate("/credentialing")} className="flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-medium hover:bg-muted">
+                <Shield className="w-3 h-3" /> Credentialing Gate
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Contract & Document Selectors */}
       <div className="flex flex-wrap gap-4">
@@ -186,14 +190,16 @@ export default function WorkflowPage({ embedded = false, initialTab }: WorkflowP
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b">
-        {(["workflow", "review", "hitl", "agents"] as const).map(tab => (
-          <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? "border-secondary text-secondary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-            {tab === "workflow" ? "Workflow" : tab === "review" ? "Review Dashboard" : tab === "hitl" ? `HITL Center (${hitlItems.length})` : "Agent Workspace"}
-          </button>
-        ))}
-      </div>
+      {/* Tabs - only show when not embedded */}
+      {!embedded && (
+        <div className="flex gap-1 border-b">
+          {(["workflow", "review", "hitl", "agents"] as const).map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? "border-secondary text-secondary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+              {tab === "workflow" ? "Workflow" : tab === "review" ? "Review Dashboard" : tab === "hitl" ? `HITL Center (${hitlItems.length})` : "Agent Workspace"}
+            </button>
+          ))}
+        </div>
+      )}
 
       {activeTab === "workflow" && wf && (
         <>
