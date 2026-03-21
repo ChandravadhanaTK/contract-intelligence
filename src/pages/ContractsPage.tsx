@@ -159,13 +159,13 @@ export default function ContractsPage() {
           <input className="w-full pl-8 pr-3 py-2 text-sm border rounded-lg bg-background" placeholder="Search families, contracts, tags…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="text-sm border rounded-lg px-3 py-2 bg-background">
-          <option>All Statuses</option>
+          <option>All Status</option>
           <option>Active</option>
           <option>Expired</option>
           <option>Pending Review</option>
           <option>Draft</option>
         </select>
-        <select className="text-sm border rounded-lg px-3 py-2 bg-background">
+        <select value={jurisdictionFilter} onChange={e => setJurisdictionFilter(e.target.value)} className="text-sm border rounded-lg px-3 py-2 bg-background">
           <option>All Jurisdictions</option>
           <option>NY</option>
           <option>FL</option>
