@@ -596,9 +596,9 @@ export default function ContractCreationWithOverview() {
               <h1 className="page-header">NewGen Contract Digitization</h1>
               <p className="text-sm text-muted-foreground mt-1">OCR + AI pipeline for creating payer contracts into structured data</p>
               <div className="mt-4" />
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {kpiCards.map(kpi => (
-                  <div key={kpi.label} className="kpi-card flex items-start gap-3">
+                  <div key={kpi.label} className="kpi-card flex items-start gap-3 cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all" onClick={() => navigate(kpi.route)}>
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${kpi.accent}`}>
                       {kpi.icon}
                     </div>
@@ -609,36 +609,6 @@ export default function ContractCreationWithOverview() {
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* Compliance metrics row — 3 KPI cards + 1 consolidated graph card */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {complianceMetrics.filter(m => m.label !== "Deviation Score").map(metric => (
-                <div key={metric.label} className="kpi-card flex items-start gap-3">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${metric.accent}`}>
-                    {metric.icon}
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground font-medium">{metric.label}</p>
-                    <p className="text-xl font-bold text-foreground">{metric.value}</p>
-                    {metric.subtitle && <p className="text-[10px] text-muted-foreground">{metric.subtitle}</p>}
-                  </div>
-                </div>
-              ))}
-              {/* Deviation Score card */}
-              {complianceMetrics.filter(m => m.label === "Deviation Score").map(metric => (
-                <div key={metric.label} className="kpi-card flex items-start gap-3">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${metric.accent}`}>
-                    {metric.icon}
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground font-medium">{metric.label}</p>
-                    <p className="text-xl font-bold text-foreground">{metric.value}</p>
-                    {metric.subtitle && <p className="text-[10px] text-muted-foreground">{metric.subtitle}</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
 
             {/* Consolidated Compliance Overview card */}
             <div className="bg-card border rounded-lg p-5">
