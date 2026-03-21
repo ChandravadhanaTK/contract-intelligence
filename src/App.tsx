@@ -26,6 +26,7 @@ import ContractCreation from "./pages/ContractCreation";
 import UploadContract from "./pages/UploadContract";
 import DigitizationPage from "./pages/DigitizationPage";
 import CompliancePage from "./pages/CompliancePage";
+import ComparePage from "./pages/ComparePage";
 
 import NotFound from "./pages/NotFound";
 
