@@ -104,7 +104,7 @@ interface DraftClause {
 }
 
 function ContractPilotTab() {
-  const [mode, setMode] = useState<"guided" | "freeform">("freeform");
+  const [mode, setMode] = useState<"pilot" | "guided" | "freeform">("freeform");
   const [messages, setMessages] = useState<PilotMessage[]>([
     {
       id: "welcome",
