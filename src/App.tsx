@@ -64,6 +64,7 @@ const App = () => {
               <Route path="/create" element={<Navigate to="/contracts?tab=creation" replace />} />
               <Route path="/upload" element={<Navigate to="/contracts?tab=upload" replace />} />
               <Route path="/digitization" element={<Navigate to="/contracts?tab=digitize" replace />} />
+              <Route path="/deviation" element={<ContractDeviation />} />
               <Route path="/clauses" element={<StandardClauses />} />
               <Route path="/redlining" element={<Redlining />} />
               <Route path="/agents" element={<AgentWorkspace />} />
@@ -73,7 +74,6 @@ const App = () => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/contracts" element={<ContractsPage />} />
               <Route path="/contracts/:id" element={<ContractViewerPage />} />
-              <Route path="/digitization" element={<DigitizationPage />} />
               <Route path="/users" element={<UserManagement />} />
               <Route path="/intake" element={<IntakePage />} />
               <Route path="/credentialing" element={<CredentialingPage />} />
