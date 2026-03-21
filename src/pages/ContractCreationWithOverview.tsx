@@ -281,137 +281,150 @@ function ContractPilotTab() {
     </div>
   );
 
+  const chatModes = [
+    { id: "pilot" as const, label: "ContractPilot", icon: Bot, desc: "AI autocomplete & clause suggestions" },
+    { id: "freeform" as const, label: "Freeform", icon: MessageSquare, desc: "Type naturally, get inline suggestions" },
+    { id: "guided" as const, label: "Guided", icon: Zap, desc: "Step-by-step interview drafting" },
+  ];
+
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="bg-card border rounded-xl p-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <Bot className="w-5 h-5 text-secondary" />
-            <div>
-              <h2 className="text-base font-bold text-foreground">ContractPilot – AI Contract Coauthor</h2>
-              <p className="text-xs text-muted-foreground">Like GitHub Copilot, but for contracts. Autocomplete, suggestions, and version control.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button onClick={() => setMode(mode === "freeform" ? "guided" : "freeform")}
-              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground border rounded-lg px-3 py-1.5">
-              {mode === "guided" ? <ToggleRight className="w-4 h-4 text-secondary" /> : <ToggleLeft className="w-4 h-4" />}
-              {mode === "guided" ? "Guided Mode" : "Freeform Mode"}
-            </button>
-          </div>
-        </div>
-        <div className="flex gap-1 mt-2">
-          {(["chat", "document", "history"] as const).map(v => (
-            <button key={v} onClick={() => setActiveView(v)}
-              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                activeView === v ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-muted"
-              }`}>
-              {v === "chat" ? "💬 Chat" : v === "document" ? "📄 Document" : "📜 History"}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Main panel */}
+        {/* Main chat panel */}
         <div className="lg:col-span-2">
-          {activeView === "chat" ? (
-            <div className="bg-card border rounded-xl flex flex-col h-[600px]">
-              {/* Quick prompts */}
-              <div className="p-2 flex flex-wrap gap-1 border-b">
-                {pilotQuickPrompts.map(p => (
-                  <button key={p} onClick={() => handleSend(p)} className="text-xs px-2.5 py-1 rounded-full bg-accent text-accent-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors">
-                    {p}
+          <div className="bg-card border rounded-xl flex flex-col h-[650px]">
+            {/* Mode selector icons */}
+            <div className="p-3 border-b flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                {chatModes.map(m => (
+                  <button
+                    key={m.id}
+                    onClick={() => setMode(m.id)}
+                    title={`${m.label}: ${m.desc}`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      mode === m.id
+                        ? "bg-secondary text-secondary-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    <m.icon className="w-3.5 h-3.5" />
+                    {m.label}
                   </button>
                 ))}
               </div>
+              <div className="flex items-center gap-1.5">
+                {(["chat", "document", "history"] as const).map(v => (
+                  <button key={v} onClick={() => setActiveView(v)}
+                    className={`text-[10px] px-2 py-1 rounded font-medium transition-colors ${
+                      activeView === v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+                    }`}>
+                    {v === "chat" ? "💬" : v === "document" ? "📄" : "📜"}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-              {/* Guided mode bar */}
+            {/* Mode context banner */}
+            <div className="px-3 py-1.5 bg-accent/40 border-b flex items-center gap-2">
+              <span className="text-[10px] text-accent-foreground">
+                {mode === "pilot" && "🤖 ContractPilot — AI autocomplete for clauses with Accept/Reject/Edit workflow"}
+                {mode === "freeform" && "✍️ Freeform — Type naturally and get inline clause suggestions & improvements"}
+                {mode === "guided" && `📋 Guided Interview — Step ${Math.min(guidedStep + 1, guidedSteps.length)} of ${guidedSteps.length}`}
+              </span>
               {mode === "guided" && (
-                <div className="px-3 py-2 bg-accent/50 border-b flex items-center justify-between">
-                  <span className="text-xs text-accent-foreground font-medium">
-                    <Zap className="w-3 h-3 inline mr-1" />
-                    Guided Interview — Step {Math.min(guidedStep + 1, guidedSteps.length)} of {guidedSteps.length}
-                  </span>
-                  <button onClick={handleGuidedNext} className="text-xs px-3 py-1 bg-secondary text-secondary-foreground rounded font-medium">
-                    {guidedStep === 0 ? "Start Interview" : guidedStep >= guidedSteps.length ? "Complete" : "Next Step"}
-                  </button>
-                </div>
-              )}
-
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
-                {messages.map(m => (
-                  <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className="max-w-[85%]">
-                      <div className={`rounded-lg px-3 py-2 text-sm ${
-                        m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-                      }`}>
-                        <pre className="whitespace-pre-wrap font-sans text-sm">{m.text}</pre>
-                      </div>
-                      {/* Accept/Reject/Edit for suggestions */}
-                      {m.suggestion && (
-                        <div className="flex gap-1.5 mt-1.5">
-                          <button onClick={() => handleAcceptClause(m.suggestion)} className="text-[10px] px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 font-medium flex items-center gap-1">
-                            <Check className="w-3 h-3" /> Accept
-                          </button>
-                          <button onClick={() => handleRejectClause(m.suggestion)} className="text-[10px] px-2.5 py-1 bg-red-100 text-red-700 rounded-full hover:bg-red-200 font-medium flex items-center gap-1">
-                            <X className="w-3 h-3" /> Reject
-                          </button>
-                          <button className="text-[10px] px-2.5 py-1 bg-muted text-muted-foreground rounded-full hover:bg-muted/80 font-medium flex items-center gap-1">
-                            <Edit3 className="w-3 h-3" /> Edit
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {loading && <div className="flex justify-start"><div className="bg-muted rounded-lg px-3 py-2 text-sm animate-pulse">✨ ContractPilot is drafting...</div></div>}
-                <div ref={bottomRef} />
-              </div>
-
-              {/* Input */}
-              <div className="p-2 border-t flex gap-1.5">
-                <input
-                  className="flex-1 border rounded-lg px-3 py-1.5 text-sm bg-background"
-                  placeholder={mode === "freeform" ? "Type naturally — I'll suggest clauses inline..." : "Answer the guided question or type freely..."}
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && handleSend()}
-                />
-                <button onClick={() => handleSend()} className="bg-secondary text-secondary-foreground p-1.5 rounded-lg hover:opacity-90">
-                  <Send className="w-4 h-4" />
+                <button onClick={handleGuidedNext} className="ml-auto text-[10px] px-2.5 py-0.5 bg-secondary text-secondary-foreground rounded font-medium">
+                  {guidedStep === 0 ? "Start" : guidedStep >= guidedSteps.length ? "Complete" : "Next Step"}
                 </button>
-              </div>
+              )}
             </div>
-          ) : activeView === "document" ? (
-            <div className="bg-card border rounded-xl overflow-y-auto max-h-[600px]">
-              {renderDocumentView()}
-            </div>
-          ) : (
-            <div className="bg-card border rounded-xl p-4 max-h-[600px] overflow-y-auto">
-              <h3 className="text-sm font-semibold mb-3">📜 Version History</h3>
-              {draftClauses.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-8">No changes recorded yet.</p>
-              ) : (
-                <div className="space-y-2">
-                  {draftClauses.flatMap(c => c.history.map(h => ({ ...h, clauseName: c.name, clauseId: c.id }))).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).map((entry, i) => (
-                    <div key={i} className="flex items-start gap-2 border-l-2 border-secondary/30 pl-3 py-1">
-                      <GitCommit className="w-3.5 h-3.5 text-secondary mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-xs font-medium text-foreground">{entry.clauseName} — v{entry.version}</p>
-                        <p className="text-[10px] text-muted-foreground">{new Date(entry.timestamp).toLocaleString()}</p>
+
+            {activeView === "chat" ? (
+              <>
+                {/* Quick prompts */}
+                <div className="p-2 flex flex-wrap gap-1 border-b">
+                  {pilotQuickPrompts.map(p => (
+                    <button key={p} onClick={() => handleSend(p)} className="text-[10px] px-2 py-0.5 rounded-full bg-accent text-accent-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors">
+                      {p}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
+                  {messages.map(m => (
+                    <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                      <div className="max-w-[85%]">
+                        <div className={`rounded-lg px-3 py-2 text-sm ${
+                          m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                        }`}>
+                          <pre className="whitespace-pre-wrap font-sans text-sm">{m.text}</pre>
+                        </div>
+                        {m.suggestion && (
+                          <div className="flex gap-1.5 mt-1.5">
+                            <button onClick={() => handleAcceptClause(m.suggestion)} className="text-[10px] px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 font-medium flex items-center gap-1">
+                              <Check className="w-3 h-3" /> Accept
+                            </button>
+                            <button onClick={() => handleRejectClause(m.suggestion)} className="text-[10px] px-2.5 py-1 bg-red-100 text-red-700 rounded-full hover:bg-red-200 font-medium flex items-center gap-1">
+                              <X className="w-3 h-3" /> Reject
+                            </button>
+                            <button className="text-[10px] px-2.5 py-1 bg-muted text-muted-foreground rounded-full hover:bg-muted/80 font-medium flex items-center gap-1">
+                              <Edit3 className="w-3 h-3" /> Edit
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
+                  {loading && <div className="flex justify-start"><div className="bg-muted rounded-lg px-3 py-2 text-sm animate-pulse">✨ Drafting...</div></div>}
+                  <div ref={bottomRef} />
                 </div>
-              )}
-            </div>
-          )}
+
+                {/* Input */}
+                <div className="p-2 border-t flex gap-1.5">
+                  <input
+                    className="flex-1 border rounded-lg px-3 py-1.5 text-sm bg-background"
+                    placeholder={
+                      mode === "pilot" ? "Ask ContractPilot to draft, review, or suggest clauses..." :
+                      mode === "freeform" ? "Type naturally — I'll suggest clauses inline..." :
+                      "Answer the guided question or type freely..."
+                    }
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && handleSend()}
+                  />
+                  <button onClick={() => handleSend()} className="bg-secondary text-secondary-foreground p-1.5 rounded-lg hover:opacity-90">
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              </>
+            ) : activeView === "document" ? (
+              <div className="flex-1 overflow-y-auto">
+                {renderDocumentView()}
+              </div>
+            ) : (
+              <div className="flex-1 overflow-y-auto p-4">
+                <h3 className="text-sm font-semibold mb-3">📜 Version History</h3>
+                {draftClauses.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-8">No changes recorded yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {draftClauses.flatMap(c => c.history.map(h => ({ ...h, clauseName: c.name, clauseId: c.id }))).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).map((entry, i) => (
+                      <div key={i} className="flex items-start gap-2 border-l-2 border-secondary/30 pl-3 py-1">
+                        <GitCommit className="w-3.5 h-3.5 text-secondary mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs font-medium text-foreground">{entry.clauseName} — v{entry.version}</p>
+                          <p className="text-[10px] text-muted-foreground">{new Date(entry.timestamp).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Sidebar — Clause Library */}
+        {/* Sidebar */}
         <div className="space-y-4">
           <div className="bg-card border rounded-xl p-4">
             <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
@@ -431,7 +444,6 @@ function ContractPilotTab() {
             </div>
           </div>
 
-          {/* Draft Stats */}
           <div className="bg-card border rounded-xl p-4">
             <h3 className="text-sm font-semibold text-foreground mb-2">Draft Stats</h3>
             <div className="space-y-1.5">
@@ -444,7 +456,7 @@ function ContractPilotTab() {
         </div>
       </div>
 
-      {/* Existing CoAuthor integration preserved below */}
+      {/* Existing CoAuthor features preserved */}
       <ContractCreation embedded initialTab="coauthor" />
     </div>
   );
