@@ -584,7 +584,7 @@ export default function ContractCreationWithOverview() {
               </div>
             </div>
 
-            {/* Compliance & Signing Metrics */}
+            {/* Compliance Score, By Category, and Deviation Graph — side by side */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {complianceMetrics.map(metric => (
                 <div key={metric.label} className="kpi-card flex items-start gap-3">
@@ -600,8 +600,47 @@ export default function ContractCreationWithOverview() {
               ))}
             </div>
 
-            {/* Compliance Deviation Score Graph */}
-            <ComplianceDeviationGraph />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Compliance Score — Donut */}
+              <div className="bg-card border rounded-lg p-5 flex items-center gap-6">
+                <div className="relative w-28 h-28 flex-shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={complianceScoreData} dataKey="value" innerRadius={35} outerRadius={52} startAngle={90} endAngle={-270} paddingAngle={2}>
+                        {complianceScoreData.map((_, i) => <Cell key={i} fill={complianceScoreColors[i]} />)}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-lg font-bold">{compliancePercent}%</span>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold mb-1">Compliance Score</h4>
+                  <p className="text-xs text-muted-foreground">{complianceScoreData[0].value} of {complianceTotal} obligations compliant</p>
+                  <p className="text-xs text-muted-foreground mt-1">{complianceScoreData[3].value} overdue • {complianceScoreData[1].value} in review</p>
+                </div>
+              </div>
+
+              {/* Compliance by Category — Progress Bars */}
+              <div className="bg-card border rounded-lg p-5">
+                <h4 className="text-sm font-semibold mb-3">Compliance by Category</h4>
+                <div className="space-y-2.5">
+                  {categoryCompliance.map(c => (
+                    <div key={c.category} className="flex items-center gap-3">
+                      <span className="text-xs text-foreground w-24 truncate">{c.category}</span>
+                      <div className="flex-1 bg-muted rounded-full h-2">
+                        <div className="h-2 rounded-full bg-emerald-500" style={{ width: c.total ? `${(c.compliant / c.total) * 100}%` : "0%" }} />
+                      </div>
+                      <span className="text-xs text-muted-foreground w-10 text-right">{c.compliant}/{c.total}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Compliance Deviation Score Graph */}
+              <ComplianceDeviationGraph />
+            </div>
 
             <ContractWorkflowPipeline />
             <WorkflowPage embedded initialTab="workflow" />
