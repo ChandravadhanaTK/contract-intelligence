@@ -68,7 +68,8 @@ export default function ContractCreationWithOverview() {
           <div className="space-y-6">
             {/* KPI Overview Cards */}
             <div>
-              <h2 className="text-sm font-semibold text-foreground mb-3">Contract Creation Overview</h2>
+              <h1 className="page-header">NewGen Contract Digitization</h1>
+              <p className="text-sm text-muted-foreground mt-1">OCR + AI pipeline for creating payer contracts into structured data</p>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
                 {kpiCards.map(kpi => (
                   <div key={kpi.label} className="kpi-card flex items-start gap-3">
