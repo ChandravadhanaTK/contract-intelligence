@@ -253,13 +253,26 @@ export default function ContractViewerPage() {
                     }
                   }}
                 >
-                  {/* Section header */}
+                  {/* Section header with confidence */}
                   {(section as any).isTitle ? (
                     <h1 className="text-center font-bold text-sm text-foreground mb-6 uppercase leading-snug whitespace-pre-line tracking-wide">{section.title}</h1>
                   ) : (
-                    <div className="text-center mb-4 mt-8">
-                      <p className="font-bold text-sm text-foreground uppercase tracking-wide">{(section as any).sectionNum}</p>
-                      <p className="font-bold text-sm text-foreground">{section.title}</p>
+                    <div className="flex items-center justify-between mb-4 mt-8">
+                      <div className="text-center flex-1">
+                        <p className="font-bold text-sm text-foreground uppercase tracking-wide">{(section as any).sectionNum}</p>
+                        <p className="font-bold text-sm text-foreground">{section.title}</p>
+                      </div>
+                      {sectionConfidence[section.id] !== undefined && (() => {
+                        const conf = sectionConfidence[section.id];
+                        const color = conf >= 80 ? "text-emerald-700 bg-emerald-50 border-emerald-200" : conf >= 60 ? "text-amber-700 bg-amber-50 border-amber-200" : "text-red-700 bg-red-50 border-red-200";
+                        const dotColor = conf >= 80 ? "bg-emerald-500" : conf >= 60 ? "bg-amber-500" : "bg-red-500";
+                        return (
+                          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-[10px] font-semibold ${color}`} style={{ fontFamily: "'Inter', sans-serif" }}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
+                            {conf}%
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
 

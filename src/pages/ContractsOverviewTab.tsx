@@ -226,33 +226,19 @@ export default function ContractsOverviewTab() {
                             ))}
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           {(() => {
-                            const ec = docExtractedClauses[doc.id] || 0;
-                            const intel = docIntelligence[doc.id] || 0;
-                            const barColor = (v: number) => v >= 80 ? "bg-emerald-500" : v >= 60 ? "bg-amber-500" : "bg-red-500";
-                            const dotColor = (v: number) => v >= 80 ? "bg-emerald-500" : v >= 60 ? "bg-amber-500" : "bg-red-500";
+                            const score = compliance;
+                            const barColor = score >= 80 ? "bg-emerald-500" : score >= 60 ? "bg-amber-500" : "bg-red-500";
+                            const dotColor = score >= 80 ? "bg-emerald-500" : score >= 60 ? "bg-amber-500" : "bg-red-500";
                             return (
-                              <>
-                                <div className="flex flex-col gap-0.5 items-end">
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-[9px] text-muted-foreground whitespace-nowrap">Clauses</span>
-                                    <div className="w-10 bg-muted rounded-full h-1.5">
-                                      <div className={`h-1.5 rounded-full ${barColor(ec)}`} style={{ width: `${ec}%` }} />
-                                    </div>
-                                    <span className={`w-2 h-2 rounded-full ${dotColor(ec)}`} />
-                                    <span className="text-[10px] font-medium text-muted-foreground w-7">{ec}%</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-[9px] text-muted-foreground whitespace-nowrap">Intelligence</span>
-                                    <div className="w-10 bg-muted rounded-full h-1.5">
-                                      <div className={`h-1.5 rounded-full ${barColor(intel)}`} style={{ width: `${intel}%` }} />
-                                    </div>
-                                    <span className={`w-2 h-2 rounded-full ${dotColor(intel)}`} />
-                                    <span className="text-[10px] font-medium text-muted-foreground w-7">{intel}%</span>
-                                  </div>
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-14 bg-muted rounded-full h-1.5">
+                                  <div className={`h-1.5 rounded-full ${barColor}`} style={{ width: `${score}%` }} />
                                 </div>
-                              </>
+                                <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+                                <span className="text-[11px] font-medium text-muted-foreground w-8">{score}%</span>
+                              </div>
                             );
                           })()}
                         </div>
