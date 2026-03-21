@@ -830,24 +830,26 @@ export default function ContractCreation({ embedded = false, initialTab }: Contr
   );
 
   return (
-    <div className="p-4 space-y-4 max-w-[1600px] mx-auto">
-      <h1 className="page-header">Contract Creation</h1>
+    <div className={embedded ? "space-y-4" : "p-4 space-y-4 max-w-[1600px] mx-auto"}>
+      {!embedded && <h1 className="page-header">Contract Creation</h1>}
 
       {/* Tab bar */}
-      <div className="flex flex-wrap gap-1 border-b">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-              activeTab === tab.id ? "border-secondary text-secondary" : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <tab.icon className="w-3.5 h-3.5" />
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {!embedded && (
+        <div className="flex flex-wrap gap-1 border-b">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
+                activeTab === tab.id ? "border-secondary text-secondary" : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <tab.icon className="w-3.5 h-3.5" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ═══ TAB: Contract Creation ═══ */}
       {activeTab === "create" && (
