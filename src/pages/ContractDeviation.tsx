@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, Target, CheckCircle, XCircle, AlertTriangle, ArrowLeft, ArrowRight, MessageSquare, ChevronDown, Bot } from "lucide-react";
+import { FileText, Target, CheckCircle, XCircle, AlertTriangle, ArrowLeft, ArrowRight, MessageSquare, ChevronDown, Bot, GitCompare } from "lucide-react";
 import { KPIStatCard } from "@/components/KPIStatCard";
 import { ClauseAccordionList } from "@/components/ClauseAccordionList";
 import { TwoColumnCompare } from "@/components/TwoColumnCompare";

@@ -78,7 +78,7 @@ function CompareModal({ open, onClose, sourceDoc, allDocs }: {
           disabled={!targetId}
           onClick={() => {
             onClose();
-            navigate(`/contracts/${sourceDoc.id}?compare=${targetId}`);
+            navigate(`/compare?a=${sourceDoc.id}&b=${targetId}`);
           }}
           className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50"
         >
