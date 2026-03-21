@@ -29,6 +29,11 @@ const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: "coauthor", label: "Talk to Contract Agent – Your CoAuthor", icon: Bot },
 ];
 
+interface ContractCreationProps {
+  embedded?: boolean;
+  initialTab?: TabId;
+}
+
 const quickPrompts = [
   "Draft full contract from inputs",
   "Generate Payment & Rate section",
