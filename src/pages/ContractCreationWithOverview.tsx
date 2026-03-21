@@ -224,23 +224,32 @@ function ContractPilotTab() {
   };
 
   const renderDocumentView = () => (
-    <div className="space-y-3 p-4">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-semibold text-foreground">📄 Draft Document</h3>
-        <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground">{draftClauses.length} clauses</span>
-      </div>
-      {draftClauses.length === 0 ? (
-        <p className="text-xs text-muted-foreground text-center py-8">No clauses drafted yet. Start a conversation to build your contract.</p>
-      ) : (
-        draftClauses.map(clause => (
-          <div key={clause.id} className={`border rounded-lg p-3 transition-all ${
-            clause.status === "accepted" ? "border-emerald-200 bg-emerald-50/30" :
-            clause.status === "rejected" ? "border-red-200 bg-red-50/30 opacity-60" :
-            "border-border"
-          }`}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-semibold text-foreground">{clause.name}</span>
-              <div className="flex items-center gap-1.5">
+    <div className="p-4">
+      <div className="bg-white border shadow-sm max-w-[650px] mx-auto px-10 py-8" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+        {/* Optum-style document header */}
+        <h1 className="text-center font-bold text-sm text-foreground mb-4 uppercase tracking-wide leading-snug">
+          OPTUMHEALTH CARE SOLUTIONS, LLC<br />PROVIDER AGREEMENT
+        </h1>
+        <p className="text-[12px] text-foreground leading-[1.7] text-justify mb-4">
+          THIS AGREEMENT ("Agreement") is entered into by and between OptumHealth Care Solutions, LLC. ("Optum") and the undersigned Provider, setting forth the terms and conditions under which Provider shall participate in networks developed by Optum.
+        </p>
+        <hr className="border-muted my-4" />
+
+        {draftClauses.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-8" style={{ fontFamily: "'Inter', sans-serif" }}>No clauses drafted yet. Start a conversation to build your contract.</p>
+        ) : (
+          draftClauses.map((clause, idx) => (
+            <div key={clause.id} className={`mb-5 rounded px-2 py-1.5 transition-all ${
+              clause.status === "accepted" ? "bg-emerald-50/40" :
+              clause.status === "rejected" ? "bg-red-50/40 opacity-60" : ""
+            }`}>
+              {/* Section header — centered bold like Optum format */}
+              <div className="text-center mb-2 mt-3">
+                <p className="font-bold text-[13px] text-foreground uppercase tracking-wide">SECTION {idx + 1}</p>
+                <p className="font-bold text-[13px] text-foreground">{clause.name}</p>
+              </div>
+
+              <div className="flex items-center gap-1.5 justify-end mb-1" style={{ fontFamily: "'Inter', sans-serif" }}>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
                   clause.status === "accepted" ? "bg-emerald-100 text-emerald-700" :
                   clause.status === "rejected" ? "bg-red-100 text-red-700" :
@@ -248,36 +257,45 @@ function ContractPilotTab() {
                 }`}>{clause.status}</span>
                 <span className="text-[10px] text-muted-foreground">v{clause.version}</span>
               </div>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">{clause.body}</p>
-            <div className="flex gap-1.5 mt-2">
-              {clause.status === "draft" && (
-                <>
-                  <button onClick={() => setDraftClauses(prev => prev.map(c => c.id === clause.id ? { ...c, status: "accepted" } : c))} className="text-[10px] px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200">
-                    <Check className="w-3 h-3 inline mr-0.5" /> Accept
-                  </button>
-                  <button onClick={() => setDraftClauses(prev => prev.map(c => c.id === clause.id ? { ...c, status: "rejected" } : c))} className="text-[10px] px-2 py-0.5 bg-red-100 text-red-700 rounded hover:bg-red-200">
-                    <X className="w-3 h-3 inline mr-0.5" /> Reject
-                  </button>
-                </>
-              )}
-              <button onClick={() => setShowDiff(showDiff === clause.id ? null : clause.id)} className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground rounded hover:bg-muted/80">
-                <History className="w-3 h-3 inline mr-0.5" /> History
-              </button>
-            </div>
-            {showDiff === clause.id && (
-              <div className="mt-2 border-t pt-2 space-y-1">
-                {clause.history.map(h => (
-                  <div key={h.version} className="text-[10px] text-muted-foreground flex items-center gap-1.5">
-                    <GitCommit className="w-3 h-3" />
-                    <span>v{h.version} — {new Date(h.timestamp).toLocaleString()}</span>
-                  </div>
-                ))}
+
+              <p className="text-[12px] text-foreground leading-[1.7] text-justify">{clause.body}</p>
+
+              <div className="flex gap-1.5 mt-2" style={{ fontFamily: "'Inter', sans-serif" }}>
+                {clause.status === "draft" && (
+                  <>
+                    <button onClick={() => setDraftClauses(prev => prev.map(c => c.id === clause.id ? { ...c, status: "accepted" } : c))} className="text-[10px] px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200">
+                      <Check className="w-3 h-3 inline mr-0.5" /> Accept
+                    </button>
+                    <button onClick={() => setDraftClauses(prev => prev.map(c => c.id === clause.id ? { ...c, status: "rejected" } : c))} className="text-[10px] px-2 py-0.5 bg-red-100 text-red-700 rounded hover:bg-red-200">
+                      <X className="w-3 h-3 inline mr-0.5" /> Reject
+                    </button>
+                  </>
+                )}
+                <button onClick={() => setShowDiff(showDiff === clause.id ? null : clause.id)} className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground rounded hover:bg-muted/80">
+                  <History className="w-3 h-3 inline mr-0.5" /> History
+                </button>
               </div>
-            )}
-          </div>
-        ))
-      )}
+              {showDiff === clause.id && (
+                <div className="mt-2 border-t pt-2 space-y-1" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  {clause.history.map(h => (
+                    <div key={h.version} className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+                      <GitCommit className="w-3 h-3" />
+                      <span>v{h.version} — {new Date(h.timestamp).toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))
+        )}
+
+        {/* Footer */}
+        <div className="mt-8 pt-3 border-t border-muted flex items-center justify-between text-[9px] text-muted-foreground" style={{ fontFamily: "'Arial', sans-serif" }}>
+          <span>OHCS-PhysHealthProviderAgmt(v2011)</span>
+          <span>Draft</span>
+          <span>Confidential and Proprietary</span>
+        </div>
+      </div>
     </div>
   );
 
