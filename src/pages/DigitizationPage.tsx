@@ -176,7 +176,7 @@ function UploadModal({ open, onClose }: { open: boolean; onClose: () => void }) 
   );
 }
 
-export default function DigitizationPage() {
+export default function DigitizationPage({ onBack }: { onBack?: () => void }) {
   const [docs, setDocs] = useState<DigitizationDocument[]>([]);
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [search, setSearch] = useState("");
