@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FileText, Search, Upload, ScanLine, Eye, RefreshCw, MoreHorizontal,
-  CheckCircle2, Clock, AlertTriangle, XCircle, Loader2, X,
+  CheckCircle2, Clock, AlertTriangle, XCircle, Loader2, X, ChevronLeft,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
 import type { DigitizationDocument } from "@/data/seed";
@@ -176,7 +176,7 @@ function UploadModal({ open, onClose }: { open: boolean; onClose: () => void }) 
   );
 }
 
-export default function DigitizationPage() {
+export default function DigitizationPage({ onBack }: { onBack?: () => void }) {
   const [docs, setDocs] = useState<DigitizationDocument[]>([]);
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [search, setSearch] = useState("");
@@ -233,9 +233,14 @@ export default function DigitizationPage() {
   const pipelineTotal = pipelineCounts.reduce((a, b) => a + b, 0) || 1;
 
   return (
-    <div className="page-container">
+    <div className={onBack ? "space-y-4" : "page-container"}>
       <div className="flex items-start justify-between flex-wrap gap-2">
         <div>
+          {onBack && (
+            <button onClick={onBack} className="flex items-center gap-1 text-xs text-primary hover:underline mb-2">
+              <ChevronLeft className="w-3.5 h-3.5" /> Back to Contracts
+            </button>
+          )}
           <h1 className="page-header">Legacy Contract Digitization</h1>
           <p className="text-sm text-muted-foreground mt-1">OCR + AI pipeline for converting legacy payer contracts into structured data</p>
         </div>

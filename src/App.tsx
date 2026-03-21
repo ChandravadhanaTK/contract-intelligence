@@ -66,9 +66,9 @@ const App = () => {
           <AppLayout onLogout={handleLogout}>
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/create" element={<ContractCreation />} />
+              <Route path="/create" element={<Navigate to="/contracts" replace />} />
               <Route path="/upload" element={<UploadContract />} />
-              <Route path="/digitization" element={<DigitizationPage />} />
+              <Route path="/digitization" element={<Navigate to="/contracts" replace />} />
               <Route path="/deviation" element={<Navigate to="/compliance-hub?tab=deviations" replace />} />
               <Route path="/clauses" element={<Navigate to="/compliance-hub?tab=clauses" replace />} />
               <Route path="/redlining" element={<Navigate to="/compliance-hub?tab=redlining" replace />} />
