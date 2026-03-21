@@ -8,7 +8,6 @@ import LoginPage from "./pages/LoginPage";
 import ContractDeviation from "./pages/ContractDeviation";
 import StandardClauses from "./pages/StandardClauses";
 import AgentWorkspace from "./pages/AgentWorkspace";
-import AgentWorkspace from "./pages/AgentWorkspace";
 import Redlining from "./pages/Redlining";
 import WorkflowPage from "./pages/WorkflowPage";
 import DownstreamFeed from "./pages/DownstreamFeed";
