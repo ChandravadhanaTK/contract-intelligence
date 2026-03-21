@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { FileText, PenLine, Users, Eye, CheckCircle2, Globe, ArrowDownToLine, GitBranch, ClipboardList, UserCheck, Bot, Zap } from "lucide-react";
+import { FileText, PenLine, Users, Eye, CheckCircle2, Globe, ArrowDownToLine, GitBranch, ClipboardList, UserCheck, Bot, Zap, Upload, List, ArrowRight } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import WorkflowPage from "./WorkflowPage";
+import ContractCreation from "./ContractCreation";
 
 const kpiCards = [
   { label: "Total Documents", value: 42, icon: <FileText className="w-4 h-4" />, accent: "bg-primary/10 text-primary" },
@@ -62,6 +63,18 @@ export default function ContractCreationWithOverview() {
           <TabsTrigger value="agents" className="flex items-center gap-1.5 text-xs">
             <Bot className="w-3.5 h-3.5" /> Agent Workspace
           </TabsTrigger>
+          <TabsTrigger value="upload" className="flex items-center gap-1.5 text-xs">
+            <Upload className="w-3.5 h-3.5" /> Upload a Contract
+          </TabsTrigger>
+          <TabsTrigger value="bulk" className="flex items-center gap-1.5 text-xs">
+            <List className="w-3.5 h-3.5" /> Bulk Upload Contract
+          </TabsTrigger>
+          <TabsTrigger value="intake" className="flex items-center gap-1.5 text-xs">
+            <ArrowRight className="w-3.5 h-3.5" /> Start from Provider Intake
+          </TabsTrigger>
+          <TabsTrigger value="coauthor" className="flex items-center gap-1.5 text-xs">
+            <Bot className="w-3.5 h-3.5" /> Talk to your Agent - Your CoAuthor
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="newgen">
@@ -101,6 +114,18 @@ export default function ContractCreationWithOverview() {
         </TabsContent>
         <TabsContent value="agents">
           <WorkflowPage embedded initialTab="agents" />
+        </TabsContent>
+        <TabsContent value="upload">
+          <ContractCreation embedded initialTab="upload" />
+        </TabsContent>
+        <TabsContent value="bulk">
+          <ContractCreation embedded initialTab="bulk" />
+        </TabsContent>
+        <TabsContent value="intake">
+          <ContractCreation embedded initialTab="intake" />
+        </TabsContent>
+        <TabsContent value="coauthor">
+          <ContractCreation embedded initialTab="coauthor" />
         </TabsContent>
       </Tabs>
     </div>

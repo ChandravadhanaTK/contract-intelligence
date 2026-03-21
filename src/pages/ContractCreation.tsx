@@ -29,6 +29,11 @@ const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: "coauthor", label: "Talk to Contract Agent – Your CoAuthor", icon: Bot },
 ];
 
+interface ContractCreationProps {
+  embedded?: boolean;
+  initialTab?: TabId;
+}
+
 const quickPrompts = [
   "Draft full contract from inputs",
   "Generate Payment & Rate section",
@@ -348,9 +353,9 @@ function BulkUploadTab({ onNavigate }: { onNavigate: (path: string) => void }) {
   );
 }
 
-export default function ContractCreation() {
+export default function ContractCreation({ embedded = false, initialTab }: ContractCreationProps = {}) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TabId>("create");
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab || "create");
   const [form, setForm] = useState({ name: "", parties: "", effectiveDate: "", term: "", paymentRate: "", servicesScope: "" });
   const [generatedDoc, setGeneratedDoc] = useState<ContractDraftDocument | null>(null);
   const [showDocPreview, setShowDocPreview] = useState(true);
@@ -825,24 +830,26 @@ export default function ContractCreation() {
   );
 
   return (
-    <div className="p-4 space-y-4 max-w-[1600px] mx-auto">
-      <h1 className="page-header">Contract Creation</h1>
+    <div className={embedded ? "space-y-4" : "p-4 space-y-4 max-w-[1600px] mx-auto"}>
+      {!embedded && <h1 className="page-header">Contract Creation</h1>}
 
       {/* Tab bar */}
-      <div className="flex flex-wrap gap-1 border-b">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-              activeTab === tab.id ? "border-secondary text-secondary" : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <tab.icon className="w-3.5 h-3.5" />
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {!embedded && (
+        <div className="flex flex-wrap gap-1 border-b">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
+                activeTab === tab.id ? "border-secondary text-secondary" : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <tab.icon className="w-3.5 h-3.5" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ═══ TAB: Contract Creation ═══ */}
       {activeTab === "create" && (
