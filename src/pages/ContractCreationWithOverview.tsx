@@ -1,5 +1,8 @@
-import { FileText, PenLine, Users, Eye, CheckCircle2, Globe, ArrowDownToLine } from "lucide-react";
+import { useState } from "react";
+import { FileText, PenLine, Users, Eye, CheckCircle2, Globe, ArrowDownToLine, GitBranch, ClipboardList, UserCheck, Bot } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ContractCreation from "./ContractCreation";
+import WorkflowPage from "./WorkflowPage";
 
 const kpiCards = [
   { label: "Total Documents", value: 42, icon: <FileText className="w-4 h-4" />, accent: "bg-primary/10 text-primary" },
@@ -12,6 +15,8 @@ const kpiCards = [
 ];
 
 export default function ContractCreationWithOverview() {
+  const [subTab, setSubTab] = useState("creation");
+
   return (
     <div className="space-y-6">
       {/* KPI Overview Cards */}
@@ -32,8 +37,42 @@ export default function ContractCreationWithOverview() {
         </div>
       </div>
 
-      {/* Existing Contract Creation */}
-      <ContractCreation />
+      {/* Sub-tabs: Creation + Workflow tabs */}
+      <Tabs value={subTab} onValueChange={setSubTab}>
+        <TabsList className="bg-muted/60 flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="creation" className="flex items-center gap-1.5 text-xs">
+            <FileText className="w-3.5 h-3.5" /> Contract Creation
+          </TabsTrigger>
+          <TabsTrigger value="workflow" className="flex items-center gap-1.5 text-xs">
+            <GitBranch className="w-3.5 h-3.5" /> Workflow
+          </TabsTrigger>
+          <TabsTrigger value="review" className="flex items-center gap-1.5 text-xs">
+            <ClipboardList className="w-3.5 h-3.5" /> Review Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="hitl" className="flex items-center gap-1.5 text-xs">
+            <UserCheck className="w-3.5 h-3.5" /> HITL Center
+          </TabsTrigger>
+          <TabsTrigger value="agents" className="flex items-center gap-1.5 text-xs">
+            <Bot className="w-3.5 h-3.5" /> Agent Workspace
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="creation">
+          <ContractCreation />
+        </TabsContent>
+        <TabsContent value="workflow">
+          <WorkflowPage embedded initialTab="workflow" />
+        </TabsContent>
+        <TabsContent value="review">
+          <WorkflowPage embedded initialTab="review" />
+        </TabsContent>
+        <TabsContent value="hitl">
+          <WorkflowPage embedded initialTab="hitl" />
+        </TabsContent>
+        <TabsContent value="agents">
+          <WorkflowPage embedded initialTab="agents" />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
