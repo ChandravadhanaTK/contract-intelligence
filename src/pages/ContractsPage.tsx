@@ -149,7 +149,7 @@ export default function ContractsPage() {
   return (
     <div className="page-container">
       <h1 className="page-header">Contracts</h1>
-      <p className="text-sm text-muted-foreground">{totalFamilies} contract families • {totalDocs} total documents</p>
+      <p className="text-sm text-muted-foreground">{totalFamilies} Contract Families • {totalDocs} Total Documents</p>
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap mt-4">
