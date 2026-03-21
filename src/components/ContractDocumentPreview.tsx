@@ -12,7 +12,7 @@ interface Props {
 }
 
 export function ContractDocumentPreview({ document, onRegenerate, onSendToRedlining, onUpdateSections, onClose }: Props) {
-  const [editMode, setEditMode] = useState(false);
+  const [editMode, setEditMode] = useState(true);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
 

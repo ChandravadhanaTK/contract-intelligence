@@ -31,7 +31,12 @@ export default function WorkflowPage() {
   const [showLoadReady, setShowLoadReady] = useState(false);
   const [checklistReq, setChecklistReq] = useState<ReviewRequest | null>(null);
   const [workspaceReq, setWorkspaceReq] = useState<ReviewRequest | null>(null);
-  const [activeTab, setActiveTab] = useState<"workflow" | "review" | "hitl">("review");
+  const [activeTab, setActiveTab] = useState<"workflow" | "review" | "hitl" | "agents">("review");
+
+  // Agent workspace state
+  const [agentLogs, setAgentLogs] = useState<AgentLog[]>([]);
+  const [agentRunning, setAgentRunning] = useState(false);
+  const [agentContractId, setAgentContractId] = useState<string>("all");
 
   // HITL items
   const [hitlItems, setHitlItems] = useState<any[]>([]);
