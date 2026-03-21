@@ -117,6 +117,7 @@ export default function ContractsOverviewTab() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [jurisdictionFilter, setJurisdictionFilter] = useState("All Jurisdictions");
+  const [contractType, setContractType] = useState("All Types");
   const [sortBy, setSortBy] = useState<SortBy>("Recent");
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [compareDoc, setCompareDoc] = useState<{ id: string; name: string } | null>(null);
