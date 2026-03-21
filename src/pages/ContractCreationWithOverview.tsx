@@ -139,6 +139,26 @@ export default function ContractCreationWithOverview() {
                 ))}
               </div>
             </div>
+
+            {/* Compliance & Signing Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {complianceMetrics.map(metric => (
+                <div key={metric.label} className="kpi-card flex items-start gap-3">
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${metric.accent}`}>
+                    {metric.icon}
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground font-medium">{metric.label}</p>
+                    <p className="text-xl font-bold text-foreground">{metric.value}</p>
+                    {metric.subtitle && <p className="text-[10px] text-muted-foreground">{metric.subtitle}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Compliance Deviation Score Graph */}
+            <ComplianceDeviationGraph />
+
             <ContractWorkflowPipeline />
             <WorkflowPage embedded initialTab="workflow" />
           </div>
