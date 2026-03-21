@@ -456,8 +456,7 @@ function ContractPilotTab() {
         </div>
       </div>
 
-      {/* Existing CoAuthor features preserved */}
-      <ContractCreation embedded initialTab="coauthor" />
+
     </div>
   );
 }
