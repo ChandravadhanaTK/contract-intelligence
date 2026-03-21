@@ -233,9 +233,14 @@ export default function DigitizationPage({ onBack }: { onBack?: () => void }) {
   const pipelineTotal = pipelineCounts.reduce((a, b) => a + b, 0) || 1;
 
   return (
-    <div className="page-container">
+    <div className={onBack ? "space-y-4" : "page-container"}>
       <div className="flex items-start justify-between flex-wrap gap-2">
         <div>
+          {onBack && (
+            <button onClick={onBack} className="flex items-center gap-1 text-xs text-primary hover:underline mb-2">
+              <ChevronLeft className="w-3.5 h-3.5" /> Back to Contracts
+            </button>
+          )}
           <h1 className="page-header">Legacy Contract Digitization</h1>
           <p className="text-sm text-muted-foreground mt-1">OCR + AI pipeline for converting legacy payer contracts into structured data</p>
         </div>
