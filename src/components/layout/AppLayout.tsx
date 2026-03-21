@@ -253,10 +253,13 @@ export function AppLayout({ children, onLogout }: Props) {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <button onClick={() => navigate("/contracts?tab=digitize")} className="px-3 py-1.5 text-xs font-medium border rounded-lg hover:bg-muted transition-colors flex items-center gap-1.5">
+            <button onClick={() => navigate("/digitization")} className="px-3 py-1.5 text-xs font-medium border rounded-lg hover:bg-muted transition-colors flex items-center gap-1.5">
               <ScanLine className="w-3.5 h-3.5" /> Digitize Legacy
             </button>
-            <button onClick={() => navigate("/contracts?tab=upload")} className="px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-colors flex items-center gap-1.5">
+            <button onClick={() => navigate("/create")} className="px-3 py-1.5 text-xs font-medium border rounded-lg hover:bg-muted transition-colors flex items-center gap-1.5">
+              <FilePlus className="w-3.5 h-3.5" /> Contract Creation
+            </button>
+            <button onClick={() => navigate("/upload")} className="px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-colors flex items-center gap-1.5">
               <Upload className="w-3.5 h-3.5" /> Upload Contracts
             </button>
 
