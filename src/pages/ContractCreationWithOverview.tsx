@@ -112,7 +112,7 @@ export default function ContractCreationWithOverview() {
             <Upload className="w-3.5 h-3.5" /> Upload Contract
           </TabsTrigger>
           <TabsTrigger value="intake" className="flex items-center gap-1.5 text-xs">
-            <ArrowRight className="w-3.5 h-3.5" /> Start from Provider Intake
+            <ArrowRight className="w-3.5 h-3.5" /> Provider Intake Contract
           </TabsTrigger>
           <TabsTrigger value="coauthor" className="flex items-center gap-1.5 text-xs">
             <Bot className="w-3.5 h-3.5" /> Talk to your Agent - Your CoAuthor
