@@ -9,7 +9,6 @@ import { useState } from "react";
 const navItems = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { label: "Contracts", path: "/contracts", icon: FolderOpen },
-  { label: "Contract Creation", path: "/create", icon: FilePlus },
   { label: "Standard Clauses", path: "/clauses", icon: BookOpen },
   { label: "Contract Deviation", path: "/deviation", icon: GitCompare },
   { label: "Redlining", path: "/redlining", icon: Pencil },
