@@ -26,6 +26,7 @@ import ContractCreation from "./pages/ContractCreation";
 import UploadContract from "./pages/UploadContract";
 import DigitizationPage from "./pages/DigitizationPage";
 import CompliancePage from "./pages/CompliancePage";
+import ComparePage from "./pages/ComparePage";
 
 import NotFound from "./pages/NotFound";
 
@@ -78,6 +79,7 @@ const App = () => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/contracts" element={<ContractsPage />} />
               <Route path="/contracts/:id" element={<ContractViewerPage />} />
+              <Route path="/compare" element={<ComparePage />} />
               <Route path="/users" element={<UserManagement />} />
               <Route path="/intake" element={<IntakePage />} />
               <Route path="/credentialing" element={<CredentialingPage />} />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, Target, CheckCircle, XCircle, AlertTriangle, ArrowLeft, ArrowRight, MessageSquare, ChevronDown, Bot } from "lucide-react";
+import { FileText, Target, CheckCircle, XCircle, AlertTriangle, ArrowLeft, ArrowRight, MessageSquare, ChevronDown, Bot, GitCompare } from "lucide-react";
 import { KPIStatCard } from "@/components/KPIStatCard";
 import { ClauseAccordionList } from "@/components/ClauseAccordionList";
 import { TwoColumnCompare } from "@/components/TwoColumnCompare";
@@ -149,6 +149,9 @@ export default function ContractDeviation() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="page-header">Contract Deviation & Recommendations</h1>
         <div className="flex gap-2">
+          <button onClick={() => navigate(`/compare?a=fd-1&b=fd-5`)} className="flex items-center gap-2 px-3 py-1.5 border rounded-lg text-sm font-medium hover:bg-muted">
+            <GitCompare className="w-4 h-4" /> Compare this contract with…
+          </button>
           <button onClick={() => navigate("/integrity")} className="flex items-center gap-2 px-3 py-1.5 border rounded-lg text-sm font-medium hover:bg-muted">
             <ArrowRight className="w-4 h-4" /> Run Integrity Validation
           </button>
