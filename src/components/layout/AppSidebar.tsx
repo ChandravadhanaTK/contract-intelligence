@@ -16,7 +16,7 @@ const navItems = [
   { label: "Workflow", path: "/workflow", icon: Workflow },
   { label: "Downstream Feed", path: "/downstream", icon: Send },
   { label: "Obligation Tracker", path: "/compliance", icon: ShieldCheck },
-  { label: "Digitization", path: "/digitization", icon: ScanLine },
+  
   { label: "User Management", path: "/users", icon: Users },
 ];
 
