@@ -183,9 +183,9 @@ export default function WorkflowPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b">
-        {(["workflow", "review", "hitl"] as const).map(tab => (
+        {(["workflow", "review", "hitl", "agents"] as const).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? "border-secondary text-secondary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-            {tab === "workflow" ? "Workflow" : tab === "review" ? "Review Dashboard" : `HITL Center (${hitlItems.length})`}
+            {tab === "workflow" ? "Workflow" : tab === "review" ? "Review Dashboard" : tab === "hitl" ? `HITL Center (${hitlItems.length})` : "Agent Workspace"}
           </button>
         ))}
       </div>
