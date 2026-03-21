@@ -392,6 +392,7 @@ function AgentWorkspaceTab({ contracts, selectedContractId: initialContractId }:
       </div>
     </div>
   );
+}
 
 function HITLItemCard({ item, onAction }: { item: any; onAction: (id: string, action: string, reason: string) => void }) {
   const [reason, setReason] = useState("");
