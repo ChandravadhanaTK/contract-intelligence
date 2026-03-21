@@ -259,9 +259,6 @@ export function AppLayout({ children, onLogout }: Props) {
             <button onClick={() => navigate("/create")} className="px-3 py-1.5 text-xs font-medium border rounded-lg hover:bg-muted transition-colors flex items-center gap-1.5">
               <FilePlus className="w-3.5 h-3.5" /> Contract Creation
             </button>
-            <button onClick={() => navigate("/upload")} className="px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-colors flex items-center gap-1.5">
-              <Upload className="w-3.5 h-3.5" /> Upload Contracts
-            </button>
 
             {/* Notifications */}
             <div className="relative">

@@ -2,21 +2,18 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   Upload, GitCompare, BookOpen, Bot, Pencil,
   Workflow, Send, ShieldCheck, FileText, ChevronLeft, ChevronRight,
-  LayoutDashboard, Users, FolderOpen,
+  LayoutDashboard, Users, FolderOpen, Shield, ClipboardList,
 } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { label: "Contracts", path: "/contracts", icon: FolderOpen },
-  { label: "Standard Clauses", path: "/clauses", icon: BookOpen },
-  { label: "Contract Deviation", path: "/deviation", icon: GitCompare },
-  { label: "Redlining", path: "/redlining", icon: Pencil },
+  { label: "Compliance", path: "/compliance-hub", icon: Shield },
+  { label: "Obligation Tracker", path: "/obligation-tracker", icon: ShieldCheck },
   { label: "Agent Workspace", path: "/agents", icon: Bot },
   { label: "Workflow", path: "/workflow", icon: Workflow },
   { label: "Downstream Feed", path: "/downstream", icon: Send },
-  { label: "Obligation Tracker", path: "/compliance", icon: ShieldCheck },
-  
   { label: "User Management", path: "/users", icon: Users },
 ];
 
@@ -46,7 +43,8 @@ export function AppSidebar() {
       {/* Nav */}
       <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path ||
+            (item.path === "/compliance-hub" && location.pathname.startsWith("/compliance-hub"));
           return (
             <NavLink
               key={item.path}

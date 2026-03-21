@@ -25,6 +25,7 @@ import ContractViewerPage from "./pages/ContractViewerPage";
 import ContractCreation from "./pages/ContractCreation";
 import UploadContract from "./pages/UploadContract";
 import DigitizationPage from "./pages/DigitizationPage";
+import CompliancePage from "./pages/CompliancePage";
 
 import NotFound from "./pages/NotFound";
 
@@ -65,13 +66,15 @@ const App = () => {
               <Route path="/create" element={<ContractCreation />} />
               <Route path="/upload" element={<UploadContract />} />
               <Route path="/digitization" element={<DigitizationPage />} />
-              <Route path="/deviation" element={<ContractDeviation />} />
-              <Route path="/clauses" element={<StandardClauses />} />
-              <Route path="/redlining" element={<Redlining />} />
+              <Route path="/deviation" element={<Navigate to="/compliance-hub?tab=deviations" replace />} />
+              <Route path="/clauses" element={<Navigate to="/compliance-hub?tab=clauses" replace />} />
+              <Route path="/redlining" element={<Navigate to="/compliance-hub?tab=redlining" replace />} />
               <Route path="/agents" element={<AgentWorkspace />} />
               <Route path="/workflow" element={<WorkflowPage />} />
               <Route path="/downstream" element={<DownstreamFeed />} />
-              <Route path="/compliance" element={<ObligationCompliance />} />
+              <Route path="/obligation-tracker" element={<ObligationCompliance />} />
+              <Route path="/compliance" element={<Navigate to="/obligation-tracker" replace />} />
+              <Route path="/compliance-hub" element={<CompliancePage />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/contracts" element={<ContractsPage />} />
               <Route path="/contracts/:id" element={<ContractViewerPage />} />
