@@ -145,7 +145,7 @@ export default function WorkflowPage({ embedded = false, initialTab }: WorkflowP
     toast.success(`Item ${action.toLowerCase()}d`);
   };
 
-  if (contracts.length === 0) return <div className="page-container"><h1 className="page-header">Workflow</h1><p className="text-muted-foreground">No contracts available.</p></div>;
+  if (contracts.length === 0) return <div className={embedded ? "space-y-4" : "page-container"}><h1 className="page-header">Workflow</h1><p className="text-muted-foreground">No contracts available.</p></div>;
 
   if (workspaceReq) {
     return (
