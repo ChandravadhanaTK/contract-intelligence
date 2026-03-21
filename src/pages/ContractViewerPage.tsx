@@ -228,51 +228,72 @@ export default function ContractViewerPage() {
           <button onClick={() => navigateClause("next", highRiskIds)} className="text-[10px] px-2 py-1 rounded border border-amber-200 hover:bg-amber-50 font-medium text-amber-700">Next high risk</button>
         </div>
 
-        {/* Document content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 relative">
-          {mockSections.map(section => {
-            const clause = extractedClauses.find(c => c.sectionId === section.id);
-            const hlClass = getHighlightClass(section.id);
-            return (
-              <div
-                key={section.id}
-                ref={el => { sectionRefs.current[section.id] = el; }}
-                data-clause-id={clause?.id || ""}
-                className={`rounded-lg border p-4 transition-all cursor-pointer ${hlClass || "border-border bg-card"}`}
-                onClick={() => {
-                  if (clause) {
-                    setPopoverClauseId(popoverClauseId === clause.id ? null : clause.id);
-                    setSelectedClauseId(clause.id);
-                  }
-                }}
-              >
-                <h3 className="text-sm font-bold text-foreground mb-2">{section.title}</h3>
-                <pre className="text-sm text-muted-foreground whitespace-pre-wrap font-sans leading-relaxed">{section.content}</pre>
+        {/* Document content — Optum Provider Agreement format */}
+        <div className="flex-1 overflow-y-auto relative">
+          <div className="max-w-[800px] mx-auto bg-white shadow-sm border my-4 px-16 py-12" style={{ fontFamily: "'Times New Roman', Georgia, serif", minHeight: '900px' }}>
+            {mockSections.map((section, secIdx) => {
+              const clause = extractedClauses.find(c => c.sectionId === section.id);
+              const hlClass = getHighlightClass(section.id);
+              return (
+                <div
+                  key={section.id}
+                  ref={el => { sectionRefs.current[section.id] = el; }}
+                  data-clause-id={clause?.id || ""}
+                  className={`mb-6 transition-all cursor-pointer rounded px-3 py-2 ${hlClass}`}
+                  onClick={() => {
+                    if (clause) {
+                      setPopoverClauseId(popoverClauseId === clause.id ? null : clause.id);
+                      setSelectedClauseId(clause.id);
+                    }
+                  }}
+                >
+                  {/* Section header */}
+                  {(section as any).isTitle ? (
+                    <h1 className="text-center font-bold text-sm text-foreground mb-6 uppercase leading-snug whitespace-pre-line tracking-wide">{section.title}</h1>
+                  ) : (
+                    <div className="text-center mb-4 mt-8">
+                      <p className="font-bold text-sm text-foreground uppercase tracking-wide">{(section as any).sectionNum}</p>
+                      <p className="font-bold text-sm text-foreground">{section.title}</p>
+                    </div>
+                  )}
 
-                {/* Clause popover/tooltip */}
-                {popoverClauseId === clause?.id && clause && (
-                  <div className="mt-3 bg-background border rounded-lg p-3 shadow-lg" onClick={e => e.stopPropagation()}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold">{clause.name}</span>
-                      <button onClick={() => setPopoverClauseId(null)} className="p-0.5 hover:bg-muted rounded"><X className="w-3 h-3" /></button>
-                    </div>
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${categoryColors[clause.category]}`}>{clause.category}</span>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${confidenceColors[clause.confidence]}`}>{clause.confidence} confidence</span>
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-secondary/10 text-secondary font-medium">§{clause.sectionRef} • {clause.pageRef}</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mb-2">{clause.summary}</p>
-                    <div className="flex gap-1.5">
-                      <button onClick={() => navigate("/compliance-hub?tab=deviations")} className="text-[10px] px-2 py-1 rounded border hover:bg-muted font-medium">View Deviation</button>
-                      <button onClick={() => { setChatOpen(true); setChatInput(`Tell me about ${clause.name}`); }} className="text-[10px] px-2 py-1 rounded border hover:bg-muted font-medium">Ask Agent</button>
-                      <button onClick={() => navigate("/compliance-hub?tab=redlining")} className="text-[10px] px-2 py-1 rounded border hover:bg-muted font-medium">Add to Redlining</button>
-                      <button onClick={() => navigate(`/compare?a=${id}&b=${id === "fd-1" ? "fd-4" : "fd-1"}&group=${clause.name}`)} className="text-[10px] px-2 py-1 rounded border border-primary/30 hover:bg-primary/5 font-medium text-primary">Compare across contracts</button>
-                    </div>
+                  {/* Section content */}
+                  <div className="text-[13px] text-foreground leading-[1.7] whitespace-pre-wrap text-justify" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                    {section.content}
                   </div>
-                )}
-              </div>
-            );
-          })}
+
+                  {/* Clause popover/tooltip */}
+                  {popoverClauseId === clause?.id && clause && (
+                    <div className="mt-3 bg-background border rounded-lg p-3 shadow-lg" style={{ fontFamily: "'Inter', sans-serif" }} onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold">{clause.name}</span>
+                        <button onClick={() => setPopoverClauseId(null)} className="p-0.5 hover:bg-muted rounded"><X className="w-3 h-3" /></button>
+                      </div>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${categoryColors[clause.category]}`}>{clause.category}</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${confidenceColors[clause.confidence]}`}>{clause.confidence} confidence</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-secondary/10 text-secondary font-medium">§{clause.sectionRef} • {clause.pageRef}</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mb-2">{clause.summary}</p>
+                      <div className="flex gap-1.5">
+                        <button onClick={() => navigate("/compliance-hub?tab=deviations")} className="text-[10px] px-2 py-1 rounded border hover:bg-muted font-medium">View Deviation</button>
+                        <button onClick={() => { setChatOpen(true); setChatInput(`Tell me about ${clause.name}`); }} className="text-[10px] px-2 py-1 rounded border hover:bg-muted font-medium">Ask Agent</button>
+                        <button onClick={() => navigate("/compliance-hub?tab=redlining")} className="text-[10px] px-2 py-1 rounded border hover:bg-muted font-medium">Add to Redlining</button>
+                        <button onClick={() => navigate(`/compare?a=${id}&b=${id === "fd-1" ? "fd-4" : "fd-1"}&group=${clause.name}`)} className="text-[10px] px-2 py-1 rounded border border-primary/30 hover:bg-primary/5 font-medium text-primary">Compare across contracts</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Footer */}
+            <div className="mt-12 pt-4 border-t border-muted flex items-center justify-between text-[10px] text-muted-foreground" style={{ fontFamily: "'Arial', sans-serif" }}>
+              <span>OHCS-PhysHealthProviderAgmt(v2011) (2)</span>
+              <span>{mockSections.length}</span>
+              <span>(Rev. 100411) BLA 042517<br />Confidential and Proprietary</span>
+            </div>
+          </div>
         </div>
       </div>
 

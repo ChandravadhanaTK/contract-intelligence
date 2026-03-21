@@ -78,18 +78,30 @@ export function ContractDocumentPreview({ document, onRegenerate, onSendToRedlin
         </div>
       </div>
 
-      <div className="p-6 max-h-[600px] overflow-y-auto">
-        <div className="prose prose-sm max-w-none">
-          <h1 className="text-xl font-bold text-primary border-b-2 border-secondary pb-2 mb-6">PROVIDER SERVICES AGREEMENT</h1>
-          <h2 className="text-lg font-semibold text-primary mb-4">{document.title}</h2>
-          <hr className="my-4" />
+      <div className="p-6 max-h-[600px] overflow-y-auto bg-white">
+        <div className="max-w-[700px] mx-auto px-12 py-8" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+          {/* Document title — Optum Provider Agreement style */}
+          <h1 className="text-center font-bold text-sm text-foreground mb-6 uppercase tracking-wide leading-snug">
+            OPTUMHEALTH CARE SOLUTIONS, LLC<br />PROVIDER AGREEMENT
+          </h1>
 
-          {document.sections.map((sec) => (
+          <p className="text-[13px] text-foreground leading-[1.7] text-justify mb-6">
+            THIS AGREEMENT ("Agreement") is entered into by and between OptumHealth Care Solutions, LLC. ("Optum") and the undersigned Provider, and sets forth the terms and conditions under which Provider shall participate in one or more networks developed by Optum to render Covered Services to Members.
+          </p>
+
+          <hr className="border-muted my-6" />
+
+          {document.sections.map((sec, i) => (
             <div key={sec.id} className="mb-6" data-section={sec.headingNumber}>
-              <h3 className="text-sm font-bold text-primary mb-2">{sec.headingNumber} {sec.title}</h3>
+              {/* Section header — centered bold like the real document */}
+              <div className="text-center mb-3 mt-6">
+                <p className="font-bold text-sm text-foreground uppercase tracking-wide">SECTION {sec.headingNumber}</p>
+                <p className="font-bold text-sm text-foreground">{sec.title}</p>
+              </div>
+
               {editMode && editingSectionId === sec.id ? (
                 <div className="space-y-2">
-                  <textarea className="w-full border rounded-lg px-3 py-2 text-sm bg-background min-h-[120px] resize-y" value={editBody} onChange={e => setEditBody(e.target.value)} />
+                  <textarea className="w-full border rounded-lg px-3 py-2 text-sm bg-background min-h-[120px] resize-y" style={{ fontFamily: "'Times New Roman', Georgia, serif" }} value={editBody} onChange={e => setEditBody(e.target.value)} />
                   <div className="flex gap-2">
                     <button onClick={saveEdit} className="px-3 py-1 bg-primary text-primary-foreground rounded text-xs font-medium">Save</button>
                     <button onClick={() => setEditingSectionId(null)} className="px-3 py-1 border rounded text-xs font-medium">Cancel</button>
@@ -97,7 +109,7 @@ export function ContractDocumentPreview({ document, onRegenerate, onSendToRedlin
                 </div>
               ) : (
                 <div className="relative group">
-                  <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{sec.body}</div>
+                  <div className="text-[13px] text-foreground whitespace-pre-wrap leading-[1.7] text-justify">{sec.body}</div>
                   {editMode && (
                     <button onClick={() => startEdit(sec.id, sec.body)} className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 p-1 bg-muted rounded text-xs">
                       <Pencil className="w-3 h-3" />
@@ -108,17 +120,23 @@ export function ContractDocumentPreview({ document, onRegenerate, onSendToRedlin
             </div>
           ))}
 
-          <h3 className="text-sm font-bold text-primary mb-2 mt-8">EXHIBITS AND APPENDICES</h3>
-          <ul className="text-sm space-y-1">
+          {/* Exhibits */}
+          <div className="text-center mb-3 mt-8">
+            <p className="font-bold text-sm text-foreground uppercase tracking-wide">EXHIBITS AND APPENDICES</p>
+          </div>
+          <ul className="text-[13px] space-y-2 text-foreground leading-[1.7]" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
             {document.exhibits.map(ex => (
               <li key={ex.id}><strong>{ex.name}:</strong> {ex.description}{ex.required ? " (Required)" : ""}</li>
             ))}
           </ul>
-        </div>
-      </div>
 
-      <div className="p-3 border-t text-xs text-muted-foreground">
-        Version {document.version} · Generated {new Date(document.lastGeneratedAt).toLocaleString()}
+          {/* Footer — matching the Optum document style */}
+          <div className="mt-12 pt-4 border-t border-muted flex items-center justify-between text-[10px] text-muted-foreground" style={{ fontFamily: "'Arial', sans-serif" }}>
+            <span>OHCS-PhysHealthProviderAgmt(v2011) (2)</span>
+            <span>Version {document.version}</span>
+            <span className="text-right">(Rev. {new Date(document.lastGeneratedAt).toLocaleDateString()})<br />Confidential and Proprietary</span>
+          </div>
+        </div>
       </div>
     </div>
   );
