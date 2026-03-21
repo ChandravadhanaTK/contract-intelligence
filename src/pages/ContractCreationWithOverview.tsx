@@ -609,6 +609,7 @@ export default function ContractCreationWithOverview() {
                   </div>
                 ))}
               </div>
+            </div>
 
             {/* Consolidated Compliance Overview card */}
             <div className="bg-card border rounded-lg p-5">
