@@ -170,11 +170,14 @@ export const api = {
     set("oci_digitization_docs", docs);
     return newDoc;
   },
-  getContractFamilies: async (statusFilter?: string, search?: string): Promise<ContractFamily[]> => {
+  getContractFamilies: async (statusFilter?: string, search?: string, jurisdictionFilter?: string): Promise<ContractFamily[]> => {
     await delay(100);
     let fams = get<ContractFamily[]>("oci_contract_families", []);
-    if (statusFilter && statusFilter !== "All Statuses") {
+    if (statusFilter && statusFilter !== "All Status") {
       fams = fams.filter(f => f.status === statusFilter);
+    }
+    if (jurisdictionFilter && jurisdictionFilter !== "All Jurisdictions") {
+      fams = fams.filter(f => f.jurisdiction === jurisdictionFilter);
     }
     if (search) {
       const s = search.toLowerCase();

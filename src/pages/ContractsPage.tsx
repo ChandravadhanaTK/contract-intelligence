@@ -117,21 +117,22 @@ function exportContractDoc(docName: string) {
 export default function ContractsPage() {
   const [families, setFamilies] = useState<ContractFamily[]>([]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All Statuses");
+  const [statusFilter, setStatusFilter] = useState("All Status");
+  const [jurisdictionFilter, setJurisdictionFilter] = useState("All Jurisdictions");
   const [sortBy, setSortBy] = useState<SortBy>("Recent");
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [compareDoc, setCompareDoc] = useState<{ id: string; name: string } | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.getContractFamilies(statusFilter, search).then(fams => {
+    api.getContractFamilies(statusFilter, search, jurisdictionFilter).then(fams => {
       let sorted = [...fams];
       if (sortBy === "Name") sorted.sort((a, b) => a.name.localeCompare(b.name));
       else if (sortBy === "Docs") sorted.sort((a, b) => b.documents.length - a.documents.length);
       else sorted.sort((a, b) => b.lastActivity.localeCompare(a.lastActivity));
       setFamilies(sorted);
     });
-  }, [search, statusFilter, sortBy]);
+  }, [search, statusFilter, jurisdictionFilter, sortBy]);
 
   const totalFamilies = families.length;
   const totalDocs = families.reduce((a, f) => a + f.documents.length, 0);
@@ -158,13 +159,13 @@ export default function ContractsPage() {
           <input className="w-full pl-8 pr-3 py-2 text-sm border rounded-lg bg-background" placeholder="Search families, contracts, tags…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="text-sm border rounded-lg px-3 py-2 bg-background">
-          <option>All Statuses</option>
+          <option>All Status</option>
           <option>Active</option>
           <option>Expired</option>
           <option>Pending Review</option>
           <option>Draft</option>
         </select>
-        <select className="text-sm border rounded-lg px-3 py-2 bg-background">
+        <select value={jurisdictionFilter} onChange={e => setJurisdictionFilter(e.target.value)} className="text-sm border rounded-lg px-3 py-2 bg-background">
           <option>All Jurisdictions</option>
           <option>NY</option>
           <option>FL</option>
