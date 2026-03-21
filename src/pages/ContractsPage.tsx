@@ -1,12 +1,17 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  FileText, Search, ChevronRight, ChevronDown, Calendar, Eye, GitCompare, FileDown,
-  Tag, FolderOpen, Filter,
+  FileText, Search, ChevronRight, ChevronDown, Eye, GitCompare, FileDown,
+  FolderOpen, ScanLine, FilePlus, Upload, Bell, ScrollText,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
-import type { ContractFamily, ContractFamilyDoc } from "@/data/seed";
+import type { ContractFamily } from "@/data/seed";
+import ContractCreation from "./ContractCreation";
+import DigitizationPage from "./DigitizationPage";
+import UploadContract from "./UploadContract";
+import { AuditLogDrawer } from "@/components/AuditLogDrawer";
 
+/* ── status / type chip maps ── */
 const statusChip: Record<string, string> = {
   Active: "bg-emerald-100 text-emerald-700",
   Expired: "bg-red-100 text-red-700",
@@ -14,7 +19,6 @@ const statusChip: Record<string, string> = {
   "Under Review": "bg-amber-100 text-amber-700",
   Draft: "bg-blue-100 text-blue-700",
 };
-
 const typeChip: Record<string, string> = {
   MSA: "bg-primary/10 text-primary",
   BAA: "bg-secondary/10 text-secondary",
@@ -23,8 +27,48 @@ const typeChip: Record<string, string> = {
 };
 
 type SortBy = "Recent" | "Name" | "Docs";
+type TabId = "contracts" | "digitize" | "creation" | "upload" | "notifications" | "audit";
 
-export default function ContractsPage() {
+const tabs: { id: TabId; label: string; icon: React.ElementType; iconOnly?: boolean }[] = [
+  { id: "contracts", label: "Contracts", icon: FolderOpen },
+  { id: "digitize", label: "Digitize Legacy", icon: ScanLine },
+  { id: "creation", label: "Contract Creation", icon: FilePlus },
+  { id: "upload", label: "Upload Contracts", icon: Upload },
+  { id: "notifications", label: "Notifications", icon: Bell, iconOnly: true },
+  { id: "audit", label: "Audit Log", icon: ScrollText, iconOnly: true },
+];
+
+/* ── Notifications panel (simple deterministic) ── */
+const seedNotifications = [
+  { id: "n1", text: "BAA Compliance Certification due in 3 days", time: "2h ago", read: false },
+  { id: "n2", text: "BlueCross MSA renewal submitted for review", time: "5h ago", read: false },
+  { id: "n3", text: "Digitization completed for Aetna Fee Schedule", time: "1d ago", read: true },
+  { id: "n4", text: "SLA review requested by Legal team", time: "1d ago", read: true },
+  { id: "n5", text: "New amendment uploaded for UnitedHealth SOW", time: "2d ago", read: true },
+];
+
+function NotificationsPanel() {
+  return (
+    <div className="page-container">
+      <h2 className="text-lg font-semibold text-foreground mb-4">Notifications</h2>
+      <div className="space-y-2">
+        {seedNotifications.map(n => (
+          <div key={n.id} className={`bg-card border rounded-lg p-4 flex items-start gap-3 ${!n.read ? "border-primary/30 bg-primary/5" : ""}`}>
+            <Bell className={`w-4 h-4 mt-0.5 flex-shrink-0 ${!n.read ? "text-primary" : "text-muted-foreground"}`} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-foreground">{n.text}</p>
+              <p className="text-xs text-muted-foreground mt-1">{n.time}</p>
+            </div>
+            {!n.read && <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-1.5" />}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Contracts Repository (existing list) ── */
+function ContractsRepository() {
   const [families, setFamilies] = useState<ContractFamily[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
@@ -54,13 +98,8 @@ export default function ContractsPage() {
   };
 
   return (
-    <div className="page-container">
-      <div className="flex items-start justify-between flex-wrap gap-2">
-        <div>
-          <h1 className="page-header">Contracts</h1>
-          <p className="text-sm text-muted-foreground mt-1">{totalFamilies} contract families • {totalDocs} total documents</p>
-        </div>
-      </div>
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">{totalFamilies} contract families • {totalDocs} total documents</p>
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
@@ -143,6 +182,83 @@ export default function ContractsPage() {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/* ── Audit Log tab (inline version) ── */
+function AuditLogTab() {
+  const [entries, setEntries] = useState<any[]>([]);
+  useEffect(() => { api.getAuditLog().then(setEntries); }, []);
+  return (
+    <div className="page-container">
+      <h2 className="text-lg font-semibold text-foreground mb-4">Audit Log</h2>
+      <div className="space-y-3">
+        {entries.length === 0 && <p className="text-sm text-muted-foreground">No entries yet.</p>}
+        {entries.map((e: any) => (
+          <div key={e.id} className="bg-card border rounded-lg p-4">
+            <div className="flex justify-between items-start mb-1">
+              <span className="text-sm font-medium text-foreground">{e.action}</span>
+              <span className="text-xs text-muted-foreground">{new Date(e.timestamp).toLocaleString()}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">{e.detail}</p>
+            <p className="text-xs text-muted-foreground mt-1">By: {e.actor}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Main ContractsPage ── */
+export default function ContractsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = (searchParams.get("tab") as TabId) || "contracts";
+
+  const setActiveTab = (tab: TabId) => {
+    setSearchParams({ tab });
+  };
+
+  const unreadCount = seedNotifications.filter(n => !n.read).length;
+
+  return (
+    <div className="page-container">
+      <h1 className="page-header">Contracts</h1>
+
+      {/* Tabs */}
+      <div className="flex items-center gap-1 border-b border-border mb-6 overflow-x-auto">
+        {tabs.map(tab => {
+          const isActive = activeTab === tab.id;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                isActive
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {!tab.iconOnly && <span>{tab.label}</span>}
+              {tab.id === "notifications" && unreadCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tab content */}
+      {activeTab === "contracts" && <ContractsRepository />}
+      {activeTab === "digitize" && <DigitizationPage />}
+      {activeTab === "creation" && <ContractCreation />}
+      {activeTab === "upload" && <UploadContract />}
+      {activeTab === "notifications" && <NotificationsPanel />}
+      {activeTab === "audit" && <AuditLogTab />}
     </div>
   );
 }

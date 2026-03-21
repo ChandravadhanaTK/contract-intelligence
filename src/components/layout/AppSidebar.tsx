@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  Upload, GitCompare, BookOpen, FilePlus, Bot, Pencil,
+  Upload, GitCompare, BookOpen, Bot, Pencil,
   Workflow, Send, ShieldCheck, FileText, ChevronLeft, ChevronRight,
   LayoutDashboard, Users, FolderOpen, ScanLine,
 } from "lucide-react";
