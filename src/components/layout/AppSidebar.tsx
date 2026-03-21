@@ -12,7 +12,6 @@ const navItems = [
   { label: "Contracts", path: "/contracts", icon: FolderOpen },
   { label: "Compliance", path: "/compliance-hub", icon: Shield },
   { label: "Obligation Tracker", path: "/obligation-tracker", icon: ShieldCheck },
-  { label: "Agent Workspace", path: "/agents", icon: Bot },
   { label: "Workflow", path: "/workflow", icon: Workflow },
   { label: "Downstream Feed", path: "/downstream", icon: Send },
   { label: "User Management", path: "/users", icon: Users },

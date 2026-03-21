@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Search, Eye, Pencil, MessageSquare, ArrowRight, Shield } from "lucide-react";
+import { Search, Eye, Pencil, MessageSquare, ArrowRight, Shield, Play, FileText, ChevronDown } from "lucide-react";
 import { api } from "@/services/mockApi";
 import { Timeline } from "@/components/Timeline";
 import { JobChecklistModal } from "@/components/JobChecklistModal";
 import { ReviewWorkspace } from "@/components/ReviewWorkspace";
 import { toast } from "sonner";
-import type { Contract, ReviewDocument, ReviewRequest, WorkflowStage, IntegrityFinding } from "@/types";
+import type { Contract, ReviewDocument, ReviewRequest, WorkflowStage, IntegrityFinding, AgentLog } from "@/types";
 
 function get<T>(key: string, fb: T): T { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; }
 
@@ -31,7 +31,12 @@ export default function WorkflowPage() {
   const [showLoadReady, setShowLoadReady] = useState(false);
   const [checklistReq, setChecklistReq] = useState<ReviewRequest | null>(null);
   const [workspaceReq, setWorkspaceReq] = useState<ReviewRequest | null>(null);
-  const [activeTab, setActiveTab] = useState<"workflow" | "review" | "hitl">("review");
+  const [activeTab, setActiveTab] = useState<"workflow" | "review" | "hitl" | "agents">("review");
+
+  // Agent workspace state
+  const [agentLogs, setAgentLogs] = useState<AgentLog[]>([]);
+  const [agentRunning, setAgentRunning] = useState(false);
+  const [agentContractId, setAgentContractId] = useState<string>("all");
 
   // HITL items
   const [hitlItems, setHitlItems] = useState<any[]>([]);
@@ -178,9 +183,9 @@ export default function WorkflowPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b">
-        {(["workflow", "review", "hitl"] as const).map(tab => (
+        {(["workflow", "review", "hitl", "agents"] as const).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? "border-secondary text-secondary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-            {tab === "workflow" ? "Workflow" : tab === "review" ? "Review Dashboard" : `HITL Center (${hitlItems.length})`}
+            {tab === "workflow" ? "Workflow" : tab === "review" ? "Review Dashboard" : tab === "hitl" ? `HITL Center (${hitlItems.length})` : "Agent Workspace"}
           </button>
         ))}
       </div>
@@ -284,7 +289,107 @@ export default function WorkflowPage() {
         </div>
       )}
 
+      {activeTab === "agents" && (
+        <AgentWorkspaceTab contracts={contracts} selectedContractId={selectedContractId} />
+      )}
+
       {checklistReq && <JobChecklistModal request={checklistReq} onClose={() => setChecklistReq(null)} onUpdate={handleRequestUpdate} />}
+    </div>
+  );
+}
+
+function AgentWorkspaceTab({ contracts, selectedContractId: initialContractId }: { contracts: Contract[]; selectedContractId: string }) {
+  const [logs, setLogs] = useState<AgentLog[]>([]);
+  const [running, setRunning] = useState(false);
+  const [selectedContractId, setSelectedContractId] = useState<string>(initialContractId || "all");
+
+  const selectedContract = selectedContractId === "all" ? null : contracts.find(c => c.id === selectedContractId);
+
+  const handleRun = async () => {
+    setRunning(true);
+    setLogs([]);
+    await api.simulateAgents((log) => {
+      setLogs((prev) => {
+        const idx = prev.findIndex((l) => l.id === log.id);
+        if (idx >= 0) { const n = [...prev]; n[idx] = log; return n; }
+        return [...prev, log];
+      });
+    });
+    setRunning(false);
+    await api.addAuditEntry({ id: `a-${Date.now()}`, timestamp: new Date().toISOString(), action: "Agents Executed", detail: `All 5 agents completed processing on ${selectedContractId === "all" ? "all contracts" : selectedContract?.name || "contract"}`, actor: "System" });
+    toast.success("All agents completed!");
+  };
+
+  const agents = ["Intake Agent", "Clause Matching Agent", "Redlining Agent", "Workflow Agent", "Compliance Agent"];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <p className="text-sm text-muted-foreground">Run AI agents for automated contract processing.</p>
+        <button onClick={handleRun} disabled={running} className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50">
+          <Play className="w-4 h-4" /> {running ? "Running..." : "Run Agents"}
+        </button>
+      </div>
+
+      <div className="bg-card border rounded-lg p-4 flex items-center gap-3 flex-wrap">
+        <FileText className="w-4 h-4 text-secondary" />
+        <span className="text-sm font-medium text-foreground">Contract:</span>
+        <div className="relative flex-1 max-w-md">
+          <select value={selectedContractId} onChange={e => setSelectedContractId(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm bg-background appearance-none pr-8">
+            <option value="all">All Contracts</option>
+            {contracts.map(c => (<option key={c.id} value={c.id}>{c.name}</option>))}
+          </select>
+          <ChevronDown className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
+        </div>
+        {selectedContract && <span className="text-xs text-muted-foreground">Uploaded: {selectedContract.uploadDate} · Status: {selectedContract.status}</span>}
+        {selectedContractId === "all" && <span className="text-xs text-muted-foreground">Agents will run across all {contracts.length} contracts</span>}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="space-y-3">
+          {agents.map((name) => {
+            const agentLogs = logs.filter((l) => l.agentName === name);
+            const isDone = agentLogs.some((l) => l.status === "DONE");
+            const isRunning = agentLogs.some((l) => l.status === "RUNNING");
+            return (
+              <div key={name} className="bg-card border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-sm">{name}</span>
+                  {isDone && <span className="status-chip status-chip-success">DONE</span>}
+                  {isRunning && !isDone && <span className="status-chip status-chip-running">RUNNING</span>}
+                  {!isRunning && !isDone && <span className="status-chip bg-muted text-muted-foreground">PENDING</span>}
+                </div>
+                {agentLogs.length > 0 && (
+                  <div className="space-y-1 mt-2">
+                    {agentLogs.map((l) => (
+                      <p key={l.id} className="text-xs text-muted-foreground flex items-center gap-2">
+                        <span className="text-[10px] text-muted-foreground">{new Date(l.timestamp).toLocaleTimeString()}</span>
+                        {l.message}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="bg-card border rounded-lg overflow-hidden">
+          <div className="p-4 border-b bg-muted/50">
+            <h3 className="font-semibold text-sm">Run Logs {selectedContractId === "all" ? "— All Contracts" : selectedContract ? `— ${selectedContract.name}` : ""}</h3>
+          </div>
+          <div className="p-4 max-h-[500px] overflow-y-auto font-mono text-xs space-y-1">
+            {logs.length === 0 && <p className="text-muted-foreground">Click "Run Agents" to start...</p>}
+            {logs.map((l) => (
+              <div key={l.id + l.status} className="flex gap-2">
+                <span className="text-muted-foreground w-20 flex-shrink-0">{new Date(l.timestamp).toLocaleTimeString()}</span>
+                <span className={`w-16 flex-shrink-0 ${l.status === "DONE" ? "text-emerald-600" : l.status === "RUNNING" ? "text-indigo-600" : "text-muted-foreground"}`}>[{l.status}]</span>
+                <span className="text-foreground">{l.agentName}: {l.message}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

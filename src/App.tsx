@@ -72,7 +72,7 @@ const App = () => {
               <Route path="/deviation" element={<Navigate to="/compliance-hub?tab=deviations" replace />} />
               <Route path="/clauses" element={<Navigate to="/compliance-hub?tab=clauses" replace />} />
               <Route path="/redlining" element={<Navigate to="/compliance-hub?tab=redlining" replace />} />
-              <Route path="/agents" element={<AgentWorkspace />} />
+              <Route path="/agents" element={<Navigate to="/workflow" replace />} />
               <Route path="/workflow" element={<WorkflowPage />} />
               <Route path="/downstream" element={<DownstreamFeed />} />
               <Route path="/obligation-tracker" element={<ObligationCompliance />} />
