@@ -234,10 +234,8 @@ export function AppLayout({ children, onLogout }: Props) {
       <AppSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-12 flex items-center justify-between px-4 border-b bg-card gap-3">
-          {/* Left: page title */}
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-sm font-semibold text-foreground truncate">{pageTitle}</span>
-          </div>
+          {/* Left: spacer */}
+          <div className="flex items-center gap-2 min-w-0" />
 
           {/* Center: Search */}
           <div className="flex-1 max-w-md mx-4">
