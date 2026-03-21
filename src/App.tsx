@@ -22,6 +22,9 @@ import RenewalsPage from "./pages/RenewalsPage";
 import UserManagement from "./pages/UserManagement";
 import ContractsPage from "./pages/ContractsPage";
 import ContractViewerPage from "./pages/ContractViewerPage";
+import ContractCreation from "./pages/ContractCreation";
+import UploadContract from "./pages/UploadContract";
+import DigitizationPage from "./pages/DigitizationPage";
 
 import NotFound from "./pages/NotFound";
 
