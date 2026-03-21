@@ -775,6 +775,33 @@ export default function ContractCreation() {
             </button>
           </div>
         )}
+        {/* Guided generation HITL */}
+        {pendingGuidedGeneration && !pendingUpdate && (
+          <div className="flex gap-2 justify-center py-2">
+            <button onClick={async () => {
+              setPendingGuidedGeneration(false);
+              await handleCoAuthorSend("Draft full contract from inputs");
+            }} className="px-4 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-medium hover:opacity-90">
+              ✅ Yes, generate contract
+            </button>
+            <button onClick={() => {
+              setPendingGuidedGeneration(false);
+              const draftId = savedDraftId || "draft-coauthor";
+              const skipMsg: CoAuthorMessage = {
+                id: `guided-skip-${Date.now()}`, draftId, role: "assistant",
+                text: "⏭️ No problem — I'll skip generation for now. You can always click **\"Draft full contract from inputs\"** when you're ready.",
+                time: new Date().toISOString(),
+              };
+              setChatMessages(prev => {
+                const updated = [...prev, skipMsg];
+                set("oci_coauthor_messages", updated);
+                return updated;
+              });
+            }} className="px-4 py-1.5 border rounded-lg text-xs font-medium hover:bg-muted">
+              ❌ No, skip
+            </button>
+          </div>
+        )}
         {loading && <div className="flex justify-start"><div className={`bg-muted rounded-lg px-3 py-2 ${fullSize ? "text-sm" : "text-xs"} animate-pulse`}>Thinking...</div></div>}
         <div ref={chatBottomRef} />
       </div>
