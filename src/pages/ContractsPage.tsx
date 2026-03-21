@@ -166,6 +166,12 @@ export default function ContractsPage() {
         </select>
         <select className="text-sm border rounded-lg px-3 py-2 bg-background">
           <option>All Jurisdictions</option>
+          <option>NY</option>
+          <option>FL</option>
+          <option>CA</option>
+          <option>OH</option>
+          <option>TX</option>
+          <option>Multi-State</option>
         </select>
         <div className="ml-auto flex border rounded-lg overflow-hidden">
           {(["Recent", "Name", "Docs"] as SortBy[]).map(s => (
