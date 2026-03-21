@@ -2,7 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   Upload, GitCompare, BookOpen, FilePlus, Bot, Pencil,
   Workflow, Send, ShieldCheck, FileText, ChevronLeft, ChevronRight,
-  LayoutDashboard, Users, FolderOpen,
+  LayoutDashboard, Users, FolderOpen, ScanLine,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -16,7 +16,8 @@ const navItems = [
   { label: "Agent Workspace", path: "/agents", icon: Bot },
   { label: "Workflow", path: "/workflow", icon: Workflow },
   { label: "Downstream Feed", path: "/downstream", icon: Send },
-  { label: "Obligation Compliance", path: "/compliance", icon: ShieldCheck },
+  { label: "Obligation Tracker", path: "/compliance", icon: ShieldCheck },
+  { label: "Digitization", path: "/digitization", icon: ScanLine },
   { label: "User Management", path: "/users", icon: Users },
 ];
 
