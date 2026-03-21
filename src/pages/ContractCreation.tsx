@@ -353,9 +353,9 @@ function BulkUploadTab({ onNavigate }: { onNavigate: (path: string) => void }) {
   );
 }
 
-export default function ContractCreation() {
+export default function ContractCreation({ embedded = false, initialTab }: ContractCreationProps = {}) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TabId>("create");
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab || "create");
   const [form, setForm] = useState({ name: "", parties: "", effectiveDate: "", term: "", paymentRate: "", servicesScope: "" });
   const [generatedDoc, setGeneratedDoc] = useState<ContractDraftDocument | null>(null);
   const [showDocPreview, setShowDocPreview] = useState(true);
