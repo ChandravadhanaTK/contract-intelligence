@@ -117,6 +117,7 @@ export default function ContractsOverviewTab() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [jurisdictionFilter, setJurisdictionFilter] = useState("All Jurisdictions");
+  const [contractType, setContractType] = useState("All Types");
   const [sortBy, setSortBy] = useState<SortBy>("Recent");
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [compareDoc, setCompareDoc] = useState<{ id: string; name: string } | null>(null);
@@ -170,6 +171,11 @@ export default function ContractsOverviewTab() {
           <option>OH</option>
           <option>TX</option>
           <option>Multi-State</option>
+        </select>
+        <select value={contractType} onChange={e => setContractType(e.target.value)} className="text-sm border rounded-lg px-3 py-2 bg-background">
+          <option>All Types</option>
+          <option>Legacy</option>
+          <option>NewGen</option>
         </select>
         <div className="ml-auto flex border rounded-lg overflow-hidden">
           {(["Recent", "Name", "Docs"] as SortBy[]).map(s => (
