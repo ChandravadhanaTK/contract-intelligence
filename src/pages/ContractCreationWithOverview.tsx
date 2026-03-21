@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { FileText, PenLine, Users, Eye, CheckCircle2, Globe, ArrowDownToLine, GitBranch, ClipboardList, UserCheck, Bot, Zap, Upload, List, ArrowRight } from "lucide-react";
+import { FileText, PenLine, Users, Eye, CheckCircle2, Globe, ArrowDownToLine, ClipboardList, UserCheck, Bot, Zap, Upload, ArrowRight } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import WorkflowPage from "./WorkflowPage";
 import ContractCreation from "./ContractCreation";
 
@@ -43,19 +45,62 @@ function ContractWorkflowPipeline() {
   );
 }
 
+function UploadContractTab() {
+  const [uploadMode, setUploadMode] = useState<"single" | "bulk">("single");
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-card border rounded-xl p-5">
+        <h3 className="text-base font-semibold text-foreground mb-1">Upload Contract</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Choose how you'd like to upload your contract documents for processing.
+        </p>
+        <RadioGroup
+          value={uploadMode}
+          onValueChange={(v) => setUploadMode(v as "single" | "bulk")}
+          className="flex gap-6"
+        >
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="single" id="upload-single" />
+            <Label htmlFor="upload-single" className="text-sm font-medium cursor-pointer">
+              Single File Upload
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="bulk" id="upload-bulk" />
+            <Label htmlFor="upload-bulk" className="text-sm font-medium cursor-pointer">
+              Bulk File Upload
+            </Label>
+          </div>
+        </RadioGroup>
+        <p className="text-xs text-muted-foreground mt-3">
+          {uploadMode === "single"
+            ? "Upload a single contract document (PDF or DOCX) for OCR processing, contract type identification, and standard clause matching."
+            : "Upload multiple contract documents at once for batch processing. Each file will go through the full OCR and extraction pipeline independently."}
+        </p>
+      </div>
+
+      {uploadMode === "single" ? (
+        <ContractCreation embedded initialTab="upload" />
+      ) : (
+        <ContractCreation embedded initialTab="bulk" />
+      )}
+    </div>
+  );
+}
+
 export default function ContractCreationWithOverview() {
   const [subTab, setSubTab] = useState("newgen");
 
   return (
     <div className="space-y-6">
-      {/* Sub-tabs */}
       <Tabs value={subTab} onValueChange={setSubTab}>
         <TabsList className="bg-muted/60 flex-wrap h-auto gap-1 p-1">
           <TabsTrigger value="newgen" className="flex items-center gap-1.5 text-xs">
             <Zap className="w-3.5 h-3.5" /> NewGen Contract Digitization
           </TabsTrigger>
           <TabsTrigger value="review" className="flex items-center gap-1.5 text-xs">
-            <ClipboardList className="w-3.5 h-3.5" /> Review Contracts Dashboard
+            <ClipboardList className="w-3.5 h-3.5" /> Review Contract
           </TabsTrigger>
           <TabsTrigger value="hitl" className="flex items-center gap-1.5 text-xs">
             <UserCheck className="w-3.5 h-3.5" /> HITL Center
@@ -64,10 +109,7 @@ export default function ContractCreationWithOverview() {
             <Bot className="w-3.5 h-3.5" /> Agent Workspace
           </TabsTrigger>
           <TabsTrigger value="upload" className="flex items-center gap-1.5 text-xs">
-            <Upload className="w-3.5 h-3.5" /> Upload a Contract
-          </TabsTrigger>
-          <TabsTrigger value="bulk" className="flex items-center gap-1.5 text-xs">
-            <List className="w-3.5 h-3.5" /> Bulk Upload Contract
+            <Upload className="w-3.5 h-3.5" /> Upload Contract
           </TabsTrigger>
           <TabsTrigger value="intake" className="flex items-center gap-1.5 text-xs">
             <ArrowRight className="w-3.5 h-3.5" /> Start from Provider Intake
@@ -79,7 +121,6 @@ export default function ContractCreationWithOverview() {
 
         <TabsContent value="newgen">
           <div className="space-y-6">
-            {/* KPI Overview Cards */}
             <div>
               <h1 className="page-header">NewGen Contract Digitization</h1>
               <p className="text-sm text-muted-foreground mt-1">OCR + AI pipeline for creating payer contracts into structured data</p>
@@ -98,11 +139,7 @@ export default function ContractCreationWithOverview() {
                 ))}
               </div>
             </div>
-
-            {/* Pipeline status bar */}
             <ContractWorkflowPipeline />
-
-            {/* Workflow content */}
             <WorkflowPage embedded initialTab="workflow" />
           </div>
         </TabsContent>
@@ -116,10 +153,7 @@ export default function ContractCreationWithOverview() {
           <WorkflowPage embedded initialTab="agents" />
         </TabsContent>
         <TabsContent value="upload">
-          <ContractCreation embedded initialTab="upload" />
-        </TabsContent>
-        <TabsContent value="bulk">
-          <ContractCreation embedded initialTab="bulk" />
+          <UploadContractTab />
         </TabsContent>
         <TabsContent value="intake">
           <ContractCreation embedded initialTab="intake" />
