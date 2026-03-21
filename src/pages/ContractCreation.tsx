@@ -571,14 +571,23 @@ export default function ContractCreation() {
         setChatMessages(withUser);
 
         await new Promise(r => setTimeout(r, 500));
+        const isLastStep = guidedStepIndex + 1 >= guidedSteps.length;
         const confirmMsg: CoAuthorMessage = {
           id: `guided-confirm-${Date.now()}`, draftId,
           role: "assistant",
-          text: `✅ Got it — I've captured your input for **${step.field}**. ${guidedStepIndex + 1 < guidedSteps.length ? "Click **Next Step** to continue or edit the answer above and **Submit** your own." : "🎉 All steps complete! Click **\"Draft full contract from inputs\"** to generate the full contract."}`,
+          text: isLastStep
+            ? `✅ Got it — I've captured your input for **${step.field}**.\n\n🎉 **All ${guidedSteps.length} steps complete!** I have all the information needed to draft your contract.\n\n📝 **Shall I generate the full Provider Services Agreement now?** Reply **Yes** to generate or **No** to skip.`
+            : `✅ Got it — I've captured your input for **${step.field}**. Click **Next Step** to continue or edit the answer above and **Submit** your own.`,
           time: new Date().toISOString(),
         };
-        setChatMessages([...withUser, confirmMsg]);
-        set("oci_coauthor_messages", [...withUser, confirmMsg]);
+        const finalMsgs = [...withUser, confirmMsg];
+        setChatMessages(finalMsgs);
+        set("oci_coauthor_messages", finalMsgs);
+
+        // If last step, set pending generation for HITL
+        if (isLastStep) {
+          setPendingGuidedGeneration(true);
+        }
       }
 
       setGuidedStepIndex(prev => prev + 1);
