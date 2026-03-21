@@ -1,89 +1,151 @@
 import { useState, useEffect } from "react";
-import { AlertTriangle, CheckCircle, Clock, ShieldCheck } from "lucide-react";
-import { KPIStatCard } from "@/components/KPIStatCard";
+import { useNavigate } from "react-router-dom";
+import {
+  AlertTriangle, CheckCircle2, Clock, ShieldAlert, Calendar, FileDown,
+  FileText, Search, ChevronDown,
+} from "lucide-react";
 import { api } from "@/services/mockApi";
-import { toast } from "sonner";
-import type { Contract, Obligation } from "@/types";
+import type { TrackerObligation } from "@/data/seed";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+
+const statusIcons: Record<string, React.ReactNode> = {
+  Overdue: <AlertTriangle className="w-4 h-4 text-destructive" />,
+  "At Risk": <ShieldAlert className="w-4 h-4 text-amber-500" />,
+  Compliant: <CheckCircle2 className="w-4 h-4 text-emerald-500" />,
+  Upcoming: <Clock className="w-4 h-4 text-blue-500" />,
+};
+
+const statusChip: Record<string, string> = {
+  Overdue: "bg-red-100 text-red-700",
+  "At Risk": "bg-amber-100 text-amber-700",
+  Compliant: "bg-emerald-100 text-emerald-700",
+  Upcoming: "bg-blue-100 text-blue-700",
+};
+
+const riskChip: Record<string, string> = {
+  High: "bg-red-100 text-red-700",
+  Medium: "bg-amber-100 text-amber-700",
+  Low: "bg-emerald-100 text-emerald-700",
+};
+
+const evidenceChip: Record<string, string> = {
+  Missing: "text-destructive font-medium",
+  Pending: "text-amber-600 font-medium",
+  Submitted: "text-emerald-600 font-medium",
+};
 
 export default function ObligationCompliance() {
-  const [contract, setContract] = useState<Contract | null>(null);
-  const [filter, setFilter] = useState<"all" | "Open" | "InProgress" | "Compliant" | "Overdue">("all");
-  const [evidenceInput, setEvidenceInput] = useState<Record<string, string>>({});
+  const [obligations, setObligations] = useState<TrackerObligation[]>([]);
+  const [statusFilter, setStatusFilter] = useState("All Statuses");
+  const [categoryFilter, setCategoryFilter] = useState("All Categories");
 
   useEffect(() => {
-    api.getContract().then(setContract);
-  }, []);
+    api.getTrackerObligations(statusFilter, categoryFilter).then(setObligations);
+  }, [statusFilter, categoryFilter]);
 
-  if (!contract) {
-    return <div className="page-container"><h1 className="page-header">Obligation Compliance</h1><p className="text-muted-foreground">No contract loaded.</p></div>;
-  }
+  const allObs = obligations;
+  const overdue = allObs.filter(o => o.status === "Overdue").length;
+  const atRisk = allObs.filter(o => o.status === "At Risk").length;
+  const compliant = allObs.filter(o => o.status === "Compliant").length;
+  const upcoming = allObs.filter(o => o.status === "Upcoming").length;
 
-  const obligations = contract.obligations;
-  const overdue = obligations.filter((o) => o.status === "Overdue");
-  const open = obligations.filter((o) => o.status === "Open");
-  const compliant = obligations.filter((o) => o.status === "Compliant");
-  const inProgress = obligations.filter((o) => o.status === "InProgress");
+  // Category breakdown for "All" view
+  const categories = ["Compliance", "Financial", "Operational", "Reporting", "Insurance"];
+  const categoryBreakdown = categories.map(cat => {
+    const total = allObs.filter(o => o.category === cat).length;
+    const comp = allObs.filter(o => o.category === cat && o.status === "Compliant").length;
+    return { category: cat, compliant: comp, total };
+  });
+  const totalCompliant = allObs.filter(o => o.status === "Compliant").length;
+  const complianceScore = allObs.length > 0 ? Math.round((totalCompliant / allObs.length) * 100) : 0;
 
-  const filtered = filter === "all" ? obligations : obligations.filter((o) => o.status === filter);
-
-  const markCompliant = async (oblId: string) => {
-    const updated = {
-      ...contract,
-      obligations: contract.obligations.map((o) =>
-        o.id === oblId ? { ...o, status: "Compliant" as const } : o
-      ),
-    };
-    await api.saveContract(updated);
-    setContract(updated);
-    toast.success("Marked as compliant");
-  };
-
-  const addEvidence = async (oblId: string) => {
-    const link = evidenceInput[oblId];
-    if (!link) return;
-    const updated = {
-      ...contract,
-      obligations: contract.obligations.map((o) =>
-        o.id === oblId ? { ...o, evidenceLinks: [...o.evidenceLinks, link] } : o
-      ),
-    };
-    await api.saveContract(updated);
-    setContract(updated);
-    setEvidenceInput((prev) => ({ ...prev, [oblId]: "" }));
-    toast.success("Evidence link added");
-  };
+  const donutData = [
+    { name: "Compliant", value: totalCompliant },
+    { name: "Non-compliant", value: allObs.length - totalCompliant },
+  ];
+  const donutColors = ["hsl(145, 63%, 42%)", "hsl(210, 20%, 90%)"];
 
   return (
     <div className="page-container">
-      <h1 className="page-header">Obligation Compliance</h1>
-
-      {overdue.length > 0 && (
-        <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 flex items-center gap-3">
-          <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0" />
-          <p className="text-sm font-medium text-destructive">{overdue.length} obligation(s) are overdue and require immediate attention</p>
+      <div className="flex items-start justify-between flex-wrap gap-2">
+        <div>
+          <h1 className="page-header">Obligation Tracker</h1>
+          <p className="text-sm text-muted-foreground mt-1">Monitor compliance, deadlines, and risk across all healthcare contracts</p>
         </div>
-      )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPIStatCard title="Open" value={open.length} variant="default" icon={<Clock className="w-5 h-5" />} />
-        <KPIStatCard title="In Progress" value={inProgress.length} variant="warning" icon={<Clock className="w-5 h-5" />} />
-        <KPIStatCard title="Compliant" value={compliant.length} variant="success" icon={<CheckCircle className="w-5 h-5" />} />
-        <KPIStatCard title="Overdue" value={overdue.length} variant="error" icon={<AlertTriangle className="w-5 h-5" />} />
+        <div className="flex gap-2">
+          <button className="px-3 py-1.5 text-xs font-medium border rounded-lg hover:bg-muted flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5" /> Export Calendar
+          </button>
+          <button className="px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:opacity-90 flex items-center gap-1.5">
+            <FileDown className="w-3.5 h-3.5" /> Compliance Report
+          </button>
+        </div>
       </div>
 
-      {/* Filter */}
-      <div className="flex gap-2">
-        {(["all", "Open", "InProgress", "Compliant", "Overdue"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              filter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
-          >
-            {f === "all" ? "All" : f === "InProgress" ? "In Progress" : f}
-          </button>
-        ))}
+      {/* KPI row + donut */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: "Overdue", value: overdue, accent: "bg-red-100 text-red-700", icon: <AlertTriangle className="w-4 h-4" /> },
+            { label: "At Risk", value: atRisk, accent: "bg-amber-100 text-amber-700", icon: <ShieldAlert className="w-4 h-4" /> },
+            { label: "Compliant", value: compliant, accent: "bg-emerald-100 text-emerald-700", icon: <CheckCircle2 className="w-4 h-4" /> },
+            { label: "Upcoming", value: upcoming, accent: "bg-blue-100 text-blue-700", icon: <Clock className="w-4 h-4" /> },
+          ].map(k => (
+            <div key={k.label} className="kpi-card flex items-start gap-3">
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${k.accent}`}>{k.icon}</div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">{k.label}</p>
+                <p className="text-2xl font-bold text-foreground">{k.value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Compliance score donut */}
+        <div className="bg-card border rounded-lg p-5">
+          <h4 className="text-xs font-semibold mb-2">Compliance Score</h4>
+          <div className="flex items-center gap-4">
+            <div className="relative w-20 h-20">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={donutData} dataKey="value" innerRadius={25} outerRadius={38} startAngle={90} endAngle={-270} paddingAngle={2}>
+                    {donutData.map((_, i) => <Cell key={i} fill={donutColors[i]} />)}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-sm font-bold">{complianceScore}%</span>
+              </div>
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase">By Category</p>
+              {categoryBreakdown.map(c => (
+                <div key={c.category} className="flex items-center gap-2">
+                  <span className="text-[11px] text-foreground flex-1">{c.category}</span>
+                  <div className="w-16 bg-muted rounded-full h-1.5">
+                    <div className="h-1.5 rounded-full bg-emerald-500" style={{ width: c.total ? `${(c.compliant / c.total) * 100}%` : "0%" }} />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground w-8">{c.compliant}/{c.total}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3">
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="text-xs border rounded-lg px-3 py-1.5 bg-background">
+          <option>All Statuses</option>
+          <option>Overdue</option>
+          <option>At Risk</option>
+          <option>Compliant</option>
+          <option>Upcoming</option>
+        </select>
+        <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="text-xs border rounded-lg px-3 py-1.5 bg-background">
+          <option>All Categories</option>
+          {categories.map(c => <option key={c}>{c}</option>)}
+        </select>
       </div>
 
       {/* Table */}
@@ -91,58 +153,28 @@ export default function ObligationCompliance() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="text-left p-3 font-semibold">Title</th>
-                <th className="text-left p-3 font-semibold">Owner</th>
-                <th className="text-left p-3 font-semibold">Due Date</th>
-                <th className="text-left p-3 font-semibold">Frequency</th>
-                <th className="text-left p-3 font-semibold">Status</th>
-                <th className="text-left p-3 font-semibold">Actions</th>
+              <tr className="border-b bg-muted/50 text-xs">
+                <th className="p-3 w-8"></th>
+                <th className="text-left p-3 font-medium">Obligation</th>
+                <th className="text-left p-3 font-medium">Contract</th>
+                <th className="text-left p-3 font-medium">Category</th>
+                <th className="text-left p-3 font-medium">Owner</th>
+                <th className="text-left p-3 font-medium">Due Date</th>
+                <th className="text-left p-3 font-medium">Risk</th>
+                <th className="text-left p-3 font-medium">Evidence</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {filtered.map((o) => (
+              {obligations.map(o => (
                 <tr key={o.id} className="hover:bg-muted/20">
-                  <td className="p-3">
-                    <p className="font-medium">{o.title}</p>
-                    <p className="text-xs text-muted-foreground">{o.description}</p>
-                  </td>
-                  <td className="p-3">{o.owner}</td>
-                  <td className="p-3">{o.dueDate}</td>
-                  <td className="p-3">{o.frequency}</td>
-                  <td className="p-3">
-                    <span className={`status-chip ${
-                      o.status === "Compliant" ? "status-chip-success" :
-                      o.status === "Overdue" ? "status-chip-error" :
-                      o.status === "InProgress" ? "status-chip-warning" :
-                      "status-chip-info"
-                    }`}>{o.status}</span>
-                  </td>
-                  <td className="p-3">
-                    <div className="space-y-2">
-                      {o.status !== "Compliant" && (
-                        <button onClick={() => markCompliant(o.id)} className="text-xs bg-success/10 text-success px-2 py-1 rounded hover:bg-success/20 flex items-center gap-1">
-                          <ShieldCheck className="w-3 h-3" /> Mark Compliant
-                        </button>
-                      )}
-                      <div className="flex gap-1">
-                        <input
-                          className="border rounded px-2 py-1 text-xs bg-background w-32"
-                          placeholder="Evidence URL"
-                          value={evidenceInput[o.id] || ""}
-                          onChange={(e) => setEvidenceInput((p) => ({ ...p, [o.id]: e.target.value }))}
-                        />
-                        <button onClick={() => addEvidence(o.id)} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary/20">Add</button>
-                      </div>
-                      {o.evidenceLinks.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {o.evidenceLinks.map((link, i) => (
-                            <a key={i} href={link} target="_blank" rel="noopener noreferrer" className="text-xs text-secondary underline">Evidence {i + 1}</a>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </td>
+                  <td className="p-3">{statusIcons[o.status]}</td>
+                  <td className="p-3 text-xs font-medium">{o.title}</td>
+                  <td className="p-3 text-xs text-muted-foreground">{o.contract}</td>
+                  <td className="p-3"><span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">{o.category}</span></td>
+                  <td className="p-3 text-xs">{o.owner}</td>
+                  <td className={`p-3 text-xs ${o.status === "Overdue" ? "text-destructive font-medium" : ""}`}>{o.dueDate}</td>
+                  <td className="p-3"><span className={`status-chip ${riskChip[o.risk]}`}>{o.risk}</span></td>
+                  <td className="p-3"><span className={`text-xs ${evidenceChip[o.evidence]}`}>{o.evidence}</span></td>
                 </tr>
               ))}
             </tbody>

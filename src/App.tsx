@@ -23,6 +23,8 @@ import MonitoringPage from "./pages/MonitoringPage";
 import RenewalsPage from "./pages/RenewalsPage";
 import UserManagement from "./pages/UserManagement";
 import ContractsPage from "./pages/ContractsPage";
+import ContractViewerPage from "./pages/ContractViewerPage";
+import DigitizationPage from "./pages/DigitizationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,6 +72,8 @@ const App = () => {
               <Route path="/compliance" element={<ObligationCompliance />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/contracts" element={<ContractsPage />} />
+              <Route path="/contracts/:id" element={<ContractViewerPage />} />
+              <Route path="/digitization" element={<DigitizationPage />} />
               <Route path="/users" element={<UserManagement />} />
               <Route path="/intake" element={<IntakePage />} />
               <Route path="/credentialing" element={<CredentialingPage />} />
