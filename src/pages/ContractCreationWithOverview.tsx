@@ -427,115 +427,175 @@ interface ContractClause {
 const agentSteps = [
   {
     id: "parties",
-    question: "Let's draft your contract! First, **who are the contracting parties?**\n\nPlease provide:\n- **Party A** (Plan/Payer)\n- **Party B** (Provider)",
+    question: "Let's draft your provider contract! First, **who are the contracting parties?**\n\nPlease provide:\n- **Party A** (Health Plan / Payer)\n- **Party B** (Provider / Facility)\n\nInclude Tax ID or NPI if available.",
     sectionNumber: "1.0",
     clauseTitle: "PARTIES AND DEFINITIONS",
-    options: ["Optum Health Plan & Northwell Health", "UnitedHealthcare & Mercy Health System", "Custom (type below)"],
+    options: [
+      "OptumHealth Care Solutions, LLC & Northwell Health System (NPI: 1234567890, TIN: 11-1234567)",
+      "UnitedHealthcare of New York, Inc. & Mount Sinai Health System (NPI: 1346789012, TIN: 13-6789012)",
+      "Custom (type below)",
+    ],
     buildClause: (answer: string) => {
       const parts = answer.includes("&") ? answer.split("&").map(s => s.trim()) : [answer, "Provider Organization"];
-      return `This Provider Services Agreement ("Agreement") is entered into by and between:\n\n**Party A:** ${parts[0]} ("Plan")\n**Party B:** ${parts[1] || "Provider Organization"} ("Provider")\n\n**Definitions:**\n- "Covered Services" – health care services covered under a Member's benefit plan.\n- "Member" – an individual enrolled in a health benefit plan administered by Plan.\n- "Clean Claim" – a claim submitted with no defect, including all required data elements.\n- "Network" – the panel of providers contracted to deliver Covered Services to Members.`;
+      const npiMatch = answer.match(/NPI:\s*([\d]+)/i);
+      const tinMatch = answer.match(/TIN:\s*([\d-]+)/i);
+      return `This Provider Services Agreement ("Agreement") is entered into by and between:\n\n**Party A:** ${parts[0]} ("Plan"), a subsidiary of UnitedHealth Group, Inc., organized and existing under the laws of the State of Minnesota, with its principal offices at 11000 Optum Circle, Eden Prairie, MN 55344.\n\n**Party B:** ${parts[1]?.replace(/\(.*?\)/g, "").trim() || "Provider Organization"} ("Provider")${npiMatch ? `, NPI: ${npiMatch[1]}` : ""}${tinMatch ? `, Tax ID: ${tinMatch[1]}` : ""}, a healthcare provider duly licensed and authorized to practice in the State of New York.\n\n**Definitions:**\n- "Covered Services" – medically necessary health care services to which a Member is entitled under the Member's Benefit Contract, including preventive care, diagnostic services, and treatment.\n- "Member" – an individual enrolled in a health benefit plan administered, insured, or underwritten by Plan.\n- "Clean Claim" – a claim for Covered Services submitted using the UB-04 (institutional) or CMS-1500 (professional) form with no defect, impropriety, or missing required data elements per 42 CFR § 447.45.\n- "Network" – the panel of credentialed providers contracted to deliver Covered Services.\n- "Fee Schedule" – the schedule of reimbursement rates as set forth in Exhibit A, as may be amended from time to time.\n- "Medical Policy" – clinical policies, coverage determinations, and utilization management protocols adopted by Plan.`;
     },
   },
   {
     id: "contractType",
-    question: "What **type of contract** is this?",
+    question: "What **type of provider agreement** is this?\n\nSelect the arrangement that best describes the provider relationship.",
     sectionNumber: "1.1",
-    clauseTitle: "CONTRACT TYPE",
-    options: ["Facility – Inpatient/Outpatient", "Professional Services", "Ancillary Services", "Behavioral Health"],
-    buildClause: (answer: string) => `This Agreement governs the provision of **${answer}** between the parties. The scope of contracted services shall be as defined in the applicable Exhibits and Attachments hereto.`,
+    clauseTitle: "CONTRACT TYPE AND NETWORK TIER",
+    options: [
+      "Facility – Acute Care Hospital (Inpatient DRG + Outpatient APC)",
+      "Professional Services – Multi-Specialty Physician Group",
+      "Ancillary – Freestanding Imaging & Lab Services",
+      "Behavioral Health – Outpatient & Intensive Outpatient Programs",
+    ],
+    buildClause: (answer: string) => `This Agreement governs the provision of **${answer}** between the parties.\n\n**1.1.1 Network Designation.** Provider is designated as a Tier 1 (Preferred) provider within Plan's tiered network structure, subject to ongoing quality performance and cost-efficiency benchmarks.\n\n**1.1.2 Lines of Business.** This Agreement applies to the following lines of business: Commercial (HMO, PPO, POS), Medicare Advantage (HMO, PPO), Medicaid Managed Care, and Exchange/Marketplace plans, as further specified in the applicable Plan Summaries.\n\n**1.1.3 Scope.** The scope of contracted services shall be as defined in the applicable Exhibits and Provider's current credentialing file.`,
   },
   {
     id: "effectiveDate",
-    question: "What is the **effective date** and **term** of this agreement?",
+    question: "What is the **effective date**, **initial term**, and **renewal terms** for this agreement?",
     sectionNumber: "2.0",
     clauseTitle: "EFFECTIVE DATE AND TERM",
-    options: ["Jan 1, 2025 – 3 years with auto-renewal", "Jul 1, 2025 – 2 years with auto-renewal", "Custom (type below)"],
+    options: [
+      "January 1, 2026 – 3-year initial term, auto-renews annually",
+      "July 1, 2025 – 2-year initial term, auto-renews for 1-year periods",
+      "Custom (type below)",
+    ],
     buildClause: (answer: string) => {
       const hasDate = answer.match(/(\w+ \d+,?\s*\d{4})/);
-      const date = hasDate ? hasDate[1] : "January 1, 2025";
-      const hasTerm = answer.match(/(\d+)\s*year/i);
-      const term = hasTerm ? `${hasTerm[1]} year(s)` : "Three (3) years";
-      return `**Effective Date:** ${date}\n**Initial Term:** ${term}\n\nThis Agreement shall automatically renew for successive one (1) year terms unless either party provides written notice of non-renewal at least one hundred eighty (180) days prior to the expiration of the then-current term.`;
+      const date = hasDate ? hasDate[1] : "January 1, 2026";
+      const hasTerm = answer.match(/(\d+)[- ]year/i);
+      const term = hasTerm ? `${hasTerm[1]}` : "3";
+      return `**2.1 Effective Date.** This Agreement shall be effective as of **${date}** ("Effective Date").\n\n**2.2 Initial Term.** The initial term of this Agreement shall be ${term === "1" ? "one (1) year" : term === "2" ? "two (2) years" : "three (3) years"} from the Effective Date ("Initial Term").\n\n**2.3 Renewal.** Following the Initial Term, this Agreement shall automatically renew for successive one (1) year terms ("Renewal Terms") unless either party provides written notice of non-renewal at least one hundred eighty (180) days prior to the expiration of the then-current term.\n\n**2.4 Rate Review.** The parties agree to conduct an annual rate review no later than ninety (90) days prior to each anniversary of the Effective Date. If the parties are unable to agree upon revised rates, the prior year's rates shall remain in effect during the Renewal Term unless either party exercises its termination rights.\n\n**2.5 Retroactive Effective Date.** Claims for Covered Services rendered between the Effective Date and Plan's system load date shall be reprocessed at contracted rates within sixty (60) days of system load completion.`;
     },
   },
   {
     id: "services",
-    question: "Describe the **scope of services** the Provider will deliver.\n\nInclude specialties, service types, and locations if applicable.",
+    question: "Describe the **scope of services** the Provider will deliver.\n\nInclude specialties, service categories, and service area/locations.",
     sectionNumber: "3.0",
     clauseTitle: "SCOPE OF SERVICES",
-    options: ["Full-service hospital (inpatient, outpatient, ED, labs)", "Cardiology & Orthopedics specialty clinic", "Multi-specialty physician group", "Custom (type below)"],
-    buildClause: (answer: string) => `**3.1 Services.** Provider shall deliver all medically necessary Covered Services to eligible Members, including but not limited to: ${answer}.\n\n**3.2 Standards of Care.** All services shall be rendered in accordance with generally accepted medical practices and all applicable state and federal requirements.\n\n**3.3 Availability.** Provider shall maintain office hours and on-call coverage sufficient to meet the needs of Members seeking Covered Services.\n\n**3.4 Referrals.** Provider shall refer Members to in-network providers when reasonably available and clinically appropriate.`,
+    options: [
+      "Full-service acute care hospital: Medical/Surgical Inpatient, ED, Outpatient Surgery, Lab, Radiology, Cardiology, Orthopedics – serving Nassau & Suffolk counties",
+      "Multi-specialty physician group: Primary Care (Internal Medicine, Family Medicine, Pediatrics), Cardiology, Gastroenterology, Endocrinology – 12 practice locations across Manhattan and Brooklyn",
+      "Behavioral Health: Psychiatry, Psychology, Licensed Clinical Social Work, Substance Use Disorder Treatment (IOP, PHP) – telehealth and in-person in Westchester County",
+      "Custom (type below)",
+    ],
+    buildClause: (answer: string) => `**3.1 Covered Services.** Provider shall deliver all medically necessary Covered Services to eligible Members within Provider's scope of licensure and credentialing, including but not limited to: ${answer}.\n\n**3.2 Standards of Care.** All services shall be rendered in accordance with: (a) generally accepted standards of medical practice; (b) applicable state and federal licensing requirements; (c) Plan's Medical Policies and Clinical Practice Guidelines; and (d) National Committee for Quality Assurance (NCQA) standards where applicable.\n\n**3.3 Access Standards.** Provider shall maintain the following appointment availability:\n- Urgent care: within 24 hours\n- Routine sick visit: within 48 hours\n- Preventive/well visit: within 30 calendar days\n- Specialist referral: within 15 business days\n- After-hours coverage: 24/7 telephonic triage\n\n**3.4 Service Area.** Provider shall deliver Covered Services at the practice locations listed in Exhibit B. Provider shall notify Plan in writing at least sixty (60) days prior to adding, closing, or relocating any service location.\n\n**3.5 Referrals.** Provider shall refer Members to in-network providers when clinically appropriate and reasonably available. Out-of-network referrals require prior authorization except in emergencies as defined under the No Surprises Act (P.L. 116-260).`,
   },
   {
     id: "payment",
-    question: "What **payment model and rates** should we use?",
+    question: "What **reimbursement methodology and rates** should apply?\n\nSpecify the rate basis (% of Medicare, per diem, case rate, etc.) and payment terms.",
     sectionNumber: "4.0",
     clauseTitle: "COMPENSATION AND PAYMENT TERMS",
-    options: ["Fee-for-Service at 110% of Medicare", "DRG-based case rates at 115% of Medicare", "Blended: DRG inpatient + FFS outpatient", "Custom (type below)"],
-    buildClause: (answer: string) => `**4.1 Reimbursement.** Plan shall reimburse Provider for Covered Services rendered to Members in accordance with the following methodology: ${answer}.\n\n**4.2 Claims Submission.** Provider shall submit Clean Claims within ninety (90) days of the date of service.\n\n**4.3 Payment Timeline.** Plan shall process and pay Clean Claims within thirty (30) calendar days of receipt. Contested claims shall be resolved within sixty (60) calendar days.\n\n**4.4 Coordination of Benefits.** Provider shall cooperate with Plan in coordinating benefits with other payors to avoid duplicate payment.`,
+    options: [
+      "Inpatient: MS-DRG at 125% of CMS Base Rate ($6,842.78 base) | Outpatient: APC at 140% of Medicare OPPS | ED: $385 facility fee + professional fees at 120% MPFS",
+      "Professional services: 135% of Medicare Physician Fee Schedule (CY2026 MPFS) for all E&M, surgical, and diagnostic CPT codes",
+      "Blended: Inpatient per diem ($2,450 Med/Surg, $4,800 ICU, $1,850 SNF) + Outpatient at 130% Medicare OPPS",
+      "Custom (type below)",
+    ],
+    buildClause: (answer: string) => `**4.1 Reimbursement.** Plan shall reimburse Provider for Covered Services rendered to Members in accordance with the following methodology:\n\n${answer}\n\nDetailed fee schedules are set forth in **Exhibit A** and incorporated herein by reference.\n\n**4.2 Claims Submission.** Provider shall submit Clean Claims electronically via the ANSI X12 837 (Professional or Institutional) transaction within:\n- Ninety (90) calendar days of the date of service for initial claims\n- Three hundred sixty-five (365) calendar days for corrected claims\n- Timely filing exceptions apply per state prompt-pay regulations\n\n**4.3 Payment Timeline.** Plan shall adjudicate and pay Clean Claims within:\n- Thirty (30) calendar days for electronic submissions\n- Forty-five (45) calendar days for paper submissions\n- Interest at 1.5% per month shall accrue on late payments per applicable state prompt-pay statutes\n\n**4.4 Coordination of Benefits.** Provider shall verify Member eligibility and other coverage prior to rendering non-emergency services. Provider shall cooperate with Plan in coordinating benefits per NAIC model guidelines.\n\n**4.5 Overpayment Recovery.** Plan may recover overpayments by offset against future claims, provided Plan notifies Provider within twenty-four (24) months of the original payment date and allows thirty (30) days for Provider to contest.`,
   },
   {
     id: "escalator",
-    question: "Should we include a **rate escalator**? If yes, what percentage and schedule?",
-    sectionNumber: "4.5",
-    clauseTitle: "RATE ESCALATOR",
-    options: ["2.5% annual CPI-U adjustment", "3% fixed annual increase", "No escalator", "Custom (type below)"],
+    question: "Should we include a **rate escalator** or annual rate adjustment provision?\n\nSpecify the methodology, cap, and effective date.",
+    sectionNumber: "4.6",
+    clauseTitle: "RATE ESCALATOR AND ADJUSTMENTS",
+    options: [
+      "CPI-U Medical Care Component, capped at 3.5% annually, effective each January 1",
+      "Fixed 3.0% annual increase applied to all fee schedule rates",
+      "Medicare update factor (MUF): Rates adjust automatically with annual CMS MPFS/IPPS updates",
+      "No escalator – rates fixed for initial term",
+    ],
     buildClause: (answer: string) => {
-      if (answer.toLowerCase().includes("no")) return "No rate escalator provisions apply to this Agreement. Rate adjustments shall be mutually agreed upon in writing by both parties.";
-      return `**4.5 Rate Escalator.** Reimbursement rates shall be adjusted annually as follows: ${answer}, effective January 1 of each contract year, subject to a maximum annual cap of four percent (4%). Any adjustment exceeding the cap shall require mutual written agreement.`;
+      if (answer.toLowerCase().includes("no escalator") || answer.toLowerCase().includes("fixed for")) {
+        return "**4.6 Rate Stability.** Reimbursement rates shall remain fixed throughout the Initial Term. Rate adjustments for Renewal Terms shall be mutually negotiated and agreed upon in writing no later than ninety (90) days prior to the applicable Renewal Term.";
+      }
+      return `**4.6 Rate Escalator.** Reimbursement rates shall be adjusted annually as follows:\n\n${answer}\n\n**4.6.1 Cap.** In no event shall the annual rate increase exceed four percent (4%) without mutual written agreement.\n\n**4.6.2 Effective Date.** Rate adjustments shall take effect on January 1 of each contract year and shall apply prospectively to claims with dates of service on or after the adjustment effective date.\n\n**4.6.3 Notification.** Plan shall provide Provider with updated fee schedules no later than thirty (30) days prior to the effective date of any rate adjustment.`;
     },
   },
   {
     id: "termination",
-    question: "What **termination provisions** should be included?\n\nSpecify notice periods for with-cause and without-cause termination.",
+    question: "What **termination provisions** should be included?\n\nSpecify notice periods for without-cause and for-cause termination, and any special provisions.",
     sectionNumber: "5.0",
-    clauseTitle: "TERMINATION",
-    options: ["180 days without cause, 60 days for cause", "90 days without cause, 30 days for cause", "Custom (type below)"],
+    clauseTitle: "TERM AND TERMINATION",
+    options: [
+      "180 days without cause (either party), 60 days for cause with 30-day cure period",
+      "90 days without cause (either party), 30 days for cause with 15-day cure period",
+      "Custom (type below)",
+    ],
     buildClause: (answer: string) => {
       const match90 = answer.includes("90");
       const withoutCause = match90 ? "ninety (90)" : "one hundred eighty (180)";
       const forCause = match90 ? "thirty (30)" : "sixty (60)";
-      return `**5.1 Termination Without Cause.** Either party may terminate this Agreement without cause by providing ${withoutCause} days prior written notice to the other party.\n\n**5.2 Termination For Cause.** Either party may terminate for material breach upon ${forCause} days written notice, provided the breaching party fails to cure within thirty (30) days of receiving such notice.\n\n**5.3 Immediate Termination.** Plan may terminate immediately upon: (a) loss of Provider's license or accreditation; (b) exclusion from federal healthcare programs; (c) conviction of fraud or criminal activity.\n\n**5.4 Continuity of Care.** Upon termination, Provider shall continue providing services to Members with active treatment plans for up to ninety (90) days.`;
+      const cure = match90 ? "fifteen (15)" : "thirty (30)";
+      return `**5.1 Termination Without Cause.** Either party may terminate this Agreement without cause by providing ${withoutCause} days prior written notice to the other party, delivered via certified mail or overnight courier to the address specified in the Notices section.\n\n**5.2 Termination For Cause.** Either party may terminate for material breach upon ${forCause} days written notice, provided the breaching party fails to cure the breach within ${cure} days of receiving such notice. Material breach includes but is not limited to: failure to comply with credentialing requirements, repeated claims submission deficiencies, or violation of compliance obligations.\n\n**5.3 Immediate Termination.** Plan may terminate this Agreement immediately upon:\n(a) Revocation or suspension of Provider's professional license or DEA registration;\n(b) Exclusion from Medicare, Medicaid, or any federal healthcare program (OIG/SAM);\n(c) Indictment for or conviction of healthcare fraud, patient abuse, or a felony;\n(d) Loss of professional liability insurance coverage;\n(e) Determination by Plan's Credentialing Committee of an imminent threat to patient safety.\n\n**5.4 Continuity of Care.** Upon termination for any reason, Provider shall:\n(a) Continue treating Members with active treatment plans, including pregnant Members in the second or third trimester, for up to ninety (90) days post-termination;\n(b) Accept reimbursement at the contracted rates for continuity-of-care services;\n(c) Cooperate in the orderly transfer of Member medical records per HIPAA requirements;\n(d) Fulfill prescription refill obligations for a minimum of thirty (30) days.\n\n**5.5 Run-Out.** Claims for Covered Services rendered prior to the termination effective date may be submitted for up to one hundred eighty (180) days following termination.`;
     },
   },
   {
     id: "compliance",
-    question: "Which **compliance and regulatory** provisions should be included?",
+    question: "Which **compliance and regulatory** provisions should be included?\n\nThis section addresses HIPAA, fraud/waste/abuse, credentialing, and audit rights.",
     sectionNumber: "6.0",
-    clauseTitle: "COMPLIANCE AND REGULATORY",
-    options: ["Full compliance suite (HIPAA, FWA, credentialing, audits)", "HIPAA and credentialing only", "Custom (type below)"],
-    buildClause: (answer: string) => `**6.1 Legal Compliance.** Both parties shall comply with all applicable federal, state, and local laws and regulations governing health care services and health insurance.\n\n**6.2 HIPAA.** All Protected Health Information (PHI) shall be handled in accordance with the Health Insurance Portability and Accountability Act (HIPAA) Privacy and Security Rules. PHI shall be encrypted at rest and in transit using AES-256 encryption.\n\n**6.3 Fraud, Waste, and Abuse.** Provider shall maintain an active FWA compliance program and shall cooperate with Plan's Special Investigations Unit.\n\n**6.4 Audits.** Plan may audit Provider's records, facilities, and claims upon reasonable notice. Provider shall retain records for a minimum of ten (10) years.\n\n**6.5 Credentialing.** Provider shall maintain all required credentials per NCQA standards and shall promptly notify Plan of any changes to licensure, certifications, or privileges.`,
+    clauseTitle: "COMPLIANCE AND REGULATORY REQUIREMENTS",
+    options: [
+      "Full compliance suite: HIPAA/HITECH, FWA, Credentialing (NCQA), Audit Rights, No Surprises Act, AKS/Stark",
+      "HIPAA/HITECH and Credentialing only",
+      "Custom (type below)",
+    ],
+    buildClause: (answer: string) => `**6.1 General Compliance.** Both parties shall comply with all applicable federal, state, and local laws and regulations, including but not limited to the Social Security Act, Anti-Kickback Statute (42 U.S.C. § 1320a-7b), Stark Law (42 U.S.C. § 1395nn), False Claims Act (31 U.S.C. §§ 3729-3733), and the No Surprises Act (P.L. 116-260).\n\n**6.2 HIPAA/HITECH Compliance.** Provider shall comply with all HIPAA Privacy, Security, and Breach Notification Rules (45 CFR Parts 160 and 164) and the HITECH Act. A Business Associate Agreement is incorporated as Exhibit D.\n- PHI shall be encrypted at rest (AES-256) and in transit (TLS 1.2+)\n- Breach notification to Plan within twenty-four (24) hours of discovery\n- Annual HIPAA training for all workforce members with access to PHI\n- Minimum necessary standard applied to all PHI disclosures\n\n**6.3 Fraud, Waste, and Abuse.** Provider shall:\n(a) Maintain an active FWA compliance program meeting OIG guidance;\n(b) Screen all employees and contractors against the OIG Exclusion List and SAM.gov monthly;\n(c) Report suspected fraud to Plan's Special Investigations Unit within five (5) business days;\n(d) Cooperate fully with Plan and government investigations.\n\n**6.4 Credentialing.** Provider and all individual practitioners shall:\n(a) Complete initial credentialing and re-credentialing every three (3) years per NCQA standards;\n(b) Maintain current state licensure, board certification (where applicable), DEA registration, and professional liability insurance;\n(c) Notify Plan within five (5) business days of any adverse action, malpractice claim, or change in privileges.\n\n**6.5 Audit Rights.** Plan, its designees, CMS, OIG, and applicable state regulators shall have the right to audit Provider's records, claims, and facilities upon thirty (30) days written notice. Provider shall retain all records for a minimum of ten (10) years from the date of service or as required by applicable law, whichever is longer.`,
   },
   {
     id: "disputes",
-    question: "How should **disputes** be resolved?",
+    question: "How should **disputes** between the parties be resolved?\n\nSelect the dispute resolution process.",
     sectionNumber: "7.0",
-    clauseTitle: "DISPUTE RESOLUTION",
-    options: ["Progressive: Negotiation → Mediation → Arbitration", "Direct binding arbitration (AAA)", "Litigation in state court", "Custom (type below)"],
+    clauseTitle: "DISPUTE RESOLUTION AND GOVERNING LAW",
+    options: [
+      "Progressive: Negotiation (30 days) → Mediation (JAMS, 60 days) → Binding Arbitration (AAA)",
+      "Direct binding arbitration under AAA Healthcare Rules",
+      "Litigation in state court of the state where services are rendered",
+      "Custom (type below)",
+    ],
     buildClause: (answer: string) => {
-      if (answer.toLowerCase().includes("litigation")) return `**7.1 Governing Law.** This Agreement shall be governed by the laws of the state in which the services are primarily rendered.\n\n**7.2 Jurisdiction.** Any dispute arising under this Agreement shall be resolved exclusively in the state courts of competent jurisdiction.\n\n**7.3 Legal Fees.** Each party shall bear its own legal fees and costs unless otherwise ordered by the court.`;
-      return `**7.1 Negotiation.** The parties shall first attempt to resolve any dispute through good-faith negotiation within thirty (30) days of written notice.\n\n**7.2 Mediation.** If negotiation fails, the parties shall submit the dispute to mediation within sixty (60) days, with costs shared equally.\n\n**7.3 Binding Arbitration.** If mediation is unsuccessful, the dispute shall be resolved by binding arbitration under the rules of the American Arbitration Association. The arbitrator's decision shall be final and enforceable in any court of competent jurisdiction.\n\n**7.4 Costs.** Each party shall bear its own costs of arbitration, with arbitrator fees shared equally.`;
+      if (answer.toLowerCase().includes("litigation")) return `**7.1 Governing Law.** This Agreement shall be governed by and construed in accordance with the laws of the State in which Provider primarily renders Covered Services, without regard to conflicts of law principles.\n\n**7.2 Jurisdiction.** Any dispute arising under or relating to this Agreement shall be resolved exclusively in the state or federal courts located in the county where Provider's principal office is located.\n\n**7.3 Claims Disputes.** Disputes regarding individual claim payments shall first be addressed through Plan's Provider Dispute Resolution (PDR) process as outlined in the Provider Manual. Provider shall submit written disputes within sixty (60) days of the payment or denial determination.\n\n**7.4 Legal Fees.** Each party shall bear its own attorneys' fees and costs unless otherwise ordered by the court.`;
+      return `**7.1 Informal Resolution.** The parties shall first attempt to resolve any dispute through good-faith negotiation between designated representatives within thirty (30) days of written notice.\n\n**7.2 Claims Disputes.** Disputes regarding individual claim payments shall be addressed through Plan's Provider Dispute Resolution (PDR) process. Provider shall submit written disputes within sixty (60) days of the payment or denial determination. Plan shall respond within thirty (30) business days.\n\n**7.3 Mediation.** If informal negotiation fails, the parties shall submit the dispute to mediation administered by JAMS within sixty (60) days. Mediation costs shall be shared equally.\n\n**7.4 Binding Arbitration.** If mediation is unsuccessful, the dispute shall be resolved by binding arbitration under the American Arbitration Association (AAA) Healthcare Arbitration Rules. The arbitration shall be conducted by a single arbitrator with healthcare industry expertise. The arbitrator's award shall be final and enforceable in any court of competent jurisdiction.\n\n**7.5 Governing Law.** This Agreement shall be governed by the laws of the State in which Provider primarily renders Covered Services.\n\n**7.6 Costs.** Each party shall bear its own attorneys' fees. Arbitrator fees and mediation costs shall be shared equally.`;
     },
   },
   {
     id: "exhibits",
-    question: "Which **exhibits and attachments** should be referenced?",
+    question: "Which **exhibits and attachments** should be incorporated into this Agreement?",
     sectionNumber: "8.0",
     clauseTitle: "EXHIBITS AND ATTACHMENTS",
-    options: ["Full suite (Fee Schedule, Service Area, Quality Metrics, BAA, Credentialing)", "Fee Schedule and BAA only", "Custom (type below)"],
+    options: [
+      "Full suite: Fee Schedule, Service Area, Quality/P4P Metrics, BAA, Credentialing Standards, Provider Manual",
+      "Fee Schedule and BAA only",
+      "Custom (type below)",
+    ],
     buildClause: (answer: string) => {
-      const full = answer.toLowerCase().includes("full") || answer.toLowerCase().includes("fee schedule, service");
-      if (full) return `The following Exhibits are incorporated by reference and made a part of this Agreement:\n\n- **Exhibit A** – Fee Schedule (Reimbursement rates for Covered Services)\n- **Exhibit B** – Service Area Map (Geographic coverage definition)\n- **Exhibit C** – Quality Performance Metrics & Pay-for-Performance Incentives\n- **Exhibit D** – HIPAA Business Associate Agreement\n- **Exhibit E** – Credentialing Requirements and Standards\n\nEach Exhibit may be amended by mutual written agreement of the parties.`;
-      return `The following Exhibits are incorporated by reference and made a part of this Agreement:\n\n- **Exhibit A** – Fee Schedule (Reimbursement rates for Covered Services)\n- **Exhibit D** – HIPAA Business Associate Agreement\n\nAdditional Exhibits may be added by mutual written agreement of the parties.`;
+      const full = answer.toLowerCase().includes("full");
+      if (full) return `The following Exhibits are incorporated by reference and made a part of this Agreement:\n\n- **Exhibit A** – Fee Schedule & Reimbursement Methodology\n  *Includes: MS-DRG rates, APC rates, MPFS percentages, per diem rates, case rates, and carve-out pricing for implants/devices*\n\n- **Exhibit B** – Service Area Map & Practice Locations\n  *Provider site addresses, hours of operation, and specialty designations*\n\n- **Exhibit C** – Quality Performance Metrics & Pay-for-Performance (P4P) Program\n  *HEDIS measures, CAHPS thresholds, readmission targets, and incentive/penalty methodology*\n\n- **Exhibit D** – HIPAA Business Associate Agreement\n  *Per 45 CFR § 164.502(e) and 45 CFR § 164.504(e)*\n\n- **Exhibit E** – Credentialing & Re-Credentialing Requirements\n  *NCQA standards, required documentation, and timeline*\n\n- **Exhibit F** – Provider Manual (incorporated by reference)\n  *Claims submission, prior authorization, appeals, and administrative procedures*\n\nEach Exhibit may be amended by mutual written agreement of the parties. Amendments to the Provider Manual shall be effective thirty (30) days after written notice to Provider.`;
+      return `The following Exhibits are incorporated by reference and made a part of this Agreement:\n\n- **Exhibit A** – Fee Schedule & Reimbursement Methodology\n  *Includes applicable rate tables and reimbursement percentages*\n\n- **Exhibit D** – HIPAA Business Associate Agreement\n  *Per 45 CFR § 164.502(e) and 45 CFR § 164.504(e)*\n\nAdditional Exhibits may be added by mutual written agreement of the parties.`;
     },
   },
   {
     id: "signatures",
-    question: "Who are the **authorized signatories** for each party?",
+    question: "Who are the **authorized signatories** for each party?\n\nProvide names and titles for the signing representatives.",
     sectionNumber: "9.0",
     clauseTitle: "SIGNATURE",
-    options: ["VP Network + CEO", "Chief Medical Officer + Medical Director", "Custom (type below)"],
-    buildClause: (answer: string) => `IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.\n\n**PLAN:**\nBy: ___________________________\nName: _________________________\nTitle: ${answer.includes("VP") ? "VP of Network Management" : "Authorized Representative"}\nDate: _________________________\n\n**PROVIDER:**\nBy: ___________________________\nName: _________________________\nTitle: ${answer.includes("CEO") ? "Chief Executive Officer" : "Authorized Representative"}\nDate: _________________________`,
+    options: [
+      "Plan: Sarah Mitchell, VP of Network Management | Provider: Dr. James Harrison, CEO",
+      "Plan: David Chen, SVP of Provider Relations | Provider: Dr. Maria Santos, Chief Medical Officer",
+      "Custom (type below)",
+    ],
+    buildClause: (answer: string) => {
+      const planTitle = answer.includes("VP") ? (answer.includes("SVP") ? "SVP of Provider Relations" : "VP of Network Management") : "Authorized Representative";
+      const provTitle = answer.includes("CEO") ? "Chief Executive Officer" : answer.includes("CMO") || answer.includes("Chief Medical") ? "Chief Medical Officer" : "Authorized Representative";
+      const planName = answer.match(/Plan:\s*([^,|]+)/i)?.[1]?.trim() || "_________________________";
+      const provName = answer.match(/Provider:\s*([^,|]+)/i)?.[1]?.trim() || "_________________________";
+      return `IN WITNESS WHEREOF, the parties hereto have caused this Agreement to be executed by their duly authorized representatives as of the Effective Date.\n\n**OPTUMHEALTH CARE SOLUTIONS, LLC ("PLAN")**\n\nBy: ___________________________\nPrinted Name: ${planName}\nTitle: ${planTitle}\nDate: _________________________\n\n\n**PROVIDER:**\n\nBy: ___________________________\nPrinted Name: ${provName}\nTitle: ${provTitle}\nDate: _________________________\nNPI: _________________________\nTax ID: _________________________\n\n\n*This Agreement, together with all Exhibits and Attachments, constitutes the entire agreement between the parties and supersedes all prior negotiations, representations, and agreements relating to the subject matter hereof.*`;
+    },
   },
 ];
 
