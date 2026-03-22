@@ -42,6 +42,16 @@ export function AppSidebar() {
     localStorage.setItem("oci_sidebar_collapsed", String(collapsed));
   }, [collapsed]);
 
+  // Listen for external toggle (from AppLayout button)
+  useEffect(() => {
+    const handler = () => {
+      const val = localStorage.getItem("oci_sidebar_collapsed") === "true";
+      setCollapsed(val);
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
+
   return (
     <aside
       className={`flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ${
