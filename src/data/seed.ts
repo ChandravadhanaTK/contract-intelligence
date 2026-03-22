@@ -44,7 +44,7 @@ const obligations: Obligation[] = [
   { id: "o8", title: "PHI Breach Response Plan Review", description: "Review and update breach notification procedures", owner: "Privacy Officer", dueDate: "2025-03-01", frequency: "Annually", status: "InProgress", evidenceLinks: [] },
 ];
 
-const makeWorkflow = (id: string, stage: "Draft" | "Review" | "Redline"): WorkflowInstance => ({
+const makeWorkflow = (id: string, stage: "Draft" | "Internal Review" | "Redlining & Review"): WorkflowInstance => ({
   id,
   stage,
   tasks: [
