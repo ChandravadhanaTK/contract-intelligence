@@ -70,6 +70,19 @@ function ComplianceDeviationGraph() {
 function ComplianceOverviewCard() {
   const [graphView, setGraphView] = useState<"score" | "category" | "deviation">("score");
 
+  const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value, name }: any) => {
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5 + 14;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    if (value === 0) return null;
+    return (
+      <text x={x} y={y} fill="hsl(var(--foreground))" textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={600}>
+        {value}
+      </text>
+    );
+  };
+
   return (
     <div className="bg-card border rounded-lg p-5">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
@@ -77,7 +90,7 @@ function ComplianceOverviewCard() {
         <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
           {([
             { value: "score", label: "Compliance Score" },
-            { value: "category", label: "By Category" },
+            { value: "category", label: "Deviation By Category" },
             { value: "deviation", label: "Deviation by Clause" },
           ] as const).map(opt => (
             <button
@@ -97,7 +110,7 @@ function ComplianceOverviewCard() {
           <div className="relative w-28 h-28">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={complianceScoreData} dataKey="value" innerRadius={35} outerRadius={52} startAngle={90} endAngle={-270} paddingAngle={2}>
+                <Pie data={complianceScoreData} dataKey="value" innerRadius={35} outerRadius={52} startAngle={90} endAngle={-270} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                   {complianceScoreData.map((_, i) => <Cell key={i} fill={complianceScoreColors[i]} />)}
                 </Pie>
               </PieChart>
@@ -159,12 +172,12 @@ function ComplianceOverviewCard() {
 
           {graphView === "deviation" && (
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={deviationData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+              <BarChart data={deviationData} margin={{ top: 15, right: 10, left: -10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="name" tick={{ fontSize: 9 }} className="fill-muted-foreground" interval={0} angle={-25} textAnchor="end" height={50} />
                 <YAxis tick={{ fontSize: 9 }} className="fill-muted-foreground" domain={[0, 6]} />
                 <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }} />
-                <Bar dataKey="score" radius={[4, 4, 0, 0]} name="Deviation Score">
+                <Bar dataKey="score" radius={[4, 4, 0, 0]} name="Deviation Score" label={{ position: 'top', fontSize: 9, fill: 'hsl(var(--foreground))' }}>
                   {deviationData.map((entry, index) => (
                     <Cell key={index} fill={entry.fill} />
                   ))}
@@ -186,16 +199,37 @@ const kpiCards = [
 
 const pipelineStages = ["Draft", "Collaboration", "Review", "Approval", "Published", "Downstream"];
 const pipelineColors = ["bg-amber-400", "bg-blue-500", "bg-violet-500", "bg-orange-500", "bg-emerald-500", "bg-teal-500"];
-const pipelineCounts = [12, 8, 7, 5, 6, 4];
+const defaultPipelineCounts = [12, 8, 7, 5, 6, 4];
+
+function getPipelineCounts(): number[] {
+  try {
+    const stored = JSON.parse(localStorage.getItem("oci_pipeline_counts") || "null");
+    if (Array.isArray(stored) && stored.length === 6) return stored;
+  } catch {}
+  return [...defaultPipelineCounts];
+}
+
+function setPipelineCounts(counts: number[]) {
+  localStorage.setItem("oci_pipeline_counts", JSON.stringify(counts));
+  window.dispatchEvent(new Event("oci_pipeline_updated"));
+}
 
 function ContractWorkflowPipeline() {
-  const pipelineTotal = pipelineCounts.reduce((a, b) => a + b, 0) || 1;
+  const [counts, setCounts] = useState(getPipelineCounts());
+
+  useEffect(() => {
+    const handler = () => setCounts(getPipelineCounts());
+    window.addEventListener("oci_pipeline_updated", handler);
+    return () => window.removeEventListener("oci_pipeline_updated", handler);
+  }, []);
+
+  const pipelineTotal = counts.reduce((a, b) => a + b, 0) || 1;
   return (
     <div className="bg-card border rounded-lg p-5">
       <h3 className="text-sm font-semibold mb-3">NewGen Contract Digitization Pipeline</h3>
       <div className="w-full h-4 rounded-full bg-muted flex overflow-hidden">
         {pipelineStages.map((stage, i) => {
-          const width = (pipelineCounts[i] / pipelineTotal) * 100;
+          const width = (counts[i] / pipelineTotal) * 100;
           if (width === 0) return null;
           return <div key={stage} className={`h-full ${pipelineColors[i]}`} style={{ width: `${width}%` }} />;
         })}
@@ -204,7 +238,7 @@ function ContractWorkflowPipeline() {
         {pipelineStages.map((stage, i) => (
           <div key={stage} className="flex items-center gap-1.5 text-xs">
             <div className={`w-3 h-3 rounded-sm ${pipelineColors[i]}`} />
-            <span className="text-muted-foreground">{stage} ({pipelineCounts[i]})</span>
+            <span className="text-muted-foreground">{stage} ({counts[i]})</span>
           </div>
         ))}
       </div>
@@ -225,10 +259,22 @@ interface SavedContract {
   parties: string;
 }
 
+const seedContracts: SavedContract[] = [
+  { id: "seed-1", name: "Northwell Health – Provider Agreement", family: "Provider Agreements", type: "Provider Services", clauses: [], signatureDataUrl: null, createdAt: "2025-11-14T10:30:00Z", status: "final", parties: "Optum Health Plan & Northwell Health" },
+  { id: "seed-2", name: "Mercy Health – Delegate Agreement", family: "Delegate Agreements", type: "Delegate", clauses: [], signatureDataUrl: null, createdAt: "2025-12-02T14:15:00Z", status: "final", parties: "UnitedHealthcare & Mercy Health System" },
+  { id: "seed-3", name: "Cleveland Clinic – Ancillary Services", family: "Provider Agreements", type: "Ancillary", clauses: [], signatureDataUrl: null, createdAt: "2026-01-08T09:00:00Z", status: "draft", parties: "Optum Health Plan & Cleveland Clinic" },
+  { id: "seed-4", name: "Kaiser Permanente – Behavioral Health", family: "Behavioral Health", type: "Specialty", clauses: [], signatureDataUrl: null, createdAt: "2026-02-18T11:45:00Z", status: "final", parties: "UnitedHealthcare & Kaiser Permanente" },
+  { id: "seed-5", name: "Mount Sinai – Renewal Amendment", family: "Provider Agreements", type: "Amendment", clauses: [], signatureDataUrl: null, createdAt: "2026-03-05T16:20:00Z", status: "draft", parties: "Optum Health Plan & Mount Sinai Health" },
+];
+
 function getSavedContracts(): SavedContract[] {
   try {
-    return JSON.parse(localStorage.getItem("oci_generated_contracts") || "[]");
-  } catch { return []; }
+    const stored = JSON.parse(localStorage.getItem("oci_generated_contracts") || "[]");
+    // Merge seed contracts (only add seeds not already present)
+    const ids = new Set(stored.map((c: SavedContract) => c.id));
+    const merged = [...stored, ...seedContracts.filter(s => !ids.has(s.id))];
+    return merged;
+  } catch { return [...seedContracts]; }
 }
 
 function saveContractToStorage(contract: SavedContract) {
@@ -249,6 +295,8 @@ function deleteContractFromStorage(id: string) {
 function MyContractsPanel({ onLoad }: { onLoad: (contract: SavedContract) => void }) {
   const [contracts, setContracts] = useState<SavedContract[]>(getSavedContracts());
   const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const handleStorage = () => setContracts(getSavedContracts());
@@ -273,7 +321,28 @@ function MyContractsPanel({ onLoad }: { onLoad: (contract: SavedContract) => voi
 
   const handleDelete = (id: string) => {
     deleteContractFromStorage(id);
+    setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
     setContracts(getSavedContracts());
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const handlePushToPipeline = () => {
+    if (selectedIds.size === 0) return;
+    setSubmitting(true);
+    setTimeout(() => {
+      const counts = getPipelineCounts();
+      counts[0] += selectedIds.size; // Add to "Draft" stage
+      setPipelineCounts(counts);
+      setSelectedIds(new Set());
+      setSubmitting(false);
+    }, 600);
   };
 
   if (contracts.length === 0) {
@@ -308,6 +377,12 @@ function MyContractsPanel({ onLoad }: { onLoad: (contract: SavedContract) => voi
               <div className="ml-5 space-y-0.5">
                 {items.map(c => (
                   <div key={c.id} className="flex items-center gap-1.5 text-[10px] px-2 py-1.5 rounded hover:bg-muted/50 group">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(c.id)}
+                      onChange={() => toggleSelect(c.id)}
+                      className="w-3 h-3 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
+                    />
                     <FileText className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                     <button onClick={() => onLoad(c)} className="flex-1 text-left text-foreground truncate hover:text-primary">
                       {c.name}
@@ -326,6 +401,16 @@ function MyContractsPanel({ onLoad }: { onLoad: (contract: SavedContract) => voi
           </div>
         ))}
       </div>
+      {selectedIds.size > 0 && (
+        <button
+          onClick={handlePushToPipeline}
+          disabled={submitting}
+          className="mt-3 w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-lg py-2 text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-60"
+        >
+          <Send className="w-3.5 h-3.5" />
+          {submitting ? "Submitting..." : `Submit ${selectedIds.size} to Digitization Pipeline`}
+        </button>
+      )}
     </div>
   );
 }
