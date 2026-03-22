@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { BackToPipelineBanner } from "@/components/BackToPipelineBanner";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Search, Eye, Pencil, MessageSquare, ArrowRight, Shield, Play, FileText, ChevronDown } from "lucide-react";
 import { api } from "@/services/mockApi";
