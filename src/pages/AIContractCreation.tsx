@@ -476,11 +476,19 @@ export default function AIContractCreation() {
           <div className="max-w-3xl mx-auto py-6 px-8">
             {/* Header toolbar */}
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-              <div>
-                <h2 className="text-lg font-bold text-foreground">Contract Document</h2>
-                <p className="text-xs text-muted-foreground">
-                  {mode === "full" ? "Full Draft Generation" : mode === "clause" ? "Clause-by-Clause Co-Authoring" : "Playbook-Guided with AI Review"}
-                </p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => { setMode(null); set("oci_create_mode", null); }}
+                  className="flex items-center gap-1 px-2.5 py-1.5 border rounded-lg text-xs font-medium hover:bg-muted"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" /> Back
+                </button>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">Contract Document</h2>
+                  <p className="text-xs text-muted-foreground">
+                    {mode === "full" ? "Full Draft Generation" : mode === "clause" ? "Clause-by-Clause Co-Authoring" : "Playbook-Guided with AI Review"}
+                  </p>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <button
