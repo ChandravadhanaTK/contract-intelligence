@@ -32,16 +32,16 @@ interface ExtractedClause {
 }
 
 const extractedClauses: ExtractedClause[] = [
-  { id: "ec-1", name: "Payment Terms", sectionId: "s5", sectionRef: "4.1", pageRef: "Page 18", category: "Financial", confidence: "High", alignment: "aligned", summary: "Standard reimbursement at 120% Medicare Fee Schedule" },
-  { id: "ec-2", name: "Termination Without Cause", sectionId: "s8", sectionRef: "7.1", pageRef: "Page 22", category: "Risk", confidence: "High", alignment: "nonAligned", summary: "180-day notice required; continuity of care provisions apply" },
-  { id: "ec-3", name: "HIPAA Compliance", sectionId: "s9", sectionRef: "8.1", pageRef: "Page 30", category: "Compliance", confidence: "High", alignment: "aligned", summary: "Full HIPAA compliance with 24-hour breach notification" },
-  { id: "ec-4", name: "Rate Escalator", sectionId: "s10", sectionRef: "3.10", pageRef: "Page 43", category: "Financial", confidence: "Medium", alignment: "nonAligned", summary: "5% annual escalator using CPI-U methodology" },
-  { id: "ec-5", name: "Prior Authorization", sectionId: "s6", sectionRef: "5.1", pageRef: "Page 20", category: "Operational", confidence: "Medium", alignment: "aligned", summary: "Required for advanced services; emergency exempt" },
-  { id: "ec-6", name: "Credentialing", sectionId: "s4", sectionRef: "3.4", pageRef: "Page 12", category: "Compliance", confidence: "High", alignment: "aligned", summary: "NCQA standards required for all practitioners" },
-  { id: "ec-7", name: "Scope of Agreement", sectionId: "s1", sectionRef: "1.0", pageRef: "Page 1", category: "Legal", confidence: "High", alignment: "aligned", summary: "Covers all medically necessary services within service area" },
-  { id: "ec-8", name: "Quality & Reporting", sectionId: "s7", sectionRef: "6.1", pageRef: "Page 24", category: "Operational", confidence: "Medium", alignment: "aligned", summary: "HEDIS measures and quarterly reporting required" },
-  { id: "ec-9", name: "Network Adequacy", sectionId: "missing", sectionRef: "—", pageRef: "—", category: "Compliance", confidence: "Low", alignment: "missing", summary: "Missing: No network adequacy clause found" },
-  { id: "ec-10", name: "Dispute Resolution", sectionId: "s3", sectionRef: "2.2", pageRef: "Page 8", category: "Legal", confidence: "Low", alignment: "nonAligned", summary: "Binding arbitration without progressive escalation" },
+  { id: "ec-1", name: "Payment Terms", sectionId: "s5", sectionRef: "4.1", pageRef: "Page 18", category: "Financial", confidence: "High", alignment: "aligned", summary: "Standard reimbursement at 120% Medicare Fee Schedule", complianceScore: 92 },
+  { id: "ec-2", name: "Termination Without Cause", sectionId: "s8", sectionRef: "7.1", pageRef: "Page 22", category: "Risk", confidence: "High", alignment: "nonAligned", summary: "180-day notice required; continuity of care provisions apply", complianceScore: 68 },
+  { id: "ec-3", name: "HIPAA Compliance", sectionId: "s9", sectionRef: "8.1", pageRef: "Page 30", category: "Compliance", confidence: "High", alignment: "aligned", summary: "Full HIPAA compliance with 24-hour breach notification", complianceScore: 95 },
+  { id: "ec-4", name: "Rate Escalator", sectionId: "s10", sectionRef: "3.10", pageRef: "Page 43", category: "Financial", confidence: "Medium", alignment: "nonAligned", summary: "5% annual escalator using CPI-U methodology", complianceScore: 58 },
+  { id: "ec-5", name: "Prior Authorization", sectionId: "s6", sectionRef: "5.1", pageRef: "Page 20", category: "Operational", confidence: "Medium", alignment: "aligned", summary: "Required for advanced services; emergency exempt", complianceScore: 84 },
+  { id: "ec-6", name: "Credentialing", sectionId: "s4", sectionRef: "3.4", pageRef: "Page 12", category: "Compliance", confidence: "High", alignment: "aligned", summary: "NCQA standards required for all practitioners", complianceScore: 91 },
+  { id: "ec-7", name: "Scope of Agreement", sectionId: "s1", sectionRef: "1.0", pageRef: "Page 1", category: "Legal", confidence: "High", alignment: "aligned", summary: "Covers all medically necessary services within service area", complianceScore: 96 },
+  { id: "ec-8", name: "Quality & Reporting", sectionId: "s7", sectionRef: "6.1", pageRef: "Page 24", category: "Operational", confidence: "Medium", alignment: "aligned", summary: "HEDIS measures and quarterly reporting required", complianceScore: 82 },
+  { id: "ec-9", name: "Network Adequacy", sectionId: "missing", sectionRef: "—", pageRef: "—", category: "Compliance", confidence: "Low", alignment: "missing", summary: "Missing: No network adequacy clause found", complianceScore: 0 },
+  { id: "ec-10", name: "Dispute Resolution", sectionId: "s3", sectionRef: "2.2", pageRef: "Page 8", category: "Legal", confidence: "Low", alignment: "nonAligned", summary: "Binding arbitration without progressive escalation", complianceScore: 45 },
 ];
 
 // Map section IDs to confidence percentages
