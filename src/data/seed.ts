@@ -58,7 +58,7 @@ const makeWorkflow = (id: string, stage: "Draft" | "Internal Review" | "Redlinin
   history: [
     { time: "2025-01-08T09:00:00Z", stage: "Draft", actor: "System", note: "Contract uploaded and processing initiated" },
     { time: "2025-01-08T09:15:00Z", stage: "Draft", actor: "Intake Agent", note: "Metadata extracted and clauses identified" },
-    { time: "2025-01-10T14:00:00Z", stage: "Review", actor: "Sarah Johnson", note: "Moved to Review after initial analysis" },
+    { time: "2025-01-10T14:00:00Z", stage: "Internal Review", actor: "Sarah Johnson", note: "Moved to Internal Review after initial analysis" },
   ],
 });
 
