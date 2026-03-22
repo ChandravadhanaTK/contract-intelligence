@@ -79,8 +79,8 @@ const App = () => {
               <Route path="/compliance" element={<Navigate to="/obligation-tracker" replace />} />
               <Route path="/compliance-hub" element={<CompliancePage />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/contracts" element={<ContractsPage />} />
               <Route path="/contracts/:id" element={<ContractViewerPage />} />
+              <Route path="/contracts/*" element={<ContractsPage />} />
               <Route path="/compare" element={<ComparePage />} />
               <Route path="/users" element={<UserManagement />} />
               <Route path="/intake" element={<IntakePage />} />
