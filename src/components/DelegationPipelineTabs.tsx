@@ -133,7 +133,7 @@ export default function DelegationPipelineTabs() {
         {(["Delegated", "NonDelegated"] as DelegationType[]).map(t => (
           <button
             key={t}
-            onClick={() => { setActiveTab(t); setSelectedDocId(null); }}
+            onClick={() => { setActiveTab(t); setSelectedDocId(null); setSelectedStageIdx(null); }}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === t ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
             {t === "Delegated" ? "Delegate Contracts Pipeline" : "Non-Delegate Contract Pipeline"}
