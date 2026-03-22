@@ -237,7 +237,7 @@ function ContractWorkflowPipeline() {
               key={stage.name}
               className={`h-full ${stage.color} cursor-pointer hover:opacity-80 transition-opacity`}
               style={{ width: `${width}%` }}
-              onClick={() => navigate(stage.route)}
+              onClick={() => navigate(stage.route + (stage.route.includes("?") ? "&from=pipeline" : "?from=pipeline"))}
               title={`${stage.name} (${counts[i]})`}
             />
           );
@@ -247,7 +247,7 @@ function ContractWorkflowPipeline() {
         {pipelineStages.map((stage, i) => (
           <button
             key={stage.name}
-            onClick={() => navigate(stage.route)}
+            onClick={() => navigate(stage.route + (stage.route.includes("?") ? "&from=pipeline" : "?from=pipeline"))}
             className="flex items-center gap-1.5 text-[11px] hover:underline cursor-pointer transition-colors"
           >
             <div className={`w-2.5 h-2.5 rounded-sm ${stage.color}`} />

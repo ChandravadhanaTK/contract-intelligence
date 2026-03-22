@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { BackToPipelineBanner } from "@/components/BackToPipelineBanner";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   ShieldCheck, BookOpen, GitCompare, Pencil, FileText, CheckCircle2,
@@ -182,6 +183,7 @@ export default function CompliancePage() {
 
   return (
     <div className="page-container">
+      <BackToPipelineBanner />
       <h1 className="page-header">Compliance</h1>
       <p className="text-sm text-muted-foreground -mt-3 mb-4">Contract compliance, standard clauses, deviations, and redlining</p>
 

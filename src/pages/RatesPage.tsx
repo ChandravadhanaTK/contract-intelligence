@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { BackToPipelineBanner } from "@/components/BackToPipelineBanner";
 import { Filter, Download, TrendingUp } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import type { RateTable, RateRow, Contract } from "@/types";
@@ -78,6 +79,7 @@ export default function RatesPage() {
 
   return (
     <div className="page-container">
+      <BackToPipelineBanner />
       <h1 className="page-header">Rate / Fee Table Extraction</h1>
 
       <div className="flex flex-wrap gap-4 items-end">

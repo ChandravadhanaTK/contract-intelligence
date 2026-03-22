@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { BackToPipelineBanner } from "@/components/BackToPipelineBanner";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Search, Eye, Pencil, MessageSquare, ArrowRight, Shield, Play, FileText, ChevronDown } from "lucide-react";
 import { api } from "@/services/mockApi";
@@ -158,6 +159,7 @@ export default function WorkflowPage({ embedded = false, initialTab }: WorkflowP
 
   return (
     <div className={embedded ? "space-y-4" : "page-container"}>
+      {!embedded && <BackToPipelineBanner />}
       {!embedded && (
         <>
           <div className="flex items-center justify-between flex-wrap gap-2">

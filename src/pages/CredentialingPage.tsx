@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { BackToPipelineBanner } from "@/components/BackToPipelineBanner";
 import { CheckCircle, XCircle, AlertTriangle, Shield, RotateCcw, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -64,6 +65,7 @@ export default function CredentialingPage() {
 
   return (
     <div className="page-container">
+      <BackToPipelineBanner />
       <div className="flex items-center gap-3 mb-2">
         <button onClick={() => navigate("/create?tab=intake")} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors" title="Back to Provider Intake">
           <ArrowLeft className="w-4 h-4" />
