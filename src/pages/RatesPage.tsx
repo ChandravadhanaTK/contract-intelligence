@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { BackToPipelineBanner } from "@/components/BackToPipelineBanner";
 import { Filter, Download, TrendingUp } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import type { RateTable, RateRow, Contract } from "@/types";
