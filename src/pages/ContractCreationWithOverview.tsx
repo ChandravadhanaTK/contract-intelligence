@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, PenLine, Users, Eye, CheckCircle2, Globe, ArrowDownToLine, ClipboardList, UserCheck, Bot, Zap, Upload, ArrowRight, Shield, AlertTriangle, TrendingDown, Send, ToggleLeft, ToggleRight, List, Library, BookOpen, GitCommit, History, Check, X, Edit3, MessageSquare, Clock, BarChart3, Pen, ImagePlus } from "lucide-react";
+import { FileText, PenLine, Users, Eye, CheckCircle2, Globe, ArrowDownToLine, ClipboardList, UserCheck, Bot, Zap, Upload, ArrowRight, Shield, AlertTriangle, TrendingDown, Send, ToggleLeft, ToggleRight, List, Library, BookOpen, GitCommit, History, Check, X, Edit3, MessageSquare, Clock, BarChart3, Pen, ImagePlus, Save, Download, Printer, Copy, Trash2, FolderOpen, ChevronDown, ChevronRight } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -94,6 +94,124 @@ function ContractWorkflowPipeline() {
           <div key={stage} className="flex items-center gap-1.5 text-xs">
             <div className={`w-3 h-3 rounded-sm ${pipelineColors[i]}`} />
             <span className="text-muted-foreground">{stage} ({pipelineCounts[i]})</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Saved Contracts Storage ─── */
+interface SavedContract {
+  id: string;
+  name: string;
+  family: string;
+  type: string;
+  clauses: ContractClause[];
+  signatureDataUrl: string | null;
+  createdAt: string;
+  status: "draft" | "final";
+  parties: string;
+}
+
+function getSavedContracts(): SavedContract[] {
+  try {
+    return JSON.parse(localStorage.getItem("oci_generated_contracts") || "[]");
+  } catch { return []; }
+}
+
+function saveContractToStorage(contract: SavedContract) {
+  const all = getSavedContracts();
+  const idx = all.findIndex(c => c.id === contract.id);
+  if (idx >= 0) all[idx] = contract; else all.push(contract);
+  localStorage.setItem("oci_generated_contracts", JSON.stringify(all));
+  window.dispatchEvent(new Event("oci_contracts_updated"));
+}
+
+function deleteContractFromStorage(id: string) {
+  const all = getSavedContracts().filter(c => c.id !== id);
+  localStorage.setItem("oci_generated_contracts", JSON.stringify(all));
+  window.dispatchEvent(new Event("oci_contracts_updated"));
+}
+
+/* ─── My Generated Contracts Panel ─── */
+function MyContractsPanel({ onLoad }: { onLoad: (contract: SavedContract) => void }) {
+  const [contracts, setContracts] = useState<SavedContract[]>(getSavedContracts());
+  const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const handleStorage = () => setContracts(getSavedContracts());
+    window.addEventListener("oci_contracts_updated", handleStorage);
+    return () => window.removeEventListener("oci_contracts_updated", handleStorage);
+  }, []);
+
+  const families = contracts.reduce<Record<string, SavedContract[]>>((acc, c) => {
+    const fam = c.family || "Uncategorized";
+    if (!acc[fam]) acc[fam] = [];
+    acc[fam].push(c);
+    return acc;
+  }, {});
+
+  const toggleFamily = (fam: string) => {
+    setExpandedFamilies(prev => {
+      const next = new Set(prev);
+      next.has(fam) ? next.delete(fam) : next.add(fam);
+      return next;
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    deleteContractFromStorage(id);
+    setContracts(getSavedContracts());
+  };
+
+  if (contracts.length === 0) {
+    return (
+      <div className="bg-card border rounded-xl p-4">
+        <h3 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+          <FolderOpen className="w-3.5 h-3.5 text-secondary" /> My Generated Contracts
+        </h3>
+        <p className="text-[10px] text-muted-foreground text-center py-4">No saved contracts yet. Generate and save a contract to see it here.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-card border rounded-xl p-4">
+      <h3 className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5">
+        <FolderOpen className="w-3.5 h-3.5 text-secondary" /> My Generated Contracts
+      </h3>
+      <p className="text-[10px] text-muted-foreground mb-2">{contracts.length} contract{contracts.length !== 1 ? "s" : ""} • {Object.keys(families).length} famil{Object.keys(families).length !== 1 ? "ies" : "y"}</p>
+      <div className="space-y-1 max-h-[250px] overflow-y-auto">
+        {Object.entries(families).map(([fam, items]) => (
+          <div key={fam}>
+            <button
+              onClick={() => toggleFamily(fam)}
+              className="w-full flex items-center gap-1.5 text-[11px] font-medium text-foreground hover:bg-muted/50 rounded px-2 py-1.5 transition-colors"
+            >
+              {expandedFamilies.has(fam) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+              <FolderOpen className="w-3 h-3 text-secondary" />
+              {fam} ({items.length})
+            </button>
+            {expandedFamilies.has(fam) && (
+              <div className="ml-5 space-y-0.5">
+                {items.map(c => (
+                  <div key={c.id} className="flex items-center gap-1.5 text-[10px] px-2 py-1.5 rounded hover:bg-muted/50 group">
+                    <FileText className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                    <button onClick={() => onLoad(c)} className="flex-1 text-left text-foreground truncate hover:text-primary">
+                      {c.name}
+                    </button>
+                    <span className="text-[8px] text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-medium ${c.status === "final" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                      {c.status === "final" ? "Final" : "Draft"}
+                    </span>
+                    <button onClick={() => handleDelete(c.id)} className="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive/80">
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -505,8 +623,103 @@ function ContractCoPilotTab() {
   const [signaturePhase, setSignaturePhase] = useState<"none" | "awaiting" | "captured">("none");
   const [confirmPhase, setConfirmPhase] = useState<"none" | "awaiting" | "confirmed">("none");
   const [signatureMode, setSignatureMode] = useState<"draw" | "upload">("draw");
+  const [contractId] = useState(() => `contract-${Date.now()}`);
+  const [isSaved, setIsSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const documentRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const getContractName = () => {
+    const partiesClause = clauses.find(c => c.id === "clause-parties");
+    if (partiesClause?.filledFrom) return partiesClause.filledFrom.split("&")[0]?.trim() + " – PSA";
+    return "Provider Services Agreement";
+  };
+
+  const getContractFamily = () => {
+    const typeClause = clauses.find(c => c.id === "clause-contractType");
+    return typeClause?.filledFrom || "Provider Services";
+  };
+
+  const getParties = () => {
+    const partiesClause = clauses.find(c => c.id === "clause-parties");
+    return partiesClause?.filledFrom || "";
+  };
+
+  const handleSaveContract = () => {
+    const contract: SavedContract = {
+      id: contractId,
+      name: getContractName(),
+      family: getContractFamily(),
+      type: clauses.find(c => c.id === "clause-contractType")?.filledFrom || "PSA",
+      clauses,
+      signatureDataUrl,
+      createdAt: new Date().toISOString(),
+      status: isComplete ? "final" : "draft",
+      parties: getParties(),
+    };
+    saveContractToStorage(contract);
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
+  };
+
+  const handleDownloadPDF = () => {
+    if (!documentRef.current) return;
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <html><head><title>${getContractName()}</title>
+      <style>
+        body { font-family: 'Times New Roman', Georgia, serif; margin: 40px; color: #1a1a1a; }
+        h1, h2, p { margin: 0 0 8px 0; }
+        .section-title { text-align: center; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-top: 20px; }
+        .clause-body { text-align: justify; line-height: 1.7; font-size: 12px; white-space: pre-line; margin-bottom: 16px; }
+        .signature-img { max-height: 60px; border-bottom: 1px solid #ccc; }
+        .footer { border-top: 1px solid #ddd; padding-top: 8px; font-size: 9px; color: #888; display: flex; justify-content: space-between; margin-top: 40px; font-family: Arial, sans-serif; }
+        hr { border: none; border-top: 1px solid #ddd; margin: 16px 0; }
+        @media print { body { margin: 20px; } }
+      </style></head><body>
+      <h1 style="text-align:center;font-size:14px;letter-spacing:2px;">OPTUMHEALTH CARE SOLUTIONS, LLC</h1>
+      <h2 style="text-align:center;font-size:12px;letter-spacing:1px;">PROVIDER SERVICES AGREEMENT</h2>
+      <p style="font-size:11px;text-align:justify;line-height:1.7;margin-bottom:16px;">THIS AGREEMENT ("Agreement") is entered into by and between the parties identified herein, setting forth the terms and conditions under which Provider shall participate in networks developed and maintained by Plan.</p>
+      <hr/>
+      ${clauses.map(c => `
+        <div class="section-title" style="font-size:13px;">SECTION ${c.sectionNumber}</div>
+        <div class="section-title" style="font-size:12px;margin-bottom:8px;">${c.title}</div>
+        <div class="clause-body">${c.body}</div>
+      `).join("")}
+      ${signatureDataUrl && isComplete ? `
+        <div style="margin-top:30px;border-top:1px solid #ddd;padding-top:16px;text-align:center;">
+          <p style="font-weight:bold;font-size:12px;text-transform:uppercase;letter-spacing:1px;">AUTHORIZED SIGNATURE</p>
+          <img src="${signatureDataUrl}" class="signature-img" style="display:block;margin:8px auto;" />
+          <p style="font-size:10px;color:#888;">Digitally signed on ${new Date().toLocaleDateString()}</p>
+        </div>
+      ` : ""}
+      <div class="footer">
+        <span>OHCS-ProviderAgmt(v2025)</span>
+        <span>${isComplete ? "Final" : "Draft"}</span>
+        <span>Confidential and Proprietary</span>
+      </div>
+      </body></html>
+    `);
+    printWindow.document.close();
+    setTimeout(() => { printWindow.print(); }, 500);
+  };
+
+  const handleCopyText = () => {
+    const text = clauses.map(c => `SECTION ${c.sectionNumber} – ${c.title}\n\n${c.body}`).join("\n\n---\n\n");
+    navigator.clipboard.writeText(text);
+  };
+
+  const handleLoadContract = (saved: SavedContract) => {
+    setClauses(saved.clauses);
+    setSignatureDataUrl(saved.signatureDataUrl);
+    setIsComplete(saved.status === "final");
+    setSignaturePhase(saved.signatureDataUrl ? "captured" : "none");
+    setConfirmPhase(saved.status === "final" ? "confirmed" : "none");
+    setCurrentStep(saved.clauses.length);
+    setActiveView("document");
+    setMode("copilot");
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -683,8 +896,31 @@ function ContractCoPilotTab() {
   ];
 
   const renderDocumentView = () => (
-    <div className="p-4 overflow-y-auto flex-1">
-      <div className="bg-white border shadow-sm max-w-[700px] mx-auto px-10 py-8" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+    <div className="flex flex-col flex-1 overflow-hidden">
+      {/* Document action bar */}
+      <div className="px-4 py-2 border-b bg-muted/30 flex items-center gap-2 flex-wrap">
+        <button onClick={handleSaveContract}
+          className={`text-[10px] px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${isSaved ? "bg-emerald-100 text-emerald-700" : "bg-secondary text-secondary-foreground hover:opacity-90"}`}>
+          {isSaved ? <><Check className="w-3 h-3" /> Saved!</> : <><Save className="w-3 h-3" /> Save Contract</>}
+        </button>
+        <button onClick={handleDownloadPDF}
+          className="text-[10px] px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 bg-primary text-primary-foreground hover:opacity-90">
+          <Download className="w-3 h-3" /> Download PDF
+        </button>
+        <button onClick={() => { if (documentRef.current) { const w = window.open("", "_blank"); if (w) { w.document.write(documentRef.current.innerHTML); w.document.close(); setTimeout(() => w.print(), 300); } } }}
+          className="text-[10px] px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 border bg-background text-foreground hover:bg-muted">
+          <Printer className="w-3 h-3" /> Print
+        </button>
+        <button onClick={handleCopyText}
+          className="text-[10px] px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 border bg-background text-foreground hover:bg-muted">
+          <Copy className="w-3 h-3" /> Copy Text
+        </button>
+        <span className="ml-auto text-[9px] text-muted-foreground">
+          {clauses.length} sections • {isComplete ? "Final" : "Draft"}
+        </span>
+      </div>
+      <div className="p-4 overflow-y-auto flex-1">
+      <div ref={documentRef} className="bg-white border shadow-sm max-w-[700px] mx-auto px-10 py-8" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
         <h1 className="text-center font-bold text-sm text-foreground mb-1 uppercase tracking-wide leading-snug">
           OPTUMHEALTH CARE SOLUTIONS, LLC
         </h1>
@@ -775,6 +1011,7 @@ function ContractCoPilotTab() {
           <span>{isComplete ? "✅ Final" : "Draft"}</span>
           <span>Confidential and Proprietary</span>
         </div>
+      </div>
       </div>
     </div>
   );
@@ -1043,6 +1280,9 @@ function ContractCoPilotTab() {
                 </div>
               </div>
             )}
+
+            {/* My Generated Contracts */}
+            <MyContractsPanel onLoad={handleLoadContract} />
           </div>
         </div>
       )}
