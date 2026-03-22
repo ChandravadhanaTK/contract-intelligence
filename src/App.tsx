@@ -24,6 +24,7 @@ import UserManagement from "./pages/UserManagement";
 import ContractsPage from "./pages/ContractsPage";
 import ContractViewerPage from "./pages/ContractViewerPage";
 import ContractCreation from "./pages/ContractCreation";
+import AIContractCreation from "./pages/AIContractCreation";
 import UploadContract from "./pages/UploadContract";
 import DigitizationPage from "./pages/DigitizationPage";
 import CompliancePage from "./pages/CompliancePage";
@@ -66,7 +67,7 @@ const App = () => {
           <AppLayout onLogout={handleLogout}>
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/create" element={<Navigate to="/contracts" replace />} />
+              <Route path="/create" element={<AIContractCreation />} />
               <Route path="/upload" element={<UploadContract />} />
               <Route path="/digitization" element={<Navigate to="/contracts" replace />} />
               <Route path="/deviation" element={<Navigate to="/compliance-hub?tab=deviations" replace />} />

@@ -2,10 +2,15 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Send, ShieldCheck, ChevronLeft, ChevronRight,
   LayoutDashboard, Users, FolderOpen, Shield,
-  ScanLine, FileText,
+  Menu,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import optumLogo from "@/assets/optum-logo.png";
+import {
+  Tooltip as TooltipRoot,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const navItems = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
@@ -26,10 +31,16 @@ const navItems = [
 ];
 
 export function AppSidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    const saved = localStorage.getItem("oci_sidebar_collapsed");
+    return saved === "true";
+  });
   const location = useLocation();
   const navigate = useNavigate();
-  
+
+  useEffect(() => {
+    localStorage.setItem("oci_sidebar_collapsed", String(collapsed));
+  }, [collapsed]);
 
   return (
     <aside
@@ -37,18 +48,36 @@ export function AppSidebar() {
         collapsed ? "w-16" : "w-64"
       } min-h-screen`}
     >
-      {/* Header */}
-      <div
-        className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border cursor-pointer"
-        onClick={() => navigate("/dashboard")}
-        title="Go to Home"
-      >
-        <img src={optumLogo} alt="Optum" className="w-8 h-8 rounded-lg flex-shrink-0" />
+      {/* Header with hamburger toggle */}
+      <div className="flex items-center gap-2 px-3 py-3 border-b border-sidebar-border">
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="p-1.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground transition-colors flex-shrink-0"
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <Menu className="w-4 h-4" />
+        </button>
         {!collapsed && (
-          <div className="overflow-hidden">
-            <h1 className="text-sm font-bold text-sidebar-primary-foreground leading-tight">Optum</h1>
-            <p className="text-xs text-sidebar-muted leading-tight">Contract Intelligence</p>
+          <div
+            className="flex items-center gap-2 cursor-pointer overflow-hidden"
+            onClick={() => navigate("/dashboard")}
+            title="Go to Home"
+          >
+            <img src={optumLogo} alt="Optum" className="w-7 h-7 rounded-lg flex-shrink-0" />
+            <div className="overflow-hidden">
+              <h1 className="text-sm font-bold text-sidebar-primary-foreground leading-tight">Optum</h1>
+              <p className="text-[10px] text-sidebar-muted leading-tight">Contract Intelligence</p>
+            </div>
           </div>
+        )}
+        {collapsed && (
+          <img
+            src={optumLogo}
+            alt="Optum"
+            className="w-7 h-7 rounded-lg flex-shrink-0 cursor-pointer"
+            onClick={() => navigate("/dashboard")}
+            title="Go to Home"
+          />
         )}
       </div>
 
@@ -65,24 +94,26 @@ export function AppSidebar() {
             const children = (item as any).children as { label: string; path: string }[];
             return (
               <div key={item.path}>
-                <button
-                  onClick={() => {
-                    if (collapsed) {
-                      navigate(item.path);
-                    } else {
-                      navigate(item.path);
-                    }
-                  }}
-                  className={`sidebar-nav-item w-full justify-between ${
-                    isActive ? "sidebar-nav-item-active" : "sidebar-nav-item-inactive"
-                  }`}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <span className="flex items-center gap-2">
-                    <item.icon className="w-4 h-4 flex-shrink-0" />
-                    {!collapsed && <span className="truncate">{item.label}</span>}
-                  </span>
-                </button>
+                <TooltipRoot>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => navigate(item.path)}
+                      className={`sidebar-nav-item w-full ${collapsed ? "justify-center" : "justify-between"} ${
+                        isActive ? "sidebar-nav-item-active" : "sidebar-nav-item-inactive"
+                      }`}
+                    >
+                      <span className={`flex items-center ${collapsed ? "" : "gap-2"}`}>
+                        <item.icon className="w-4 h-4 flex-shrink-0" />
+                        {!collapsed && <span className="truncate">{item.label}</span>}
+                      </span>
+                    </button>
+                  </TooltipTrigger>
+                  {collapsed && (
+                    <TooltipContent side="right" className="text-xs">
+                      {item.label}
+                    </TooltipContent>
+                  )}
+                </TooltipRoot>
                 {!collapsed && (
                   <div className="ml-6 mt-1 space-y-0.5 border-l border-sidebar-border pl-3">
                     {children.map((child) => {
@@ -111,25 +142,33 @@ export function AppSidebar() {
           }
 
           return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={`sidebar-nav-item ${
-                isActive ? "sidebar-nav-item-active" : "sidebar-nav-item-inactive"
-              }`}
-              title={collapsed ? item.label : undefined}
-            >
-              <item.icon className="w-4 h-4 flex-shrink-0" />
-              {!collapsed && <span className="truncate">{item.label}</span>}
-            </NavLink>
+            <TooltipRoot key={item.path}>
+              <TooltipTrigger asChild>
+                <NavLink
+                  to={item.path}
+                  className={`sidebar-nav-item ${collapsed ? "justify-center" : ""} ${
+                    isActive ? "sidebar-nav-item-active" : "sidebar-nav-item-inactive"
+                  }`}
+                >
+                  <item.icon className="w-4 h-4 flex-shrink-0" />
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                </NavLink>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right" className="text-xs">
+                  {item.label}
+                </TooltipContent>
+              )}
+            </TooltipRoot>
           );
         })}
       </nav>
 
-      {/* Collapse toggle */}
+      {/* Collapse toggle at bottom */}
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="flex items-center justify-center py-3 border-t border-sidebar-border text-sidebar-muted hover:text-sidebar-foreground transition-colors"
+        title={collapsed ? "Expand" : "Collapse"}
       >
         {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
       </button>
