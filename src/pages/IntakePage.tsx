@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, FileText, CheckCircle, AlertTriangle, ArrowRight, Trash2 } from "lucide-react";
+import { Plus, FileText, CheckCircle, AlertTriangle, ArrowRight, ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { IntakeRequest } from "@/types";
 
