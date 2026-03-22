@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, GitCompare, FileDown, ChevronDown, Shield, FileText,
   Bot, Send, X, Sparkles, Clock, ChevronUp, Search, ArrowRight,
-  AlertTriangle, CheckCircle, Info,
+  AlertTriangle, CheckCircle, Info, Pencil, Save,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
 import { seedContractFamilies } from "@/data/seed";
@@ -113,9 +113,34 @@ export default function ContractViewerPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  // Editable sections state (for non-Active documents)
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [sectionEdits, setSectionEdits] = useState<Record<string, string>>({});
+
   const result = id ? getDocById(id) : null;
   const docName = result?.doc.name || "Contract Document";
   const familyName = result?.family.name || "";
+  const docStatus = result?.doc.status || "Active";
+  const isEditable = docStatus !== "Active";
+
+  const startSectionEdit = (sectionId: string, content: string) => {
+    setEditingSectionId(sectionId);
+    setEditContent(sectionEdits[sectionId] ?? content);
+  };
+
+  const saveSectionEdit = () => {
+    if (!editingSectionId) return;
+    setSectionEdits(prev => ({ ...prev, [editingSectionId]: editContent }));
+    setEditingSectionId(null);
+    setEditContent("");
+    toast.success("Section updated successfully");
+  };
+
+  const cancelSectionEdit = () => {
+    setEditingSectionId(null);
+    setEditContent("");
+  };
 
   // Filtered clauses
   const filteredClauses = useMemo(() => {
@@ -214,6 +239,11 @@ export default function ContractViewerPage() {
             <p className="text-sm font-semibold truncate">{docName}</p>
             <p className="text-xs text-muted-foreground">{familyName}</p>
           </div>
+          {isEditable && (
+            <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+              {docStatus} — Editable
+            </span>
+          )}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Clock className="w-3 h-3" /> Last modified: 10m ago
           </div>
@@ -278,9 +308,45 @@ export default function ContractViewerPage() {
                   )}
 
                   {/* Section content */}
-                  <div className="text-[13px] text-foreground leading-[1.7] whitespace-pre-wrap text-justify" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
-                    {section.content}
-                  </div>
+                  {editingSectionId === section.id ? (
+                    <div className="space-y-2" onClick={e => e.stopPropagation()}>
+                      <textarea
+                        className="w-full border rounded-lg px-3 py-2 text-[13px] bg-background min-h-[180px] resize-y leading-[1.7] text-justify"
+                        style={{ fontFamily: "'Times New Roman', Georgia, serif" }}
+                        value={editContent}
+                        onChange={e => setEditContent(e.target.value)}
+                        autoFocus
+                      />
+                      <div className="flex gap-2" style={{ fontFamily: "'Inter', sans-serif" }}>
+                        <button onClick={saveSectionEdit} className="flex items-center gap-1 px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium">
+                          <Save className="w-3 h-3" /> Save
+                        </button>
+                        <button onClick={cancelSectionEdit} className="px-3 py-1.5 border rounded text-xs font-medium hover:bg-muted">
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative group">
+                      <div className="text-[13px] text-foreground leading-[1.7] whitespace-pre-wrap text-justify" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                        {sectionEdits[section.id] ?? section.content}
+                      </div>
+                      {isEditable && !(section as any).isTitle && (
+                        <button
+                          onClick={e => { e.stopPropagation(); startSectionEdit(section.id, section.content); }}
+                          className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-muted rounded-md text-xs flex items-center gap-1 shadow-sm border"
+                          style={{ fontFamily: "'Inter', sans-serif" }}
+                        >
+                          <Pencil className="w-3 h-3" /> Edit
+                        </button>
+                      )}
+                      {sectionEdits[section.id] && (
+                        <span className="absolute top-0 left-0 text-[9px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>
+                          Edited
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   {/* Clause popover/tooltip */}
                   {popoverClauseId === clause?.id && clause && (
