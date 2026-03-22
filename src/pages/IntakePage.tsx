@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, FileText, CheckCircle, AlertTriangle, ArrowRight, Trash2 } from "lucide-react";
+import { Plus, FileText, CheckCircle, AlertTriangle, ArrowRight, ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { IntakeRequest } from "@/types";
 
@@ -139,6 +139,12 @@ export default function IntakePage() {
 
   return (
     <div className="page-container">
+      <div className="flex items-center gap-3 mb-2">
+        <button onClick={() => navigate("/contracts/newgen?tab=intake")} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors" title="Back to Provider Intake Contract">
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Provider Intake Contract</span>
+        </button>
+      </div>
       <div className="flex items-center justify-between">
         <h1 className="page-header">Provider Intake & Triage</h1>
         <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90">
