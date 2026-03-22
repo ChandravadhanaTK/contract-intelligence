@@ -199,16 +199,37 @@ const kpiCards = [
 
 const pipelineStages = ["Draft", "Collaboration", "Review", "Approval", "Published", "Downstream"];
 const pipelineColors = ["bg-amber-400", "bg-blue-500", "bg-violet-500", "bg-orange-500", "bg-emerald-500", "bg-teal-500"];
-const pipelineCounts = [12, 8, 7, 5, 6, 4];
+const defaultPipelineCounts = [12, 8, 7, 5, 6, 4];
+
+function getPipelineCounts(): number[] {
+  try {
+    const stored = JSON.parse(localStorage.getItem("oci_pipeline_counts") || "null");
+    if (Array.isArray(stored) && stored.length === 6) return stored;
+  } catch {}
+  return [...defaultPipelineCounts];
+}
+
+function setPipelineCounts(counts: number[]) {
+  localStorage.setItem("oci_pipeline_counts", JSON.stringify(counts));
+  window.dispatchEvent(new Event("oci_pipeline_updated"));
+}
 
 function ContractWorkflowPipeline() {
-  const pipelineTotal = pipelineCounts.reduce((a, b) => a + b, 0) || 1;
+  const [counts, setCounts] = useState(getPipelineCounts());
+
+  useEffect(() => {
+    const handler = () => setCounts(getPipelineCounts());
+    window.addEventListener("oci_pipeline_updated", handler);
+    return () => window.removeEventListener("oci_pipeline_updated", handler);
+  }, []);
+
+  const pipelineTotal = counts.reduce((a, b) => a + b, 0) || 1;
   return (
     <div className="bg-card border rounded-lg p-5">
       <h3 className="text-sm font-semibold mb-3">NewGen Contract Digitization Pipeline</h3>
       <div className="w-full h-4 rounded-full bg-muted flex overflow-hidden">
         {pipelineStages.map((stage, i) => {
-          const width = (pipelineCounts[i] / pipelineTotal) * 100;
+          const width = (counts[i] / pipelineTotal) * 100;
           if (width === 0) return null;
           return <div key={stage} className={`h-full ${pipelineColors[i]}`} style={{ width: `${width}%` }} />;
         })}
@@ -217,7 +238,7 @@ function ContractWorkflowPipeline() {
         {pipelineStages.map((stage, i) => (
           <div key={stage} className="flex items-center gap-1.5 text-xs">
             <div className={`w-3 h-3 rounded-sm ${pipelineColors[i]}`} />
-            <span className="text-muted-foreground">{stage} ({pipelineCounts[i]})</span>
+            <span className="text-muted-foreground">{stage} ({counts[i]})</span>
           </div>
         ))}
       </div>
