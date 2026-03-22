@@ -361,16 +361,30 @@ export default function AIContractCreation() {
                 const sc = statusConfig[s.status];
                 const isSelected = selectedSection === s.id;
                 return (
-                  <button
-                    key={s.id}
-                    onClick={() => scrollToSection(s.id)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition-colors ${
-                      isSelected ? "bg-primary/10 text-primary font-medium ring-1 ring-primary/30" : "bg-muted/50 text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    <span>{s.headingNumber} {s.title}</span>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${sc.color}`}>{sc.label}</span>
-                  </button>
+                  <div key={s.id} className="flex items-center">
+                    <button
+                      onClick={() => scrollToSection(s.id)}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-l-md text-xs transition-colors ${
+                        isSelected ? "bg-primary/10 text-primary font-medium ring-1 ring-primary/30" : "bg-muted/50 text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <span>{s.headingNumber} {s.title}</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${sc.color}`}>{sc.label}</span>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/compliance?tab=redlining&section=${encodeURIComponent(s.title)}`);
+                        toast.info(`Opening redlining review for "${s.title}"`);
+                      }}
+                      title={`View redlining comments for ${s.title}`}
+                      className={`px-1.5 py-1 rounded-r-md text-xs transition-colors border-l ${
+                        isSelected ? "bg-primary/10 text-primary hover:bg-primary/20" : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      <MessageSquare className="w-3 h-3" />
+                    </button>
+                  </div>
                 );
               })}
               <button
