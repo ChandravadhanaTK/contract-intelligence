@@ -148,20 +148,37 @@ export default function DelegationPipelineTabs() {
         </h3>
         <div className="flex items-center gap-1 overflow-x-auto">
           {stages.map((stage, i) => {
-            const docsAtStage = filteredDocs.filter(d => getStageIdx(d) === i).length;
+            const allDocsForTab = docs.filter(d => d.delegationType === activeTab);
+            const docsAtStage = allDocsForTab.filter(d => getStageIdx(d) === i).length;
+            const isSelected = selectedStageIdx === i;
             return (
               <div key={stage} className="flex items-center flex-shrink-0">
-                <div className={`text-center px-3 py-2 rounded-md text-[10px] font-semibold leading-tight min-w-[100px] ${
-                  docsAtStage > 0 ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                }`}>
+                <button
+                  onClick={() => setSelectedStageIdx(isSelected ? null : i)}
+                  className={`text-center px-3 py-2 rounded-md text-[10px] font-semibold leading-tight min-w-[100px] transition-all cursor-pointer border-2 ${
+                    isSelected
+                      ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30"
+                      : docsAtStage > 0
+                        ? "bg-primary/10 text-primary border-transparent hover:border-primary/40"
+                        : "bg-muted text-muted-foreground border-transparent hover:border-muted-foreground/30"
+                  }`}
+                >
                   {stage.split(": ")[1] || stage}
                   {docsAtStage > 0 && <span className="block text-[9px] mt-0.5 font-normal">({docsAtStage} docs)</span>}
-                </div>
+                </button>
                 {i < stages.length - 1 && <div className="w-3 h-0.5 bg-muted flex-shrink-0" />}
               </div>
             );
           })}
         </div>
+        {selectedStageIdx !== null && (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground">
+              Filtering by: <strong className="text-foreground">{stages[selectedStageIdx].split(": ")[1] || stages[selectedStageIdx]}</strong>
+            </span>
+            <button onClick={() => setSelectedStageIdx(null)} className="text-[10px] text-primary hover:underline">Clear filter</button>
+          </div>
+        )}
       </div>
 
       {/* Delegation-specific widgets */}
