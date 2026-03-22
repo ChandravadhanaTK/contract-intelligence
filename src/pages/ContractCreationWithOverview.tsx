@@ -896,8 +896,31 @@ function ContractCoPilotTab() {
   ];
 
   const renderDocumentView = () => (
-    <div className="p-4 overflow-y-auto flex-1">
-      <div className="bg-white border shadow-sm max-w-[700px] mx-auto px-10 py-8" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+    <div className="flex flex-col flex-1 overflow-hidden">
+      {/* Document action bar */}
+      <div className="px-4 py-2 border-b bg-muted/30 flex items-center gap-2 flex-wrap">
+        <button onClick={handleSaveContract}
+          className={`text-[10px] px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${isSaved ? "bg-emerald-100 text-emerald-700" : "bg-secondary text-secondary-foreground hover:opacity-90"}`}>
+          {isSaved ? <><Check className="w-3 h-3" /> Saved!</> : <><Save className="w-3 h-3" /> Save Contract</>}
+        </button>
+        <button onClick={handleDownloadPDF}
+          className="text-[10px] px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 bg-primary text-primary-foreground hover:opacity-90">
+          <Download className="w-3 h-3" /> Download PDF
+        </button>
+        <button onClick={() => { if (documentRef.current) { const w = window.open("", "_blank"); if (w) { w.document.write(documentRef.current.innerHTML); w.document.close(); setTimeout(() => w.print(), 300); } } }}
+          className="text-[10px] px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 border bg-background text-foreground hover:bg-muted">
+          <Printer className="w-3 h-3" /> Print
+        </button>
+        <button onClick={handleCopyText}
+          className="text-[10px] px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 border bg-background text-foreground hover:bg-muted">
+          <Copy className="w-3 h-3" /> Copy Text
+        </button>
+        <span className="ml-auto text-[9px] text-muted-foreground">
+          {clauses.length} sections • {isComplete ? "Final" : "Draft"}
+        </span>
+      </div>
+      <div className="p-4 overflow-y-auto flex-1">
+      <div ref={documentRef} className="bg-white border shadow-sm max-w-[700px] mx-auto px-10 py-8" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
         <h1 className="text-center font-bold text-sm text-foreground mb-1 uppercase tracking-wide leading-snug">
           OPTUMHEALTH CARE SOLUTIONS, LLC
         </h1>
