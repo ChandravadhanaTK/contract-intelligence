@@ -237,7 +237,7 @@ function ContractWorkflowPipeline() {
               key={stage.name}
               className={`h-full ${stage.color} cursor-pointer hover:opacity-80 transition-opacity`}
               style={{ width: `${width}%` }}
-              onClick={() => navigate(stage.route)}
+              onClick={() => navigate(stage.route + (stage.route.includes("?") ? "&from=pipeline" : "?from=pipeline"))}
               title={`${stage.name} (${counts[i]})`}
             />
           );
