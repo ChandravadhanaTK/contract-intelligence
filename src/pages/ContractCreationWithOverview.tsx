@@ -67,6 +67,40 @@ function ComplianceDeviationGraph() {
   );
 }
 
+const kpiCards = [
+  { label: "Total Documents", value: 42, icon: <FileText className="w-4 h-4" />, accent: "bg-primary/10 text-primary", route: "/contracts" },
+  { label: "Deviation Score", value: "3.2%", icon: <TrendingDown className="w-4 h-4" />, accent: "bg-red-100 text-red-700", route: "/deviation" },
+  { label: "Avg Creation Time", value: "4.2d", icon: <Clock className="w-4 h-4" />, accent: "bg-violet-100 text-violet-700", route: "/workflow" },
+];
+
+const pipelineStages = ["Draft", "Collaboration", "Review", "Approval", "Published", "Downstream"];
+const pipelineColors = ["bg-amber-400", "bg-blue-500", "bg-violet-500", "bg-orange-500", "bg-emerald-500", "bg-teal-500"];
+const pipelineCounts = [12, 8, 7, 5, 6, 4];
+
+function ContractWorkflowPipeline() {
+  const pipelineTotal = pipelineCounts.reduce((a, b) => a + b, 0) || 1;
+  return (
+    <div className="bg-card border rounded-lg p-5">
+      <h3 className="text-sm font-semibold mb-3">NewGen Contract Digitization Pipeline</h3>
+      <div className="w-full h-4 rounded-full bg-muted flex overflow-hidden">
+        {pipelineStages.map((stage, i) => {
+          const width = (pipelineCounts[i] / pipelineTotal) * 100;
+          if (width === 0) return null;
+          return <div key={stage} className={`h-full ${pipelineColors[i]}`} style={{ width: `${width}%` }} />;
+        })}
+      </div>
+      <div className="flex flex-wrap gap-4 mt-3">
+        {pipelineStages.map((stage, i) => (
+          <div key={stage} className="flex items-center gap-1.5 text-xs">
+            <div className={`w-3 h-3 rounded-sm ${pipelineColors[i]}`} />
+            <span className="text-muted-foreground">{stage} ({pipelineCounts[i]})</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ─── ContractCoPilot – Interactive AI Contract Agent ─── */
 
 interface CoPilotMessage {
