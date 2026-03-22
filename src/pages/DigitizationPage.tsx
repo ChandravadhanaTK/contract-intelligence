@@ -451,7 +451,7 @@ export default function DigitizationPage({ onBack }: { onBack?: () => void }) {
                         </button>
                         <MoreActionsMenu
                           doc={d}
-                          onViewContract={() => setViewingDoc(d)}
+                          onViewContract={() => navigate(`/contracts/${d.id}`)}
                           onViewCompliance={() => navigate(`/compliance-hub?tab=overview`)}
                         />
                       </div>

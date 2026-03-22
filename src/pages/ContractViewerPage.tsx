@@ -6,13 +6,22 @@ import {
   AlertTriangle, CheckCircle, Info, Pencil, Save,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
-import { seedContractFamilies } from "@/data/seed";
+import { seedContractFamilies, seedDigitizationDocs } from "@/data/seed";
 import { toast } from "sonner";
 
 function getDocById(id: string) {
+  // Check contract families first
   for (const fam of seedContractFamilies) {
     const doc = fam.documents.find(d => d.id === id);
     if (doc) return { doc, family: fam };
+  }
+  // Fallback: check digitization docs
+  const digDoc = seedDigitizationDocs.find(d => d.id === id);
+  if (digDoc) {
+    return {
+      doc: { id: digDoc.id, name: digDoc.name, type: digDoc.type as any, status: digDoc.status === "Completed" ? "Active" as const : "Under Review" as const, effectiveDate: "2024-01-01", expirationDate: "2027-01-01" },
+      family: { id: `dig-fam-${digDoc.id}`, name: digDoc.payer, payer: digDoc.payer, region: "National", documents: [] },
+    };
   }
   return null;
 }
