@@ -421,7 +421,7 @@ export const seedContract: Contract = {
   rawText: "",
   clauses: [...missingClauses, ...nonAlignedClauses, ...alignedClauses],
   obligations,
-  workflow: makeWorkflow("wf1", "Review"),
+  workflow: makeWorkflow("wf1", "Internal Review"),
   documents: reviewDocuments.filter((d) => d.contractId === "contract-001"),
 };
 
