@@ -591,7 +591,7 @@ export default function AIContractCreation() {
 
                 {/* Section blocks */}
                 <div className="space-y-5">
-                  {sections.map(s => {
+                  {sections.map((s, i) => {
                     const isSelected = selectedSection === s.id;
                     const isEditing = editingSection === s.id;
                     return (
