@@ -4,7 +4,7 @@ import { AuditLogDrawer } from "../AuditLogDrawer";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  ChevronDown, LogOut, Search, Bell, Upload, ScanLine, Sparkles, X,
+  ChevronDown, ChevronLeft, ChevronRight, LogOut, Search, Bell, Upload, ScanLine, Sparkles, X,
   FileText, BookOpen, ClipboardList, Send, Bot, FilePlus,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
@@ -190,11 +190,18 @@ export function AppLayout({ children, onLogout }: Props) {
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem("oci_sidebar_collapsed") === "true");
   const [notifications, setNotifications] = useState<{ id: string; text: string; time: string; read: boolean }[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     api.getNotifications().then(setNotifications);
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setSidebarCollapsed(localStorage.getItem("oci_sidebar_collapsed") === "true");
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
   }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -232,7 +239,22 @@ export function AppLayout({ children, onLogout }: Props) {
   return (
     <div className="flex min-h-screen w-full bg-background">
       <AppSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        {/* Sidebar collapse toggle - floats on the border between sidebar and main */}
+        <button
+          onClick={() => {
+            const next = !sidebarCollapsed;
+            localStorage.setItem("oci_sidebar_collapsed", String(next));
+            setSidebarCollapsed(next);
+            window.dispatchEvent(new StorageEvent("storage", { key: "oci_sidebar_collapsed" }));
+          }}
+          className="absolute top-3 left-0 z-30 -translate-x-1/2 w-7 h-7 rounded-full border-2 border-border bg-card shadow-lg flex items-center justify-center hover:bg-accent transition-colors"
+          title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {sidebarCollapsed
+            ? <ChevronRight className="w-4 h-4 text-foreground" />
+            : <ChevronLeft className="w-4 h-4 text-foreground" />}
+        </button>
         <header className="h-12 flex items-center justify-between px-4 border-b bg-card gap-3">
           {/* Left: spacer */}
           <div className="flex items-center gap-2 min-w-0" />

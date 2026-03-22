@@ -42,6 +42,16 @@ export function AppSidebar() {
     localStorage.setItem("oci_sidebar_collapsed", String(collapsed));
   }, [collapsed]);
 
+  // Listen for external toggle (from AppLayout button)
+  useEffect(() => {
+    const handler = () => {
+      const val = localStorage.getItem("oci_sidebar_collapsed") === "true";
+      setCollapsed(val);
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
+
   return (
     <aside
       className={`flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ${
@@ -164,14 +174,6 @@ export function AppSidebar() {
         })}
       </nav>
 
-      {/* Collapse toggle at bottom */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center justify-center py-3 border-t border-sidebar-border text-sidebar-muted hover:text-sidebar-foreground transition-colors"
-        title={collapsed ? "Expand" : "Collapse"}
-      >
-        {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-      </button>
     </aside>
   );
 }
