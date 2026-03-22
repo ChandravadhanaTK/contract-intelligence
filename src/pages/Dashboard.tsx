@@ -57,8 +57,8 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-2">
         <div>
-          <h1 className="page-header">Payer Contract Intelligence</h1>
-          <p className="text-sm text-muted-foreground mt-1">Real-time analytics across payer agreements, claims performance & compliance</p>
+          <h1 className="page-header">Provider Contract Intelligence</h1>
+          <p className="text-sm text-muted-foreground mt-1">Real-time analytics across provider agreements, claims performance & compliance</p>
         </div>
       </div>
 
