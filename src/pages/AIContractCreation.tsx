@@ -429,9 +429,14 @@ export default function AIContractCreation() {
 
           {/* My Generated Contracts */}
           <div>
-            <button onClick={() => togglePanel("drafts")} className="w-full flex items-center justify-between p-3 hover:bg-muted/50 text-sm font-semibold text-foreground">
-              <span>My Generated Contracts</span>
-              {collapsedPanels.drafts ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            <button onClick={() => togglePanel("drafts")} className="w-full flex items-center justify-between p-3 hover:bg-muted/50 text-sm font-semibold text-foreground group">
+              <span className="flex items-center gap-2">
+                <span className={`flex items-center justify-center w-5 h-5 rounded transition-colors ${collapsedPanels.drafts ? "bg-muted" : "bg-primary/10"}`}>
+                  {collapsedPanels.drafts ? <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-primary" />}
+                </span>
+                My Generated Contracts
+              </span>
+              <span className="text-[9px] text-muted-foreground">{drafts.length}</span>
             </button>
             {!collapsedPanels.drafts && (
               <div className="px-3 pb-3 space-y-2">
