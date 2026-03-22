@@ -101,6 +101,124 @@ function ContractWorkflowPipeline() {
   );
 }
 
+/* ─── Saved Contracts Storage ─── */
+interface SavedContract {
+  id: string;
+  name: string;
+  family: string;
+  type: string;
+  clauses: ContractClause[];
+  signatureDataUrl: string | null;
+  createdAt: string;
+  status: "draft" | "final";
+  parties: string;
+}
+
+function getSavedContracts(): SavedContract[] {
+  try {
+    return JSON.parse(localStorage.getItem("oci_generated_contracts") || "[]");
+  } catch { return []; }
+}
+
+function saveContractToStorage(contract: SavedContract) {
+  const all = getSavedContracts();
+  const idx = all.findIndex(c => c.id === contract.id);
+  if (idx >= 0) all[idx] = contract; else all.push(contract);
+  localStorage.setItem("oci_generated_contracts", JSON.stringify(all));
+  window.dispatchEvent(new Event("oci_contracts_updated"));
+}
+
+function deleteContractFromStorage(id: string) {
+  const all = getSavedContracts().filter(c => c.id !== id);
+  localStorage.setItem("oci_generated_contracts", JSON.stringify(all));
+  window.dispatchEvent(new Event("oci_contracts_updated"));
+}
+
+/* ─── My Generated Contracts Panel ─── */
+function MyContractsPanel({ onLoad }: { onLoad: (contract: SavedContract) => void }) {
+  const [contracts, setContracts] = useState<SavedContract[]>(getSavedContracts());
+  const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const handleStorage = () => setContracts(getSavedContracts());
+    window.addEventListener("oci_contracts_updated", handleStorage);
+    return () => window.removeEventListener("oci_contracts_updated", handleStorage);
+  }, []);
+
+  const families = contracts.reduce<Record<string, SavedContract[]>>((acc, c) => {
+    const fam = c.family || "Uncategorized";
+    if (!acc[fam]) acc[fam] = [];
+    acc[fam].push(c);
+    return acc;
+  }, {});
+
+  const toggleFamily = (fam: string) => {
+    setExpandedFamilies(prev => {
+      const next = new Set(prev);
+      next.has(fam) ? next.delete(fam) : next.add(fam);
+      return next;
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    deleteContractFromStorage(id);
+    setContracts(getSavedContracts());
+  };
+
+  if (contracts.length === 0) {
+    return (
+      <div className="bg-card border rounded-xl p-4">
+        <h3 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+          <FolderOpen className="w-3.5 h-3.5 text-secondary" /> My Generated Contracts
+        </h3>
+        <p className="text-[10px] text-muted-foreground text-center py-4">No saved contracts yet. Generate and save a contract to see it here.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-card border rounded-xl p-4">
+      <h3 className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5">
+        <FolderOpen className="w-3.5 h-3.5 text-secondary" /> My Generated Contracts
+      </h3>
+      <p className="text-[10px] text-muted-foreground mb-2">{contracts.length} contract{contracts.length !== 1 ? "s" : ""} • {Object.keys(families).length} famil{Object.keys(families).length !== 1 ? "ies" : "y"}</p>
+      <div className="space-y-1 max-h-[250px] overflow-y-auto">
+        {Object.entries(families).map(([fam, items]) => (
+          <div key={fam}>
+            <button
+              onClick={() => toggleFamily(fam)}
+              className="w-full flex items-center gap-1.5 text-[11px] font-medium text-foreground hover:bg-muted/50 rounded px-2 py-1.5 transition-colors"
+            >
+              {expandedFamilies.has(fam) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+              <FolderOpen className="w-3 h-3 text-secondary" />
+              {fam} ({items.length})
+            </button>
+            {expandedFamilies.has(fam) && (
+              <div className="ml-5 space-y-0.5">
+                {items.map(c => (
+                  <div key={c.id} className="flex items-center gap-1.5 text-[10px] px-2 py-1.5 rounded hover:bg-muted/50 group">
+                    <FileText className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                    <button onClick={() => onLoad(c)} className="flex-1 text-left text-foreground truncate hover:text-primary">
+                      {c.name}
+                    </button>
+                    <span className="text-[8px] text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-medium ${c.status === "final" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                      {c.status === "final" ? "Final" : "Draft"}
+                    </span>
+                    <button onClick={() => handleDelete(c.id)} className="opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive/80">
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ─── ContractCoPilot – Interactive AI Contract Agent ─── */
 
 interface CoPilotMessage {
