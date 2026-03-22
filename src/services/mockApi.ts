@@ -1,6 +1,6 @@
 import type { Contract, StandardClause, AuditEntry, DraftContract, ClauseVersion, AgentLog, ReviewDocument, ReviewRequest, ChatMessage } from "@/types";
 import { chatAnswerMap } from "@/data/seed";
-import type { DigitizationDocument, TrackerObligation, ContractFamily, RedlineClauseGroup } from "@/data/seed";
+import type { DigitizationDocument, TrackerObligation, ContractFamily, RedlineClauseGroup, RedlineDocument } from "@/data/seed";
 
 function delay(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
