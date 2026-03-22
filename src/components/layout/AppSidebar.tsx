@@ -83,7 +83,7 @@ export function AppSidebar() {
                     {!collapsed && <span className="truncate">{item.label}</span>}
                   </span>
                 </button>
-                {!collapsed && contractsOpen && (
+                {!collapsed && (
                   <div className="ml-6 mt-1 space-y-0.5 border-l border-sidebar-border pl-3">
                     {children.map((child) => {
                       const childActive =
