@@ -2,7 +2,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Send, ShieldCheck, ChevronLeft, ChevronRight,
   LayoutDashboard, Users, FolderOpen, Shield,
-  ScanLine, FileText, ChevronDown,
+  ScanLine, FileText,
 } from "lucide-react";
 import { useState } from "react";
 import optumLogo from "@/assets/optum-logo.png";
@@ -29,9 +29,7 @@ export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const [contractsOpen, setContractsOpen] = useState(
-    location.pathname.startsWith("/contracts")
-  );
+  
 
   return (
     <aside
@@ -72,7 +70,7 @@ export function AppSidebar() {
                     if (collapsed) {
                       navigate(item.path);
                     } else {
-                      setContractsOpen(!contractsOpen);
+                      navigate(item.path);
                     }
                   }}
                   className={`sidebar-nav-item w-full justify-between ${
@@ -84,15 +82,8 @@ export function AppSidebar() {
                     <item.icon className="w-4 h-4 flex-shrink-0" />
                     {!collapsed && <span className="truncate">{item.label}</span>}
                   </span>
-                  {!collapsed && (
-                    <ChevronDown
-                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                        contractsOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  )}
                 </button>
-                {!collapsed && contractsOpen && (
+                {!collapsed && (
                   <div className="ml-6 mt-1 space-y-0.5 border-l border-sidebar-border pl-3">
                     {children.map((child) => {
                       const childActive =
