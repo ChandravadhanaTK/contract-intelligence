@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle, CheckCircle2, Clock, ShieldAlert, Calendar, FileDown,
-  FileText, Search, ChevronDown,
+  FileText, Search, ChevronDown, Eye,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
 import type { TrackerObligation } from "@/data/seed";
@@ -100,6 +100,7 @@ function generateReport(obligations: TrackerObligation[], format: "json" | "csv"
 }
 
 export default function ObligationCompliance() {
+  const navigate = useNavigate();
   const [obligations, setObligations] = useState<TrackerObligation[]>([]);
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
@@ -254,6 +255,7 @@ export default function ObligationCompliance() {
                 <th className="text-left p-3 font-medium">Due Date</th>
                 <th className="text-left p-3 font-medium">Risk</th>
                 <th className="text-left p-3 font-medium">Evidence</th>
+                <th className="text-left p-3 font-medium">Document</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -267,6 +269,14 @@ export default function ObligationCompliance() {
                   <td className={`p-3 text-xs ${o.status === "Overdue" ? "text-destructive font-medium" : ""}`}>{o.dueDate}</td>
                   <td className="p-3"><span className={`status-chip ${riskChip[o.risk]}`}>{o.risk}</span></td>
                   <td className="p-3"><span className={`text-xs ${evidenceChip[o.evidence]}`}>{o.evidence}</span></td>
+                  <td className="p-3">
+                    <button
+                      onClick={() => navigate(`/contracts/${o.contractId}`)}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
+                    >
+                      <Eye className="w-3 h-3" /> View
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
