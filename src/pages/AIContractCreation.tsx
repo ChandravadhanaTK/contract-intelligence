@@ -5,7 +5,7 @@ import {
   FileText, Layers, BookOpen, ArrowRight, ArrowLeft, Bot, Send, ChevronDown, ChevronRight,
   Edit3, MessageSquare, Plus, Upload, Download, RotateCcw, Save, Check, X,
   CheckCircle2, AlertCircle, XCircle, Info, Sparkles, ToggleLeft, ToggleRight,
-  Eye, Copy, Trash2, Search, FolderOpen,
+  Eye, Copy, Trash2, Search, FolderOpen, ArrowUp, ArrowDown,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -273,6 +273,28 @@ export default function AIContractCreation() {
     };
     setSections(prev => [...prev, newSection]);
     setTimeout(() => scrollToSection(newId), 100);
+  };
+
+  const handleDeleteSection = (id: string) => {
+    setSections(prev => {
+      const filtered = prev.filter(s => s.id !== id);
+      return filtered.map((s, i) => ({ ...s, headingNumber: `§${i + 1}` }));
+    });
+    if (selectedSection === id) setSelectedSection(null);
+    if (editingSection === id) setEditingSection(null);
+    toast.success("Clause deleted");
+  };
+
+  const handleMoveSection = (id: string, direction: "up" | "down") => {
+    setSections(prev => {
+      const idx = prev.findIndex(s => s.id === id);
+      if (idx < 0) return prev;
+      const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+      if (targetIdx < 0 || targetIdx >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[targetIdx]] = [next[targetIdx], next[idx]];
+      return next.map((s, i) => ({ ...s, headingNumber: `§${i + 1}` }));
+    });
   };
 
   const completionPercent = sections.length > 0
@@ -569,7 +591,7 @@ export default function AIContractCreation() {
 
                 {/* Section blocks */}
                 <div className="space-y-5">
-                  {sections.map(s => {
+                  {sections.map((s, i) => {
                     const isSelected = selectedSection === s.id;
                     const isEditing = editingSection === s.id;
                     return (
@@ -589,6 +611,20 @@ export default function AIContractCreation() {
                             <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${statusConfig[s.status].color}`}>
                               {statusConfig[s.status].label}
                             </span>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleMoveSection(s.id, "up"); }}
+                              disabled={i === 0}
+                              className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed" title="Move up"
+                            >
+                              <ArrowUp className="w-3 h-3 text-muted-foreground" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleMoveSection(s.id, "down"); }}
+                              disabled={i === sections.length - 1}
+                              className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed" title="Move down"
+                            >
+                              <ArrowDown className="w-3 h-3 text-muted-foreground" />
+                            </button>
                             {isEditing ? (
                               <>
                                 <button
@@ -600,7 +636,6 @@ export default function AIContractCreation() {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    // revert: reload from saved
                                     const saved = get<ContractSection[] | null>("oci_create_sections", null);
                                     const original = saved?.find(x => x.id === s.id);
                                     if (original) setSections(prev => prev.map(p => p.id === s.id ? original : p));
@@ -619,6 +654,12 @@ export default function AIContractCreation() {
                                 <Edit3 className="w-3 h-3 text-muted-foreground" />
                               </button>
                             )}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeleteSection(s.id); }}
+                              className="p-1 rounded hover:bg-destructive/10 text-destructive" title="Delete clause"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
                             <button className="p-1 rounded hover:bg-muted" title="Comment"><MessageSquare className="w-3 h-3 text-muted-foreground" /></button>
                           </div>
                         </div>
