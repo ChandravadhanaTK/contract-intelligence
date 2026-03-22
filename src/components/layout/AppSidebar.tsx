@@ -100,18 +100,17 @@ export function AppSidebar() {
                           ? location.pathname === "/contracts"
                           : location.pathname.startsWith(child.path);
                       return (
-                        <NavLink
+                        <button
                           key={child.path}
-                          to={child.path}
-                          end={child.path === "/contracts"}
-                          className={`block text-xs py-1.5 px-2 rounded-md transition-colors ${
+                          onClick={() => navigate(child.path)}
+                          className={`block w-full text-left text-xs py-1.5 px-2 rounded-md transition-colors ${
                             childActive
                               ? "bg-primary/10 text-primary font-medium"
                               : "text-sidebar-muted hover:text-sidebar-foreground hover:bg-muted/50"
                           }`}
                         >
                           {child.label}
-                        </NavLink>
+                        </button>
                       );
                     })}
                   </div>
