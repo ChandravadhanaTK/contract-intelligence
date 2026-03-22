@@ -70,19 +70,6 @@ function ComplianceDeviationGraph() {
 function ComplianceOverviewCard() {
   const [graphView, setGraphView] = useState<"score" | "category" | "deviation">("score");
 
-  const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value, name }: any) => {
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5 + 14;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-    if (value === 0) return null;
-    return (
-      <text x={x} y={y} fill="hsl(var(--foreground))" textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={600}>
-        {value}
-      </text>
-    );
-  };
-
   return (
     <div className="bg-card border rounded-lg p-5">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
