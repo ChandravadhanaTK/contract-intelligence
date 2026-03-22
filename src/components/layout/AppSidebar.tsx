@@ -29,7 +29,7 @@ export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const [contractsOpen, setContractsOpen] = useState(true);
+  
 
   return (
     <aside
