@@ -1483,23 +1483,57 @@ function ContractCoPilotTab() {
                 {agentSteps.map((step, i) => {
                   const filled = clauses.find(c => c.id === `clause-${step.id}`);
                   const isCurrent = i === currentStep && signaturePhase === "none" && !isComplete;
+                  const isEditing = editingClause === `clause-${step.id}`;
                   return (
-                    <div key={step.id} className={`flex items-center gap-2 text-[11px] px-2 py-1.5 rounded-lg transition-colors ${
-                      isCurrent ? "bg-secondary/10 border border-secondary/30" :
-                      filled ? "bg-emerald-50" : ""
-                    }`}>
-                      {filled ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                      ) : isCurrent ? (
-                        <Bot className="w-3.5 h-3.5 text-secondary flex-shrink-0 animate-pulse" />
-                      ) : (
-                        <div className="w-3.5 h-3.5 rounded-full border border-muted-foreground/30 flex-shrink-0" />
-                      )}
-                      <span className={`${filled ? "text-foreground" : isCurrent ? "text-foreground font-medium" : "text-muted-foreground"}`}>
-                        {step.sectionNumber} {step.clauseTitle}
-                      </span>
-                      {filled?.status === "edited" && (
-                        <span className="text-[8px] px-1 py-0.5 bg-amber-100 text-amber-700 rounded ml-auto">edited</span>
+                    <div key={step.id}>
+                      <div className={`flex items-center gap-2 text-[11px] px-2 py-1.5 rounded-lg transition-colors ${
+                        isCurrent ? "bg-secondary/10 border border-secondary/30" :
+                        isEditing ? "bg-amber-50 border border-amber-200" :
+                        filled ? "bg-emerald-50" : ""
+                      }`}>
+                        {filled ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                        ) : isCurrent ? (
+                          <Bot className="w-3.5 h-3.5 text-secondary flex-shrink-0 animate-pulse" />
+                        ) : (
+                          <div className="w-3.5 h-3.5 rounded-full border border-muted-foreground/30 flex-shrink-0" />
+                        )}
+                        <span className={`flex-1 ${filled ? "text-foreground" : isCurrent ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                          {step.sectionNumber} {step.clauseTitle}
+                        </span>
+                        {filled?.status === "edited" && !isEditing && (
+                          <span className="text-[8px] px-1 py-0.5 bg-amber-100 text-amber-700 rounded">edited</span>
+                        )}
+                        {filled && !isEditing && (
+                          <button
+                            onClick={() => { setEditingClause(`clause-${step.id}`); setEditText(filled.body); }}
+                            className="text-[9px] px-1.5 py-0.5 rounded bg-accent text-accent-foreground hover:bg-accent/80 flex items-center gap-0.5 opacity-60 hover:opacity-100 transition-opacity"
+                            title="Edit section"
+                          >
+                            <Edit3 className="w-2.5 h-2.5" />
+                          </button>
+                        )}
+                        {isEditing && (
+                          <span className="text-[8px] px-1.5 py-0.5 bg-secondary text-secondary-foreground rounded font-medium">editing</span>
+                        )}
+                      </div>
+                      {isEditing && filled && (
+                        <div className="mt-1.5 mx-1 p-2 bg-background border rounded-lg">
+                          <textarea
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            className="w-full border rounded p-2 text-[10px] min-h-[80px] bg-background resize-y"
+                            style={{ fontFamily: "'Times New Roman', Georgia, serif" }}
+                          />
+                          <div className="flex gap-1.5 mt-1.5">
+                            <button onClick={() => handleEditSave(`clause-${step.id}`)} className="text-[9px] px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded font-medium hover:bg-emerald-200 flex items-center gap-0.5">
+                              <Check className="w-2.5 h-2.5" /> Save
+                            </button>
+                            <button onClick={() => setEditingClause(null)} className="text-[9px] px-2 py-0.5 bg-muted text-muted-foreground rounded font-medium hover:bg-muted/80">
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
                       )}
                     </div>
                   );
