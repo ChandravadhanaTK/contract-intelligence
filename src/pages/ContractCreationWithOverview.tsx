@@ -653,7 +653,7 @@ export default function ContractCreationWithOverview() {
             <ArrowRight className="w-3.5 h-3.5" /> Provider Intake Contract
           </TabsTrigger>
           <TabsTrigger value="coauthor" className="flex items-center gap-1.5 text-xs">
-            <Bot className="w-3.5 h-3.5" /> Talk to your Agent - Your CoAuthor
+            <Bot className="w-3.5 h-3.5" /> ContractCoPilot
           </TabsTrigger>
         </TabsList>
 
