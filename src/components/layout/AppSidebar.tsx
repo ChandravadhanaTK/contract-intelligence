@@ -164,14 +164,6 @@ export function AppSidebar() {
         })}
       </nav>
 
-      {/* Collapse toggle at bottom */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center justify-center py-3 border-t border-sidebar-border text-sidebar-muted hover:text-sidebar-foreground transition-colors"
-        title={collapsed ? "Expand" : "Collapse"}
-      >
-        {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-      </button>
     </aside>
   );
 }
