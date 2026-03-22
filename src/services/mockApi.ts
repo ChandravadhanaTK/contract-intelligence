@@ -199,9 +199,14 @@ export const api = {
     }
     return obs;
   },
-  getRedlineGroups: async (): Promise<RedlineClauseGroup[]> => {
+  getRedlineDocuments: async (): Promise<RedlineDocument[]> => {
+    await delay(50);
+    return get<RedlineDocument[]>("oci_redline_documents", []);
+  },
+  getRedlineGroups: async (documentId?: string): Promise<RedlineClauseGroup[]> => {
     await delay(100);
-    return get<RedlineClauseGroup[]>("oci_redline_groups", []);
+    const all = get<RedlineClauseGroup[]>("oci_redline_groups", []);
+    return documentId ? all.filter(g => g.documentId === documentId) : all;
   },
   saveRedlineGroups: async (groups: RedlineClauseGroup[]) => {
     await delay(50);

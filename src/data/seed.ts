@@ -551,6 +551,9 @@ export function initializeSeedData() {
   if (!localStorage.getItem("oci_redline_groups")) {
     localStorage.setItem("oci_redline_groups", JSON.stringify(seedRedlineGroups));
   }
+  if (!localStorage.getItem("oci_redline_documents")) {
+    localStorage.setItem("oci_redline_documents", JSON.stringify(seedRedlineDocuments));
+  }
   if (!localStorage.getItem("oci_notifications")) {
     localStorage.setItem("oci_notifications", JSON.stringify(seedNotifications));
   }
