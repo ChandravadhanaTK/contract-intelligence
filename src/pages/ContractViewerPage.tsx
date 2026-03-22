@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft, GitCompare, FileDown, ChevronDown, Shield, FileText,
+  ArrowLeft, GitCompare, FileDown, ChevronDown, ChevronRight, Shield, FileText,
   Bot, Send, X, Sparkles, Clock, ChevronUp, Search, ArrowRight,
   AlertTriangle, CheckCircle, Info, Pencil, Save,
 } from "lucide-react";

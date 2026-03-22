@@ -860,6 +860,7 @@ function ContractCoPilotTab() {
   const [activeView, setActiveView] = useState<"chat" | "document">("chat");
   const [editingClause, setEditingClause] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
+  const [copilotCollapsed, setCopilotCollapsed] = useState<Record<string, boolean>>({});
   const [isComplete, setIsComplete] = useState(false);
   const [loading, setLoading] = useState(false);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
