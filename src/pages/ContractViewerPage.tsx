@@ -141,7 +141,6 @@ export default function ContractViewerPage() {
     setEditingSectionId(null);
     setEditContent("");
   };
-  const familyName = result?.family.name || "";
 
   // Filtered clauses
   const filteredClauses = useMemo(() => {
