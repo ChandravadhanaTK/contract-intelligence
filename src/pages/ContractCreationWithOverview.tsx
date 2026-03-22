@@ -70,6 +70,19 @@ function ComplianceDeviationGraph() {
 function ComplianceOverviewCard() {
   const [graphView, setGraphView] = useState<"score" | "category" | "deviation">("score");
 
+  const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value, name }: any) => {
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5 + 14;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    if (value === 0) return null;
+    return (
+      <text x={x} y={y} fill="hsl(var(--foreground))" textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={600}>
+        {value}
+      </text>
+    );
+  };
+
   return (
     <div className="bg-card border rounded-lg p-5">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
@@ -77,7 +90,7 @@ function ComplianceOverviewCard() {
         <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
           {([
             { value: "score", label: "Compliance Score" },
-            { value: "category", label: "By Category" },
+            { value: "category", label: "Deviation By Category" },
             { value: "deviation", label: "Deviation by Clause" },
           ] as const).map(opt => (
             <button
@@ -97,7 +110,7 @@ function ComplianceOverviewCard() {
           <div className="relative w-28 h-28">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={complianceScoreData} dataKey="value" innerRadius={35} outerRadius={52} startAngle={90} endAngle={-270} paddingAngle={2}>
+                <Pie data={complianceScoreData} dataKey="value" innerRadius={35} outerRadius={52} startAngle={90} endAngle={-270} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
                   {complianceScoreData.map((_, i) => <Cell key={i} fill={complianceScoreColors[i]} />)}
                 </Pie>
               </PieChart>
@@ -159,12 +172,12 @@ function ComplianceOverviewCard() {
 
           {graphView === "deviation" && (
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={deviationData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+              <BarChart data={deviationData} margin={{ top: 15, right: 10, left: -10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="name" tick={{ fontSize: 9 }} className="fill-muted-foreground" interval={0} angle={-25} textAnchor="end" height={50} />
                 <YAxis tick={{ fontSize: 9 }} className="fill-muted-foreground" domain={[0, 6]} />
                 <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }} />
-                <Bar dataKey="score" radius={[4, 4, 0, 0]} name="Deviation Score">
+                <Bar dataKey="score" radius={[4, 4, 0, 0]} name="Deviation Score" label={{ position: 'top', fontSize: 9, fill: 'hsl(var(--foreground))' }}>
                   {deviationData.map((entry, index) => (
                     <Cell key={index} fill={entry.fill} />
                   ))}
