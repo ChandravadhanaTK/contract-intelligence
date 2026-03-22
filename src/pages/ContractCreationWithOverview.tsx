@@ -97,7 +97,7 @@ function ComplianceOverviewCard() {
           <div className="relative w-28 h-28">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={complianceScoreData} dataKey="value" innerRadius={35} outerRadius={52} startAngle={90} endAngle={-270} paddingAngle={2} label={renderCustomLabel} labelLine={false}>
+                <Pie data={complianceScoreData} dataKey="value" innerRadius={35} outerRadius={52} startAngle={90} endAngle={-270} paddingAngle={2}>
                   {complianceScoreData.map((_, i) => <Cell key={i} fill={complianceScoreColors[i]} />)}
                 </Pie>
               </PieChart>
