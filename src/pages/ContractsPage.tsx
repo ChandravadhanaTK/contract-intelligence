@@ -2,6 +2,7 @@ import { useLocation } from "react-router-dom";
 import ContractsOverviewTab from "./ContractsOverviewTab";
 import DigitizationPage from "./DigitizationPage";
 import ContractCreationWithOverview from "./ContractCreationWithOverview";
+import { BackToPipelineBanner } from "@/components/BackToPipelineBanner";
 
 export default function ContractsPage() {
   const location = useLocation();
@@ -15,5 +16,5 @@ export default function ContractsPage() {
     content = <ContractsOverviewTab />;
   }
 
-  return <div className="page-container">{content}</div>;
+  return <div className="page-container"><BackToPipelineBanner />{content}</div>;
 }
