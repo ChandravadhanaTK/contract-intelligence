@@ -34,6 +34,7 @@ export default function DelegationPipelineTabs() {
   const [sourceFilter, setSourceFilter] = useState("All Sources");
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [intakeFilter, setIntakeFilter] = useState<"All" | DelegationType>("All");
+  const [selectedStageIdx, setSelectedStageIdx] = useState<number | null>(null);
 
   const filteredDocs = docs.filter(d => {
     if (d.delegationType !== activeTab) return false;
