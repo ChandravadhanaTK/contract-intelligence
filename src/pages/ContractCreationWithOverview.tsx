@@ -1320,6 +1320,10 @@ function ContractCoPilotTab() {
                                   className={`text-[10px] px-2.5 py-1 rounded-lg flex items-center gap-1 ${signatureMode === "upload" ? "bg-secondary text-secondary-foreground" : "bg-background text-foreground border"}`}>
                                   <ImagePlus className="w-3 h-3" /> Upload
                                 </button>
+                                <button onClick={handleSignLater}
+                                  className="text-[10px] px-2.5 py-1 rounded-lg flex items-center gap-1 bg-background text-muted-foreground border hover:bg-muted ml-auto">
+                                  <Clock className="w-3 h-3" /> Sign Later
+                                </button>
                               </div>
                               {signatureMode === "draw" ? (
                                 <SignaturePad onSave={handleSignatureCaptured} />
