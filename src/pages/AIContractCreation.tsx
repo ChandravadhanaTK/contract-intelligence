@@ -4,7 +4,7 @@ import {
   FileText, Layers, BookOpen, ArrowRight, Bot, Send, ChevronDown, ChevronRight,
   Edit3, MessageSquare, Highlighter, Plus, Upload, Download, RotateCcw, Save,
   CheckCircle2, AlertCircle, XCircle, Info, Sparkles, ToggleLeft, ToggleRight,
-  Eye, Copy, Trash2, Search, FolderOpen, PanelLeftClose, PanelLeftOpen,
+  Eye, Copy, Trash2, Search, FolderOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -166,13 +166,12 @@ export default function AIContractCreation() {
     return saved || [];
   });
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
-  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
+  const [collapsedPanels, setCollapsedPanels] = useState<Record<string, boolean>>({ sections: false, summary: true, drafts: true });
   const [chatMessages, setChatMessages] = useState<ChatMsg[]>(() => get("oci_create_chat", []));
   const [chatInput, setChatInput] = useState("");
   const [autoApply, setAutoApply] = useState(false);
   const [drafts, setDrafts] = useState<DraftMeta[]>(() => get("oci_my_drafts", []));
   const [draftSearch, setDraftSearch] = useState("");
-  const [collapsedPanels, setCollapsedPanels] = useState<Record<string, boolean>>({ sections: false, summary: true, drafts: true });
   const centerRef = useRef<HTMLDivElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
@@ -315,403 +314,413 @@ export default function AIContractCreation() {
     );
   }
 
-  /* ─── 3-Column Workspace ─── */
+  /* ─── Workspace ─── */
   return (
-    <div className="flex h-[calc(100vh-3rem)] overflow-hidden">
-      {/* LEFT PANEL */}
-      {leftPanelOpen && (
-        <div className="w-72 flex-shrink-0 border-r bg-card overflow-y-auto">
-          <div className="p-3 border-b flex items-center justify-between">
-            <span className="text-xs font-bold text-foreground uppercase tracking-wide">Workspace</span>
-            <button onClick={() => setLeftPanelOpen(false)} className="p-1 rounded hover:bg-muted" title="Collapse panel">
-              <PanelLeftClose className="w-4 h-4 text-muted-foreground" />
-            </button>
-          </div>
-
-          {/* Contract Sections */}
-          <div className="border-b">
-            <button onClick={() => togglePanel("sections")} className="w-full flex items-center justify-between p-3 hover:bg-muted/50 text-sm font-semibold text-foreground group">
-              <span className="flex items-center gap-2">
-                <span className={`flex items-center justify-center w-5 h-5 rounded transition-colors ${collapsedPanels.sections ? "bg-muted" : "bg-primary/10"}`}>
-                  {collapsedPanels.sections ? <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-primary" />}
-                </span>
-                Contract Sections
+    <div className="flex flex-col h-[calc(100vh-3rem)] overflow-hidden">
+      {/* TOP COLLAPSIBLE BARS */}
+      <div className="flex-shrink-0 border-b bg-card">
+        {/* Contract Sections */}
+        <div className="border-b">
+          <button onClick={() => togglePanel("sections")} className="w-full flex items-center justify-between px-4 py-2 hover:bg-muted/50 text-sm font-semibold text-foreground">
+            <span className="flex items-center gap-2">
+              <span className={`flex items-center justify-center w-5 h-5 rounded transition-colors ${collapsedPanels.sections ? "bg-muted" : "bg-primary/10"}`}>
+                {collapsedPanels.sections ? <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-primary" />}
               </span>
-              <span className="text-[9px] text-muted-foreground">{sections.length}</span>
-            </button>
-            {!collapsedPanels.sections && (
-              <div className="px-2 pb-3 space-y-0.5">
-                {sections.map(s => {
-                  const sc = statusConfig[s.status];
-                  const isSelected = selectedSection === s.id;
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() => scrollToSection(s.id)}
-                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-left text-xs transition-colors ${
-                        isSelected ? "bg-primary/10 text-primary font-medium" : "text-foreground hover:bg-muted/50"
-                      }`}
-                    >
-                      <span className="truncate">{s.headingNumber} {s.title}</span>
-                      <span className={`flex-shrink-0 text-[9px] px-1.5 py-0.5 rounded-full font-medium ${sc.color}`}>
-                        {sc.label}
-                      </span>
-                    </button>
-                  );
-                })}
-                <button
-                  onClick={handleAddNewClause}
-                  className="w-full flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-primary hover:bg-primary/5 rounded-md mt-1"
-                >
-                  <Plus className="w-3 h-3" /> Add a new clause
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Draft Summary */}
-          <div className="border-b">
-            <button onClick={() => togglePanel("summary")} className="w-full flex items-center justify-between p-3 hover:bg-muted/50 text-sm font-semibold text-foreground group">
-              <span className="flex items-center gap-2">
-                <span className={`flex items-center justify-center w-5 h-5 rounded transition-colors ${collapsedPanels.summary ? "bg-muted" : "bg-primary/10"}`}>
-                  {collapsedPanels.summary ? <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-primary" />}
-                </span>
-                Draft Summary
-              </span>
-            </button>
-            {!collapsedPanels.summary && (
-              <div className="px-3 pb-3 space-y-2">
-                <div>
-                  <p className="text-[10px] text-muted-foreground uppercase">Draft Name</p>
-                  <p className="text-xs font-medium">Payer Agreement – Standard</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-muted-foreground uppercase">Template</p>
-                  <p className="text-xs font-medium">Payer Agreement – Standard</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-muted-foreground uppercase">Completion</p>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-muted rounded-full">
-                      <div className="h-1.5 rounded-full bg-primary transition-all" style={{ width: `${completionPercent}%` }} />
-                    </div>
-                    <span className="text-xs font-medium">{completionPercent}%</span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div><span className="text-muted-foreground">Effective:</span> 01/01/2025</div>
-                  <div><span className="text-muted-foreground">Term:</span> 3 Years</div>
-                  <div><span className="text-muted-foreground">Parties:</span> 2</div>
-                  <div><span className="text-muted-foreground">Payment:</span> Blended</div>
-                </div>
-                {sections.filter(s => s.status === "missing" || s.status === "needs-input").length > 0 && (
-                  <div>
-                    <p className="text-[10px] text-muted-foreground uppercase mb-1">Missing Information</p>
-                    {sections.filter(s => s.status === "missing" || s.status === "needs-input").map(s => (
-                      <p key={s.id} className="text-[10px] text-amber-600">• {s.headingNumber} {s.title}</p>
-                    ))}
-                  </div>
-                )}
-                <div className="flex gap-1.5 pt-1">
-                  <button onClick={handleSaveDraft} className="flex items-center gap-1 px-2.5 py-1 bg-primary text-primary-foreground rounded text-[10px] font-medium hover:opacity-90">
-                    <Save className="w-3 h-3" /> Save
+              Contract Sections
+            </span>
+            <span className="text-[10px] text-muted-foreground">{sections.length} sections • {completionPercent}% complete</span>
+          </button>
+          {!collapsedPanels.sections && (
+            <div className="px-4 pb-3 flex flex-wrap gap-1.5">
+              {sections.map(s => {
+                const sc = statusConfig[s.status];
+                const isSelected = selectedSection === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => scrollToSection(s.id)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs transition-colors ${
+                      isSelected ? "bg-primary/10 text-primary font-medium ring-1 ring-primary/30" : "bg-muted/50 text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <span>{s.headingNumber} {s.title}</span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${sc.color}`}>{sc.label}</span>
                   </button>
-                  <button className="flex items-center gap-1 px-2.5 py-1 border rounded text-[10px] font-medium hover:bg-muted">
-                    <Download className="w-3 h-3" /> Export
-                  </button>
-                  <button onClick={() => { setMode(null); setSections([]); set("oci_create_mode", null); }} className="flex items-center gap-1 px-2.5 py-1 border rounded text-[10px] font-medium hover:bg-muted text-destructive">
-                    <RotateCcw className="w-3 h-3" /> Reset
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* My Generated Contracts */}
-          <div>
-            <button onClick={() => togglePanel("drafts")} className="w-full flex items-center justify-between p-3 hover:bg-muted/50 text-sm font-semibold text-foreground group">
-              <span className="flex items-center gap-2">
-                <span className={`flex items-center justify-center w-5 h-5 rounded transition-colors ${collapsedPanels.drafts ? "bg-muted" : "bg-primary/10"}`}>
-                  {collapsedPanels.drafts ? <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-primary" />}
-                </span>
-                My Generated Contracts
-              </span>
-              <span className="text-[9px] text-muted-foreground">{drafts.length}</span>
-            </button>
-            {!collapsedPanels.drafts && (
-              <div className="px-3 pb-3 space-y-2">
-                <div className="relative">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
-                  <input
-                    className="w-full pl-7 pr-2 py-1 text-xs border rounded bg-background"
-                    placeholder="Search my drafts…"
-                    value={draftSearch}
-                    onChange={e => setDraftSearch(e.target.value)}
-                  />
-                </div>
-                {filteredDrafts.length === 0 && <p className="text-[10px] text-muted-foreground text-center py-2">No saved drafts</p>}
-                {filteredDrafts.map(d => (
-                  <div key={d.id} className="border rounded-lg p-2 text-xs space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium truncate">{d.name}</span>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
-                        d.status === "Final" ? "bg-emerald-100 text-emerald-700" :
-                        d.status === "In Review" ? "bg-blue-100 text-blue-700" :
-                        "bg-muted text-muted-foreground"
-                      }`}>{d.status}</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">{new Date(d.createdAt).toLocaleDateString()}</p>
-                    <div className="flex gap-1">
-                      <button onClick={() => handleLoadDraft(d)} className="text-[10px] text-primary hover:underline flex items-center gap-0.5">
-                        <FolderOpen className="w-3 h-3" /> Open
-                      </button>
-                      <button onClick={() => {
-                        const dup = { ...d, id: `draft-${Date.now()}`, name: d.name + " (Copy)", createdAt: new Date().toISOString() };
-                        setDrafts(prev => [dup, ...prev].slice(0, 5));
-                        toast.success("Duplicated");
-                      }} className="text-[10px] text-muted-foreground hover:underline flex items-center gap-0.5">
-                        <Copy className="w-3 h-3" /> Duplicate
-                      </button>
-                      <button onClick={() => handleDeleteDraft(d.id)} className="text-[10px] text-destructive hover:underline flex items-center gap-0.5">
-                        <Trash2 className="w-3 h-3" /> Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Collapsed left panel toggle */}
-      {!leftPanelOpen && (
-        <button
-          onClick={() => setLeftPanelOpen(true)}
-          className="flex-shrink-0 w-10 flex items-center justify-center border-r bg-card hover:bg-muted transition-colors"
-          title="Expand panel"
-        >
-          <PanelLeftOpen className="w-4 h-4 text-muted-foreground" />
-        </button>
-      )}
-
-      {/* CENTER PANEL - Contract Document */}
-      <div className="flex-1 overflow-y-auto" ref={centerRef}>
-        <div className="p-4">
-          {/* Header toolbar */}
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-            <div>
-              <h2 className="text-lg font-bold text-foreground">Contract Document</h2>
-              <p className="text-xs text-muted-foreground">
-                {mode === "full" ? "Full Draft Generation" : mode === "clause" ? "Clause-by-Clause Co-Authoring" : "Playbook-Guided with AI Review"}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
+                );
+              })}
               <button
-                onClick={() => navigate("/contracts/newgen")}
-                className="flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-medium hover:bg-muted"
+                onClick={handleAddNewClause}
+                className="flex items-center gap-1 px-2.5 py-1 text-xs text-primary hover:bg-primary/5 rounded-md border border-dashed border-primary/30"
               >
-                <Upload className="w-3.5 h-3.5" /> Upload for reference
-              </button>
-              <button
-                onClick={() => {
-                  handleSaveDraft();
-                  navigate("/compliance-hub?tab=redlining");
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium hover:opacity-90"
-              >
-                Send to Redlining
-              </button>
-            </div>
-          </div>
-
-          {/* Quick Setup for Full Draft */}
-          {mode === "full" && sections.length === 0 && (
-            <div className="bg-accent/50 border border-primary/10 rounded-xl p-5 mb-4">
-              <h3 className="text-sm font-semibold mb-3">Quick Setup</h3>
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                  <label className="text-[10px] text-muted-foreground uppercase">Contract Type</label>
-                  <select className="w-full mt-1 border rounded-lg px-3 py-1.5 text-xs bg-background">
-                    <option>Payer Agreement</option>
-                    <option>Provider Agreement</option>
-                    <option>Amendment</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] text-muted-foreground uppercase">Template</label>
-                  <select className="w-full mt-1 border rounded-lg px-3 py-1.5 text-xs bg-background">
-                    <option>Payer Agreement – Standard</option>
-                    <option>Provider Agreement – Facility</option>
-                  </select>
-                </div>
-              </div>
-              <button
-                onClick={() => setSections(allSectionTemplates)}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90"
-              >
-                <Sparkles className="w-4 h-4" /> Use Template
+                <Plus className="w-3 h-3" /> Add clause
               </button>
             </div>
           )}
+        </div>
 
-          {/* Section blocks */}
-          <div className="space-y-3">
-            {sections.map(s => {
-              const isSelected = selectedSection === s.id;
-              return (
-                <div
-                  key={s.id}
-                  id={`section-${s.id}`}
-                  onClick={() => setSelectedSection(s.id)}
-                  className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                    isSelected ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border bg-card hover:border-primary/30"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-bold text-foreground">{s.headingNumber} {s.title}</h3>
-                    <div className="flex items-center gap-1.5">
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${statusConfig[s.status].color}`}>
-                        {statusConfig[s.status].label}
-                      </span>
-                      <button className="p-1 rounded hover:bg-muted" title="Edit"><Edit3 className="w-3 h-3 text-muted-foreground" /></button>
-                      <button className="p-1 rounded hover:bg-muted" title="Comment"><MessageSquare className="w-3 h-3 text-muted-foreground" /></button>
-                      <button className="p-1 rounded hover:bg-muted" title="Highlight"><Highlighter className="w-3 h-3 text-muted-foreground" /></button>
-                    </div>
+        {/* Draft Summary */}
+        <div className="border-b">
+          <button onClick={() => togglePanel("summary")} className="w-full flex items-center justify-between px-4 py-2 hover:bg-muted/50 text-sm font-semibold text-foreground">
+            <span className="flex items-center gap-2">
+              <span className={`flex items-center justify-center w-5 h-5 rounded transition-colors ${collapsedPanels.summary ? "bg-muted" : "bg-primary/10"}`}>
+                {collapsedPanels.summary ? <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-primary" />}
+              </span>
+              Draft Summary
+            </span>
+          </button>
+          {!collapsedPanels.summary && (
+            <div className="px-4 pb-3 flex items-center gap-6 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground uppercase">Draft:</span>
+                <span className="text-xs font-medium">Payer Agreement – Standard</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground uppercase">Completion:</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-24 h-1.5 bg-muted rounded-full">
+                    <div className="h-1.5 rounded-full bg-primary transition-all" style={{ width: `${completionPercent}%` }} />
                   </div>
-                  <div className="text-xs text-foreground whitespace-pre-line leading-relaxed" style={{ fontFamily: "'Times New Roman', serif" }}>
-                    {s.body}
+                  <span className="text-xs font-medium">{completionPercent}%</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 text-xs">
+                <span><span className="text-muted-foreground">Effective:</span> 01/01/2025</span>
+                <span><span className="text-muted-foreground">Term:</span> 3 Years</span>
+                <span><span className="text-muted-foreground">Payment:</span> Blended</span>
+              </div>
+              {sections.filter(s => s.status === "missing" || s.status === "needs-input").length > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <AlertCircle className="w-3 h-3 text-amber-600" />
+                  <span className="text-[10px] text-amber-600">{sections.filter(s => s.status === "missing" || s.status === "needs-input").length} sections need attention</span>
+                </div>
+              )}
+              <div className="flex gap-1.5 ml-auto">
+                <button onClick={handleSaveDraft} className="flex items-center gap-1 px-2.5 py-1 bg-primary text-primary-foreground rounded text-[10px] font-medium hover:opacity-90">
+                  <Save className="w-3 h-3" /> Save
+                </button>
+                <button className="flex items-center gap-1 px-2.5 py-1 border rounded text-[10px] font-medium hover:bg-muted">
+                  <Download className="w-3 h-3" /> Export
+                </button>
+                <button onClick={() => { setMode(null); setSections([]); set("oci_create_mode", null); }} className="flex items-center gap-1 px-2.5 py-1 border rounded text-[10px] font-medium hover:bg-muted text-destructive">
+                  <RotateCcw className="w-3 h-3" /> Reset
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* My Generated Contracts */}
+        <div>
+          <button onClick={() => togglePanel("drafts")} className="w-full flex items-center justify-between px-4 py-2 hover:bg-muted/50 text-sm font-semibold text-foreground">
+            <span className="flex items-center gap-2">
+              <span className={`flex items-center justify-center w-5 h-5 rounded transition-colors ${collapsedPanels.drafts ? "bg-muted" : "bg-primary/10"}`}>
+                {collapsedPanels.drafts ? <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-primary" />}
+              </span>
+              <FolderOpen className="w-3.5 h-3.5 text-secondary" />
+              My Generated Contracts
+            </span>
+            <span className="text-[10px] text-muted-foreground">{drafts.length} drafts</span>
+          </button>
+          {!collapsedPanels.drafts && (
+            <div className="px-4 pb-3 flex items-start gap-3 overflow-x-auto">
+              <div className="relative flex-shrink-0">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+                <input
+                  className="w-40 pl-7 pr-2 py-1 text-xs border rounded bg-background"
+                  placeholder="Search drafts…"
+                  value={draftSearch}
+                  onChange={e => setDraftSearch(e.target.value)}
+                />
+              </div>
+              {filteredDrafts.length === 0 && <p className="text-[10px] text-muted-foreground py-1">No saved drafts</p>}
+              {filteredDrafts.map(d => (
+                <div key={d.id} className="flex-shrink-0 border rounded-lg p-2 text-xs space-y-1 w-48">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium truncate">{d.name}</span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
+                      d.status === "Final" ? "bg-emerald-100 text-emerald-700" :
+                      d.status === "In Review" ? "bg-blue-100 text-blue-700" :
+                      "bg-muted text-muted-foreground"
+                    }`}>{d.status}</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">{new Date(d.createdAt).toLocaleDateString()}</p>
+                  <div className="flex gap-1">
+                    <button onClick={() => handleLoadDraft(d)} className="text-[10px] text-primary hover:underline flex items-center gap-0.5">
+                      <FolderOpen className="w-3 h-3" /> Open
+                    </button>
+                    <button onClick={() => {
+                      const dup = { ...d, id: `draft-${Date.now()}`, name: d.name + " (Copy)", createdAt: new Date().toISOString() };
+                      setDrafts(prev => [dup, ...prev].slice(0, 5));
+                      toast.success("Duplicated");
+                    }} className="text-[10px] text-muted-foreground hover:underline flex items-center gap-0.5">
+                      <Copy className="w-3 h-3" /> Dup
+                    </button>
+                    <button onClick={() => handleDeleteDraft(d.id)} className="text-[10px] text-destructive hover:underline flex items-center gap-0.5">
+                      <Trash2 className="w-3 h-3" /> Del
+                    </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-
-          {sections.length === 0 && mode !== "full" && (
-            <div className="text-center py-12 text-muted-foreground">
-              <FileText className="w-10 h-10 mx-auto mb-3 opacity-40" />
-              <p className="text-sm">Use the AI CoAuthor to start building your contract</p>
+              ))}
             </div>
           )}
         </div>
       </div>
 
-      {/* RIGHT PANEL - AI CoAuthor */}
-      <div className="w-80 flex-shrink-0 border-l bg-card flex flex-col overflow-hidden">
-        <div className="p-3 border-b flex items-center gap-2 bg-muted/50">
-          <Bot className="w-4 h-4 text-secondary" />
-          <span className="font-semibold text-sm">AI CoAuthor</span>
-        </div>
-
-        {/* Context chip */}
-        {selectedSection && (
-          <div className="px-3 py-2 border-b bg-accent/30">
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-              Editing: {sections.find(s => s.id === selectedSection)?.headingNumber} {sections.find(s => s.id === selectedSection)?.title}
-            </span>
-          </div>
-        )}
-
-        {/* Playbook Rules (playbook mode only) */}
-        {mode === "playbook" && (
-          <div className="px-3 py-2 border-b space-y-1">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase">Playbook Rules</p>
-            <div className="flex flex-wrap gap-1">
-              {playbookRules.map(r => (
-                <span key={r.rule} className={`text-[9px] px-2 py-0.5 rounded-full font-medium ${
-                  r.pass ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                }`}>
-                  {r.pass ? "✓" : "⚠"} {r.rule}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Quick prompts */}
-        <div className="p-2 flex flex-wrap gap-1 border-b">
-          {["Add reimbursement terms", "Add termination clause", "Add HIPAA compliance", "Add dispute resolution", "Summarize this draft"].map(p => (
-            <button
-              key={p}
-              onClick={() => handleSendChat(p)}
-              className="text-[10px] px-2 py-0.5 rounded-full bg-accent text-accent-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors"
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-
-        {/* Chat messages */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
-          {chatMessages.length === 0 && (
-            <div className="text-center mt-4 space-y-2">
-              <Bot className="w-8 h-8 mx-auto text-muted-foreground opacity-40" />
-              <p className="text-xs text-muted-foreground">I'm your AI CoAuthor. I can help you draft clauses, review sections, and ensure compliance. Select a section or describe a clause to get started.</p>
-            </div>
-          )}
-          {chatMessages.map(m => (
-            <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className="max-w-[95%] space-y-1.5">
-                <div className={`rounded-lg px-3 py-2 text-xs leading-relaxed ${
-                  m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-                }`}>
-                  {m.text.split("\n").map((line, i) => <p key={i}>{line}</p>)}
-                </div>
-                {/* Proposed clause card */}
-                {m.proposedClause && (
-                  <div className="border rounded-lg p-2.5 bg-accent/30 space-y-1.5">
-                    <p className="text-[10px] font-bold text-foreground">{m.proposedClause.title}</p>
-                    <div className="text-[10px] text-foreground whitespace-pre-line leading-relaxed border-l-2 border-primary pl-2" style={{ fontFamily: "'Times New Roman', serif" }}>
-                      {m.proposedClause.body.slice(0, 200)}…
-                    </div>
-                    <p className="text-[10px] text-muted-foreground italic">{m.proposedClause.rationale}</p>
-                    <button
-                      onClick={() => scrollToSection(m.proposedClause!.sectionRef)}
-                      className="text-[9px] px-1.5 py-0.5 rounded bg-secondary/10 text-secondary font-medium hover:bg-secondary/20 cursor-pointer"
-                    >
-                      {m.proposedClause.citation}
-                    </button>
-                    <div className="flex gap-1 pt-1">
-                      <button onClick={() => handleApplyClause(m.proposedClause!, "insert")} className="text-[9px] px-2 py-0.5 bg-primary text-primary-foreground rounded font-medium hover:opacity-90">Insert</button>
-                      <button onClick={() => handleApplyClause(m.proposedClause!, "replace")} className="text-[9px] px-2 py-0.5 border rounded font-medium hover:bg-muted">Replace</button>
-                      <button onClick={() => handleApplyClause(m.proposedClause!, "add")} className="text-[9px] px-2 py-0.5 border rounded font-medium hover:bg-muted">Add new</button>
-                    </div>
-                  </div>
-                )}
-                {/* Suggested next */}
-                {m.suggestedNext && (
-                  <button
-                    onClick={() => handleSendChat(m.suggestedNext!)}
-                    className="text-[10px] px-2 py-1 rounded-full bg-accent text-accent-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors"
-                  >
-                    {m.suggestedNext}
-                  </button>
-                )}
+      {/* MAIN CONTENT AREA */}
+      <div className="flex flex-1 overflow-hidden min-h-0">
+        {/* CENTER PANEL - Contract Document (MSA Format) */}
+        <div className="flex-1 overflow-y-auto bg-muted/30" ref={centerRef}>
+          <div className="max-w-3xl mx-auto py-6 px-8">
+            {/* Header toolbar */}
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+              <div>
+                <h2 className="text-lg font-bold text-foreground">Contract Document</h2>
+                <p className="text-xs text-muted-foreground">
+                  {mode === "full" ? "Full Draft Generation" : mode === "clause" ? "Clause-by-Clause Co-Authoring" : "Playbook-Guided with AI Review"}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigate("/contracts/newgen")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-medium hover:bg-muted"
+                >
+                  <Upload className="w-3.5 h-3.5" /> Upload for reference
+                </button>
+                <button
+                  onClick={() => {
+                    handleSaveDraft();
+                    navigate("/compliance-hub?tab=redlining");
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium hover:opacity-90"
+                >
+                  Send to Redlining
+                </button>
               </div>
             </div>
-          ))}
-          <div ref={chatBottomRef} />
+
+            {/* Quick Setup for Full Draft */}
+            {mode === "full" && sections.length === 0 && (
+              <div className="bg-accent/50 border border-primary/10 rounded-xl p-5 mb-4">
+                <h3 className="text-sm font-semibold mb-3">Quick Setup</h3>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <label className="text-[10px] text-muted-foreground uppercase">Contract Type</label>
+                    <select className="w-full mt-1 border rounded-lg px-3 py-1.5 text-xs bg-background">
+                      <option>Payer Agreement</option>
+                      <option>Provider Agreement</option>
+                      <option>Amendment</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground uppercase">Template</label>
+                    <select className="w-full mt-1 border rounded-lg px-3 py-1.5 text-xs bg-background">
+                      <option>Payer Agreement – Standard</option>
+                      <option>Provider Agreement – Facility</option>
+                    </select>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSections(allSectionTemplates)}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90"
+                >
+                  <Sparkles className="w-4 h-4" /> Use Template
+                </button>
+              </div>
+            )}
+
+            {/* MSA-FORMATTED CONTRACT DOCUMENT */}
+            {sections.length > 0 && (
+              <div className="bg-card border rounded-lg shadow-sm p-8" style={{ fontFamily: "'Times New Roman', 'Georgia', serif" }}>
+                {/* MSA Title Block */}
+                <div className="text-center mb-8 border-b pb-6">
+                  <p className="text-[11px] tracking-widest text-muted-foreground uppercase mb-4">Confidential and Proprietary</p>
+                  <h1 className="text-xl font-bold uppercase tracking-wide mb-2">MASTER SERVICES AGREEMENT</h1>
+                  <p className="text-sm font-semibold uppercase">Provider Participation Agreement</p>
+                  <div className="mt-4 text-xs text-muted-foreground space-y-0.5">
+                    <p>By and Between</p>
+                    <p className="font-semibold text-foreground">UnitedHealthcare Insurance Company ("Plan")</p>
+                    <p>and</p>
+                    <p className="font-semibold text-foreground">[Provider Name] ("Provider")</p>
+                  </div>
+                  <p className="mt-4 text-xs text-muted-foreground">Effective Date: January 1, 2025</p>
+                  <p className="text-xs text-muted-foreground">Contract No.: OHCS-PA-2025-001</p>
+                </div>
+
+                {/* Recitals */}
+                <div className="mb-6">
+                  <p className="text-sm font-bold text-center uppercase mb-3">RECITALS</p>
+                  <div className="text-xs leading-relaxed text-justify space-y-2">
+                    <p><strong>WHEREAS,</strong> Plan is a health insurance company duly authorized to conduct business in the applicable states and administers health benefit plans for its enrolled Members; and</p>
+                    <p><strong>WHEREAS,</strong> Provider is a duly licensed healthcare provider who desires to participate in Plan's provider network and render Covered Services to Members; and</p>
+                    <p><strong>NOW, THEREFORE,</strong> in consideration of the mutual covenants and agreements set forth herein, and for other good and valuable consideration, the receipt and sufficiency of which are hereby acknowledged, the parties agree as follows:</p>
+                  </div>
+                </div>
+
+                {/* Section blocks */}
+                <div className="space-y-5">
+                  {sections.map(s => {
+                    const isSelected = selectedSection === s.id;
+                    return (
+                      <div
+                        key={s.id}
+                        id={`section-${s.id}`}
+                        onClick={() => setSelectedSection(s.id)}
+                        className={`rounded-md p-4 cursor-pointer transition-all border ${
+                          isSelected ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-transparent hover:border-primary/20 hover:bg-accent/20"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-sm font-bold uppercase tracking-wide text-foreground">
+                            {s.headingNumber.replace("§", "SECTION ")} — {s.title.toUpperCase()}
+                          </h3>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${statusConfig[s.status].color}`}>
+                              {statusConfig[s.status].label}
+                            </span>
+                            <button className="p-1 rounded hover:bg-muted" title="Edit"><Edit3 className="w-3 h-3 text-muted-foreground" /></button>
+                            <button className="p-1 rounded hover:bg-muted" title="Comment"><MessageSquare className="w-3 h-3 text-muted-foreground" /></button>
+                          </div>
+                        </div>
+                        <div className="text-xs text-foreground whitespace-pre-line leading-relaxed text-justify">
+                          {s.body}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Footer */}
+                <div className="mt-8 pt-4 border-t text-center text-[10px] text-muted-foreground space-y-0.5">
+                  <p>OHCS-PhysHealthProviderAgmt | Rev. 2025-01</p>
+                  <p>Confidential and Proprietary — Do not distribute without authorization</p>
+                </div>
+              </div>
+            )}
+
+            {sections.length === 0 && mode !== "full" && (
+              <div className="text-center py-12 text-muted-foreground">
+                <FileText className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                <p className="text-sm">Use the AI CoAuthor to start building your contract</p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Auto-apply toggle + input */}
-        <div className="border-t">
-          <div className="px-3 py-1.5 flex items-center justify-between">
-            <span className="text-[10px] text-muted-foreground">Auto-apply suggestions</span>
-            <button onClick={() => setAutoApply(!autoApply)} className="text-muted-foreground">
-              {autoApply ? <ToggleRight className="w-5 h-5 text-primary" /> : <ToggleLeft className="w-5 h-5" />}
-            </button>
+        {/* RIGHT PANEL - AI CoAuthor Chat */}
+        <div className="w-80 flex-shrink-0 border-l bg-card flex flex-col overflow-hidden">
+          <div className="p-3 border-b flex items-center gap-2 bg-muted/50">
+            <Bot className="w-4 h-4 text-secondary" />
+            <span className="font-semibold text-sm">AI CoAuthor</span>
           </div>
-          <div className="p-2 flex gap-2">
-            <input
-              className="flex-1 border rounded-lg px-3 py-1.5 text-xs bg-background"
-              placeholder="Describe a clause to draft…"
-              value={chatInput}
-              onChange={e => setChatInput(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleSendChat(chatInput)}
-            />
-            <button onClick={() => handleSendChat(chatInput)} className="bg-secondary text-secondary-foreground p-1.5 rounded-lg hover:opacity-90">
-              <Send className="w-3.5 h-3.5" />
-            </button>
+
+          {/* Context chip */}
+          {selectedSection && (
+            <div className="px-3 py-2 border-b bg-accent/30">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                Editing: {sections.find(s => s.id === selectedSection)?.headingNumber} {sections.find(s => s.id === selectedSection)?.title}
+              </span>
+            </div>
+          )}
+
+          {/* Playbook Rules (playbook mode only) */}
+          {mode === "playbook" && (
+            <div className="px-3 py-2 border-b space-y-1">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase">Playbook Rules</p>
+              <div className="flex flex-wrap gap-1">
+                {playbookRules.map(r => (
+                  <span key={r.rule} className={`text-[9px] px-2 py-0.5 rounded-full font-medium ${
+                    r.pass ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                  }`}>
+                    {r.pass ? "✓" : "⚠"} {r.rule}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Quick prompts */}
+          <div className="p-2 flex flex-wrap gap-1 border-b">
+            {["Add reimbursement terms", "Add termination clause", "Add HIPAA compliance", "Add dispute resolution", "Summarize this draft"].map(p => (
+              <button
+                key={p}
+                onClick={() => handleSendChat(p)}
+                className="text-[10px] px-2 py-0.5 rounded-full bg-accent text-accent-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors"
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+
+          {/* Chat messages */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
+            {chatMessages.length === 0 && (
+              <div className="text-center mt-4 space-y-2">
+                <Bot className="w-8 h-8 mx-auto text-muted-foreground opacity-40" />
+                <p className="text-xs text-muted-foreground">I'm your AI CoAuthor. I can help you draft clauses, review sections, and ensure compliance. Select a section or describe a clause to get started.</p>
+              </div>
+            )}
+            {chatMessages.map(m => (
+              <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div className="max-w-[95%] space-y-1.5">
+                  <div className={`rounded-lg px-3 py-2 text-xs leading-relaxed ${
+                    m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                  }`}>
+                    {m.text.split("\n").map((line, i) => <p key={i}>{line}</p>)}
+                  </div>
+                  {m.proposedClause && (
+                    <div className="border rounded-lg p-2.5 bg-accent/30 space-y-1.5">
+                      <p className="text-[10px] font-bold text-foreground">{m.proposedClause.title}</p>
+                      <div className="text-[10px] text-foreground whitespace-pre-line leading-relaxed border-l-2 border-primary pl-2" style={{ fontFamily: "'Times New Roman', serif" }}>
+                        {m.proposedClause.body.slice(0, 200)}…
+                      </div>
+                      <p className="text-[10px] text-muted-foreground italic">{m.proposedClause.rationale}</p>
+                      <button
+                        onClick={() => scrollToSection(m.proposedClause!.sectionRef)}
+                        className="text-[9px] px-1.5 py-0.5 rounded bg-secondary/10 text-secondary font-medium hover:bg-secondary/20 cursor-pointer"
+                      >
+                        {m.proposedClause.citation}
+                      </button>
+                      <div className="flex gap-1 pt-1">
+                        <button onClick={() => handleApplyClause(m.proposedClause!, "insert")} className="text-[9px] px-2 py-0.5 bg-primary text-primary-foreground rounded font-medium hover:opacity-90">Insert</button>
+                        <button onClick={() => handleApplyClause(m.proposedClause!, "replace")} className="text-[9px] px-2 py-0.5 border rounded font-medium hover:bg-muted">Replace</button>
+                        <button onClick={() => handleApplyClause(m.proposedClause!, "add")} className="text-[9px] px-2 py-0.5 border rounded font-medium hover:bg-muted">Add new</button>
+                      </div>
+                    </div>
+                  )}
+                  {m.suggestedNext && (
+                    <button
+                      onClick={() => handleSendChat(m.suggestedNext!)}
+                      className="text-[10px] px-2 py-1 rounded-full bg-accent text-accent-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors"
+                    >
+                      {m.suggestedNext}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+            <div ref={chatBottomRef} />
+          </div>
+
+          {/* Auto-apply toggle + input */}
+          <div className="border-t">
+            <div className="px-3 py-1.5 flex items-center justify-between">
+              <span className="text-[10px] text-muted-foreground">Auto-apply suggestions</span>
+              <button onClick={() => setAutoApply(!autoApply)} className="text-muted-foreground">
+                {autoApply ? <ToggleRight className="w-5 h-5 text-primary" /> : <ToggleLeft className="w-5 h-5" />}
+              </button>
+            </div>
+            <div className="p-2 flex gap-2">
+              <input
+                className="flex-1 border rounded-lg px-3 py-1.5 text-xs bg-background"
+                placeholder="Describe a clause to draft…"
+                value={chatInput}
+                onChange={e => setChatInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleSendChat(chatInput)}
+              />
+              <button onClick={() => handleSendChat(chatInput)} className="bg-secondary text-secondary-foreground p-1.5 rounded-lg hover:opacity-90">
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
