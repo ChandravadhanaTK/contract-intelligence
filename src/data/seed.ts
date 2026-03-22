@@ -527,6 +527,7 @@ export function initializeSeedData() {
     localStorage.setItem("oci_contract_families", JSON.stringify(seedContractFamilies));
     localStorage.setItem("oci_tracker_obligations", JSON.stringify(seedTrackerObligations));
     localStorage.setItem("oci_redline_groups", JSON.stringify(seedRedlineGroups));
+    localStorage.setItem("oci_redline_documents", JSON.stringify(seedRedlineDocuments));
     localStorage.setItem("oci_notifications", JSON.stringify(seedNotifications));
     localStorage.setItem("oci_initialized", "true");
   }
