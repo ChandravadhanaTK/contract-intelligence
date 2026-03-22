@@ -167,6 +167,7 @@ export default function AIContractCreation() {
     return saved || [];
   });
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const [editingSection, setEditingSection] = useState<string | null>(null);
   const [collapsedPanels, setCollapsedPanels] = useState<Record<string, boolean>>({ sections: false, summary: true, drafts: true });
   const [chatMessages, setChatMessages] = useState<ChatMsg[]>(() => get("oci_create_chat", []));
   const [chatInput, setChatInput] = useState("");
