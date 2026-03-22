@@ -1012,7 +1012,9 @@ function ContractCoPilotTab() {
           <span>Confidential and Proprietary</span>
         </div>
       </div>
+      </div>
     </div>
+  );
   );
 
   return (
