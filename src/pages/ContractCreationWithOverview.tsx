@@ -995,7 +995,18 @@ function ContractCoPilotTab() {
     setConfirmPhase("awaiting");
   };
 
-  const handleSignatureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSignLater = () => {
+    setSignaturePhase("captured");
+    setSignatureDataUrl(null);
+    const sigLaterMsg: CoPilotMessage = {
+      id: `sig-later-${Date.now()}`,
+      role: "assistant",
+      text: "⏭️ **Signature skipped for now.** You can add your signature later.\n\n📝 Your contract with **" + agentSteps.length + " sections** is ready as a draft.\n\n**Would you like me to generate the contract document?**",
+      time: new Date().toISOString(),
+      isConfirmPrompt: true,
+    };
+    setMessages(prev => [...prev, sigLaterMsg]);
+    setConfirmPhase("awaiting");
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
