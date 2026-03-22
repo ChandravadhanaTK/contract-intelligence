@@ -239,6 +239,11 @@ export default function ContractViewerPage() {
             <p className="text-sm font-semibold truncate">{docName}</p>
             <p className="text-xs text-muted-foreground">{familyName}</p>
           </div>
+          {isEditable && (
+            <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+              {docStatus} — Editable
+            </span>
+          )}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Clock className="w-3 h-3" /> Last modified: 10m ago
           </div>
