@@ -184,9 +184,22 @@ const kpiCards = [
   { label: "Avg Creation Time", value: "4.2d", icon: <Clock className="w-4 h-4" />, accent: "bg-violet-100 text-violet-700", route: "/workflow" },
 ];
 
-const pipelineStages = ["Draft", "Collaboration", "Review", "Approval", "Published", "Downstream"];
-const pipelineColors = ["bg-amber-400", "bg-blue-500", "bg-violet-500", "bg-orange-500", "bg-emerald-500", "bg-teal-500"];
-const defaultPipelineCounts = [12, 8, 7, 5, 6, 4];
+const pipelineStages = [
+  { name: "Draft", route: "/create", color: "bg-amber-400" },
+  { name: "Collaborative Drafting", route: "/create", color: "bg-amber-500" },
+  { name: "Redlining & Review", route: "/compliance-hub?tab=redlining", color: "bg-rose-500" },
+  { name: "Internal Review", route: "/workflow", color: "bg-violet-500" },
+  { name: "Credentialing Validation", route: "/credentialing", color: "bg-blue-500" },
+  { name: "Contract Pricing Analysis", route: "/rates", color: "bg-cyan-500" },
+  { name: "Provider Review", route: "/contracts", color: "bg-indigo-500" },
+  { name: "Pricing Team Review", route: "/rates", color: "bg-sky-500" },
+  { name: "Legal Team Review", route: "/compliance-hub?tab=deviations", color: "bg-purple-500" },
+  { name: "Negotiation & Review", route: "/compliance-hub?tab=redlining", color: "bg-orange-500" },
+  { name: "Signature", route: "/create", color: "bg-pink-500" },
+  { name: "Published", route: "/contracts", color: "bg-emerald-500" },
+  { name: "Data Loading", route: "/rates", color: "bg-teal-500" },
+];
+const defaultPipelineCounts = [12, 8, 6, 7, 5, 4, 3, 3, 4, 5, 2, 6, 3];
 
 function getPipelineCounts(): number[] {
   try {
