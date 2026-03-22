@@ -204,7 +204,7 @@ const defaultPipelineCounts = [12, 8, 6, 7, 5, 4, 3, 3, 4, 5, 2, 6, 3];
 function getPipelineCounts(): number[] {
   try {
     const stored = JSON.parse(localStorage.getItem("oci_pipeline_counts") || "null");
-    if (Array.isArray(stored) && stored.length === 6) return stored;
+    if (Array.isArray(stored) && stored.length === pipelineStages.length) return stored;
   } catch {}
   return [...defaultPipelineCounts];
 }
