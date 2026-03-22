@@ -216,6 +216,7 @@ function setPipelineCounts(counts: number[]) {
 
 function ContractWorkflowPipeline() {
   const [counts, setCounts] = useState(getPipelineCounts());
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handler = () => setCounts(getPipelineCounts());
@@ -231,15 +232,27 @@ function ContractWorkflowPipeline() {
         {pipelineStages.map((stage, i) => {
           const width = (counts[i] / pipelineTotal) * 100;
           if (width === 0) return null;
-          return <div key={stage} className={`h-full ${pipelineColors[i]}`} style={{ width: `${width}%` }} />;
+          return (
+            <div
+              key={stage.name}
+              className={`h-full ${stage.color} cursor-pointer hover:opacity-80 transition-opacity`}
+              style={{ width: `${width}%` }}
+              onClick={() => navigate(stage.route)}
+              title={`${stage.name} (${counts[i]})`}
+            />
+          );
         })}
       </div>
-      <div className="flex flex-wrap gap-4 mt-3">
+      <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-3">
         {pipelineStages.map((stage, i) => (
-          <div key={stage} className="flex items-center gap-1.5 text-xs">
-            <div className={`w-3 h-3 rounded-sm ${pipelineColors[i]}`} />
-            <span className="text-muted-foreground">{stage} ({counts[i]})</span>
-          </div>
+          <button
+            key={stage.name}
+            onClick={() => navigate(stage.route)}
+            className="flex items-center gap-1.5 text-[11px] hover:underline cursor-pointer transition-colors"
+          >
+            <div className={`w-2.5 h-2.5 rounded-sm ${stage.color}`} />
+            <span className="text-muted-foreground">{stage.name} ({counts[i]})</span>
+          </button>
         ))}
       </div>
     </div>
