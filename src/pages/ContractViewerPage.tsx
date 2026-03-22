@@ -117,6 +117,11 @@ export default function ContractViewerPage() {
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [sectionEdits, setSectionEdits] = useState<Record<string, string>>({});
+  // Collapsible sections state
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const toggleSection = (sectionId: string) => {
+    setCollapsedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
+  };
 
   const result = id ? getDocById(id) : null;
   const docName = result?.doc.name || "Contract Document";
