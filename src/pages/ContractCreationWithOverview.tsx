@@ -110,6 +110,8 @@ interface CoPilotMessage {
   time: string;
   clauseAdded?: string;
   options?: string[];
+  isSignaturePrompt?: boolean;
+  isConfirmPrompt?: boolean;
 }
 
 interface ContractClause {
@@ -236,7 +238,260 @@ const agentSteps = [
   },
 ];
 
+/* ─── Signature Pad Component ─── */
+function SignaturePad({ onSave }: { onSave: (dataUrl: string) => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [hasDrawn, setHasDrawn] = useState(false);
+
+  const getPos = (e: React.MouseEvent | React.TouchEvent) => {
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    if ("touches" in e) {
+      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+    }
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
+  const startDraw = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+    const pos = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+    setIsDrawing(true);
+  };
+
+  const draw = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDrawing) return;
+    e.preventDefault();
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+    const pos = getPos(e);
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#1a1a1a";
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    setHasDrawn(true);
+  };
+
+  const endDraw = () => setIsDrawing(false);
+
+  const clear = () => {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx || !canvasRef.current) return;
+    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    setHasDrawn(false);
+  };
+
+  const save = () => {
+    if (!canvasRef.current || !hasDrawn) return;
+    onSave(canvasRef.current.toDataURL("image/png"));
+  };
+
+  return (
+    <div className="space-y-2">
+      <canvas
+        ref={canvasRef}
+        width={400}
+        height={120}
+        className="border-2 border-dashed border-muted-foreground/30 rounded-lg bg-background cursor-crosshair w-full"
+        style={{ touchAction: "none" }}
+        onMouseDown={startDraw}
+        onMouseMove={draw}
+        onMouseUp={endDraw}
+        onMouseLeave={endDraw}
+        onTouchStart={startDraw}
+        onTouchMove={draw}
+        onTouchEnd={endDraw}
+      />
+      <div className="flex gap-2">
+        <button onClick={clear} className="text-[10px] px-2.5 py-1 bg-muted text-muted-foreground rounded-lg hover:bg-muted/80">
+          Clear
+        </button>
+        <button onClick={save} disabled={!hasDrawn}
+          className="text-[10px] px-2.5 py-1 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 disabled:opacity-50">
+          <Check className="w-3 h-3 inline mr-1" />Apply Signature
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Guided Mode (Simulated) ─── */
+const guidedStepsData = [
+  { field: "Contract Type", question: "What type of contract are you drafting? (e.g., Provider Services Agreement, Vendor Agreement, Amendment)", sample: "Provider Services Agreement" },
+  { field: "Parties", question: "Who are the parties involved? Please provide full legal entity names.", sample: "Optum Health Plan, Inc. & Northwell Health Systems, LLC" },
+  { field: "Effective Date", question: "What is the effective date of this agreement?", sample: "January 1, 2025" },
+  { field: "Term", question: "What is the contract term (duration)?", sample: "3 years with auto-renewal" },
+  { field: "Services Scope", question: "Describe the scope of services covered.", sample: "Inpatient, outpatient, and emergency medical services across all network facilities" },
+  { field: "Payment Terms", question: "What are the payment terms and rate structure?", sample: "Fee-for-service based on Medicare RBRVS with 110% multiplier" },
+  { field: "Key Clauses", question: "Any specific clauses you'd like included? (confidentiality, termination, HIPAA, etc.)", sample: "Confidentiality, Termination, HIPAA Compliance, Dispute Resolution, Indemnification" },
+];
+
+function GuidedModePanel() {
+  const [guidedStep, setGuidedStep] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [guidedMessages, setGuidedMessages] = useState<{ role: string; text: string }[]>([
+    { role: "assistant", text: "📋 **Guided Interview Mode**\n\nI'll walk you through a structured questionnaire to gather all required contract details. Click **Next Step** to begin." },
+  ]);
+  const [guidedInput, setGuidedInput] = useState("");
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [guidedMessages]);
+
+  const handleGuidedNext = () => {
+    if (guidedStep < guidedStepsData.length) {
+      const step = guidedStepsData[guidedStep];
+      setGuidedMessages(prev => [...prev, {
+        role: "assistant",
+        text: `**Step ${guidedStep + 1} of ${guidedStepsData.length}: ${step.field}**\n\n${step.question}\n\n*💡 Example: "${step.sample}"*`,
+      }]);
+      setGuidedStep(prev => prev + 1);
+    } else {
+      setGuidedMessages(prev => [...prev, {
+        role: "assistant",
+        text: "🎉 **All steps complete!** I have all the information needed.\n\n📝 Switch to **ContractCoPilot** mode and type **\"Draft full contract\"** to generate the full agreement based on your answers.",
+      }]);
+    }
+  };
+
+  const handleGuidedAnswer = () => {
+    if (!guidedInput.trim()) return;
+    const field = guidedStepsData[guidedStep - 1]?.field || "response";
+    setAnswers(prev => ({ ...prev, [field]: guidedInput }));
+    setGuidedMessages(prev => [...prev, { role: "user", text: guidedInput }]);
+    setGuidedInput("");
+    handleGuidedNext();
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="px-3 py-1.5 bg-accent/40 border-b flex items-center gap-2">
+        <span className="text-[10px] text-accent-foreground">
+          📋 Guided Interview — Step {Math.min(guidedStep + 1, guidedStepsData.length)} of {guidedStepsData.length}
+        </span>
+        <button onClick={handleGuidedNext} className="ml-auto text-[10px] px-2.5 py-0.5 bg-secondary text-secondary-foreground rounded font-medium">
+          {guidedStep >= guidedStepsData.length ? "✅ Complete" : `Next Step →`}
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
+        {guidedMessages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div className={`max-w-[85%] rounded-xl px-3.5 py-2.5 text-xs leading-relaxed whitespace-pre-line ${
+              m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+            }`}>{m.text}</div>
+          </div>
+        ))}
+        <div ref={bottomRef} />
+      </div>
+      <div className="p-2.5 border-t flex gap-2">
+        <input
+          className="flex-1 border rounded-lg px-3 py-2 text-xs bg-background"
+          placeholder="Type your answer…"
+          value={guidedInput}
+          onChange={(e) => setGuidedInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleGuidedAnswer()}
+        />
+        <button onClick={handleGuidedAnswer} className="bg-secondary text-secondary-foreground p-2 rounded-lg hover:opacity-90">
+          <Send className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Freeform Mode ─── */
+const freeformClauses = [
+  { id: "conf", name: "Confidentiality", body: "Both parties agree to maintain the confidentiality of all proprietary information exchanged during the term of this Agreement.", category: "Standard" },
+  { id: "liab", name: "Limitation of Liability", body: "Neither party shall be liable for any indirect, incidental, special, consequential, or punitive damages.", category: "Standard" },
+  { id: "pay", name: "Payment Terms", body: "Provider shall submit claims within thirty (30) days. Plan shall remit payment within forty-five (45) days of clean claim receipt.", category: "Financial" },
+  { id: "term", name: "Termination", body: "Either party may terminate without cause upon ninety (90) days' prior written notice.", category: "Standard" },
+  { id: "disp", name: "Dispute Resolution", body: "Any dispute shall first be submitted to mediation. If mediation fails, binding arbitration under AAA rules.", category: "Legal" },
+  { id: "hipaa", name: "HIPAA Compliance", body: "Provider agrees to comply with all applicable provisions of HIPAA, including Privacy Rule, Security Rule, and Breach Notification Rule.", category: "Compliance" },
+];
+
+function FreeformModePanel() {
+  const [freeMessages, setFreeMessages] = useState<{ role: string; text: string; suggestion?: { clause: string; body: string } }[]>([
+    { role: "assistant", text: "✍️ **Freeform Mode** — Type naturally and I'll suggest relevant clauses and improvements.\n\nTry asking for specific clauses like \"Add confidentiality\" or \"Draft payment terms\". I'll provide inline suggestions you can accept or modify." },
+  ]);
+  const [freeInput, setFreeInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [freeMessages]);
+
+  const handleFreeformSend = async () => {
+    if (!freeInput.trim() || loading) return;
+    const msg = freeInput;
+    setFreeMessages(prev => [...prev, { role: "user", text: msg }]);
+    setFreeInput("");
+    setLoading(true);
+    await new Promise(r => setTimeout(r, 600 + Math.random() * 400));
+
+    const lower = msg.toLowerCase();
+    const matched = freeformClauses.find(c => lower.includes(c.name.toLowerCase()));
+    if (matched) {
+      setFreeMessages(prev => [...prev, {
+        role: "assistant",
+        text: `📋 **Suggested: ${matched.name} Clause**\n\n> ${matched.body}\n\n💡 **Why this matters:** This is a standard ${matched.category.toLowerCase()} clause that protects both parties and ensures regulatory compliance.\n\nYou can copy this clause into your contract draft or ask me to refine it.`,
+        suggestion: { clause: matched.name, body: matched.body },
+      }]);
+    } else if (lower.includes("review") || lower.includes("improve")) {
+      setFreeMessages(prev => [...prev, {
+        role: "assistant",
+        text: "🔍 **Review Suggestions:**\n- ⚠️ Consider adding a Force Majeure clause\n- ⚠️ Payment terms could include late fee provisions\n- ✅ Standard termination language looks good\n- ⚠️ Add data breach notification timeline (72-hour)\n\nWould you like me to draft any of these?",
+      }]);
+    } else {
+      setFreeMessages(prev => [...prev, {
+        role: "assistant",
+        text: `I understand you'd like to work on: **"${msg}"**\n\n💡 **Tip:** You can ask me to:\n- "Add [clause name] clause"\n- "Review and improve current draft"\n- Or mention specific clause types (confidentiality, payment, termination, HIPAA, etc.)`,
+      }]);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="px-3 py-1.5 bg-accent/40 border-b">
+        <span className="text-[10px] text-accent-foreground">✍️ Freeform — Type naturally and get inline clause suggestions & improvements</span>
+      </div>
+      <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
+        {freeMessages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div className={`max-w-[85%] rounded-xl px-3.5 py-2.5 text-xs leading-relaxed whitespace-pre-line ${
+              m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+            }`}>{m.text}</div>
+          </div>
+        ))}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="bg-muted rounded-xl px-3.5 py-2.5 text-xs animate-pulse">Thinking...</div>
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+      <div className="p-2.5 border-t flex gap-2">
+        <input
+          className="flex-1 border rounded-lg px-3 py-2 text-xs bg-background"
+          placeholder="Type naturally… e.g. 'Add confidentiality clause'"
+          value={freeInput}
+          onChange={(e) => setFreeInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleFreeformSend()}
+        />
+        <button onClick={handleFreeformSend} className="bg-secondary text-secondary-foreground p-2 rounded-lg hover:opacity-90">
+          <Send className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main ContractCoPilot Tab ─── */
 function ContractCoPilotTab() {
+  const [mode, setMode] = useState<"copilot" | "freeform" | "guided">("copilot");
   const [messages, setMessages] = useState<CoPilotMessage[]>([]);
   const [input, setInput] = useState("");
   const [currentStep, setCurrentStep] = useState(0);
@@ -246,12 +501,18 @@ function ContractCoPilotTab() {
   const [editText, setEditText] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+  const [signaturePhase, setSignaturePhase] = useState<"none" | "awaiting" | "captured">("none");
+  const [confirmPhase, setConfirmPhase] = useState<"none" | "awaiting" | "confirmed">("none");
+  const [signatureMode, setSignatureMode] = useState<"draw" | "upload">("draw");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  // Start the conversation on mount
   useEffect(() => {
     if (messages.length === 0) {
       setMessages([{
@@ -310,21 +571,98 @@ function ContractCoPilotTab() {
       setMessages(prev => [...prev, confirmMsg, nextQ]);
       setCurrentStep(nextStep);
     } else {
-      const doneMsg: CoPilotMessage = {
-        id: `done-${Date.now()}`,
+      // All Q&A done — ask for signature
+      const sigMsg: CoPilotMessage = {
+        id: `sig-prompt-${Date.now()}`,
         role: "assistant",
-        text: "🎉 **All sections complete!** Your Provider Services Agreement has been fully drafted.\n\n📄 Switch to **Document View** to review, edit, and finalize the contract. You can click **Edit** on any section to modify the language.\n\n*The contract is ready for review and signature.*",
+        text: "🖊️ **All contract sections are drafted!**\n\nNow, please provide your **signature** to finalize the agreement. You can:\n- **Draw** your signature directly\n- **Upload** a signature image\n\nUse the signature panel below:",
         time: new Date().toISOString(),
+        isSignaturePrompt: true,
       };
-      setMessages(prev => [...prev, confirmMsg, doneMsg]);
-      setIsComplete(true);
+      setMessages(prev => [...prev, confirmMsg, sigMsg]);
+      setSignaturePhase("awaiting");
     }
     setLoading(false);
+  };
+
+  const handleSignatureCaptured = (dataUrl: string) => {
+    setSignatureDataUrl(dataUrl);
+    setSignaturePhase("captured");
+    const sigDoneMsg: CoPilotMessage = {
+      id: `sig-done-${Date.now()}`,
+      role: "assistant",
+      text: "✅ **Signature captured successfully!**\n\n📝 Your contract with **" + agentSteps.length + " sections** is ready.\n\n**Would you like me to generate the final contract document?**",
+      time: new Date().toISOString(),
+      isConfirmPrompt: true,
+    };
+    setMessages(prev => [...prev, sigDoneMsg]);
+    setConfirmPhase("awaiting");
+  };
+
+  const handleSignatureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result) {
+        handleSignatureCaptured(reader.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleConfirm = (confirmed: boolean) => {
+    if (confirmed) {
+      setConfirmPhase("confirmed");
+      setIsComplete(true);
+      setActiveView("document");
+      const finalMsg: CoPilotMessage = {
+        id: `final-${Date.now()}`,
+        role: "user",
+        text: "Yes, generate the contract!",
+        time: new Date().toISOString(),
+      };
+      const genMsg: CoPilotMessage = {
+        id: `gen-${Date.now()}`,
+        role: "assistant",
+        text: "🎉 **Contract generated!** Your Provider Services Agreement is now ready.\n\n📄 I've switched to **Document View** — you can review, edit any section, and finalize the contract.\n\n*All sections include your signature. The document is ready for review and execution.*",
+        time: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, finalMsg, genMsg]);
+    } else {
+      const noMsg: CoPilotMessage = {
+        id: `no-${Date.now()}`,
+        role: "user",
+        text: "Not yet, let me review first.",
+        time: new Date().toISOString(),
+      };
+      const reviewMsg: CoPilotMessage = {
+        id: `review-${Date.now()}`,
+        role: "assistant",
+        text: "No problem! You can switch to **Document View** to review your drafted sections. When you're ready, type **\"Generate contract\"** to finalize.",
+        time: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, noMsg, reviewMsg]);
+      setConfirmPhase("none");
+    }
   };
 
   const handleSend = (text?: string) => {
     const msg = text || input;
     if (!msg.trim() || loading) return;
+
+    // Check for late confirmation
+    if (confirmPhase === "none" && signaturePhase === "captured" && msg.toLowerCase().includes("generate")) {
+      handleConfirm(true);
+      setInput("");
+      return;
+    }
+
+    if (signaturePhase !== "none" && !isComplete) {
+      setInput("");
+      return;
+    }
+
     processAnswer(msg);
   };
 
@@ -334,9 +672,15 @@ function ContractCoPilotTab() {
     setEditText("");
   };
 
-  const pendingClauses = agentSteps.filter((_, i) => i >= currentStep + (isComplete ? 0 : 1)).map(s => s.clauseTitle);
+  const pendingClauses = agentSteps.filter((_, i) => i >= currentStep + (isComplete || signaturePhase !== "none" ? 0 : 1)).map(s => s.clauseTitle);
   const filledCount = clauses.length;
   const totalCount = agentSteps.length;
+
+  const chatModes = [
+    { id: "copilot" as const, label: "ContractCoPilot", icon: Bot, desc: "Interactive Q&A agent that drafts your contract" },
+    { id: "freeform" as const, label: "Freeform", icon: MessageSquare, desc: "Type naturally, get inline suggestions" },
+    { id: "guided" as const, label: "Guided", icon: Zap, desc: "Step-by-step interview (simulated)" },
+  ];
 
   const renderDocumentView = () => (
     <div className="p-4 overflow-y-auto flex-1">
@@ -404,7 +748,20 @@ function ContractCoPilotTab() {
           ))
         )}
 
-        {pendingClauses.length > 0 && (
+        {/* Signature on document */}
+        {signatureDataUrl && isComplete && (
+          <div className="mt-8 border-t pt-4">
+            <p className="font-bold text-[12px] text-foreground text-center mb-3 uppercase tracking-wide">AUTHORIZED SIGNATURE</p>
+            <div className="flex justify-center">
+              <img src={signatureDataUrl} alt="Signature" className="max-h-16 border-b border-foreground/20" />
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center mt-1">
+              Digitally signed on {new Date().toLocaleDateString()}
+            </p>
+          </div>
+        )}
+
+        {pendingClauses.length > 0 && !isComplete && (
           <div className="mt-6 border-t border-dashed pt-4" style={{ fontFamily: "'Inter', sans-serif" }}>
             <p className="text-[10px] text-muted-foreground font-semibold mb-2">⏳ Pending Sections:</p>
             {pendingClauses.map(name => (
@@ -415,7 +772,7 @@ function ContractCoPilotTab() {
 
         <div className="mt-8 pt-3 border-t border-muted flex items-center justify-between text-[9px] text-muted-foreground" style={{ fontFamily: "'Arial', sans-serif" }}>
           <span>OHCS-ProviderAgmt(v2025)</span>
-          <span>{isComplete ? "Complete" : "Draft"}</span>
+          <span>{isComplete ? "✅ Final" : "Draft"}</span>
           <span>Confidential and Proprietary</span>
         </div>
       </div>
@@ -424,164 +781,274 @@ function ContractCoPilotTab() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
-          <div className="bg-card border rounded-xl flex flex-col h-[650px]">
-            <div className="p-3 border-b flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bot className="w-4 h-4 text-secondary" />
-                <span className="font-semibold text-sm">ContractCoPilot — AI Contract Agent</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button onClick={() => setActiveView("chat")}
-                  className={`text-[10px] px-2.5 py-1 rounded font-medium transition-colors ${activeView === "chat" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
-                  💬 Chat
-                </button>
-                <button onClick={() => setActiveView("document")}
-                  className={`text-[10px] px-2.5 py-1 rounded font-medium transition-colors ${activeView === "document" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
-                  📄 Document
-                </button>
-              </div>
+      {/* Mode Selector */}
+      <div className="flex gap-2">
+        {chatModes.map(m => (
+          <button
+            key={m.id}
+            onClick={() => setMode(m.id)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all border ${
+              mode === m.id
+                ? "bg-secondary text-secondary-foreground border-secondary shadow-sm"
+                : "bg-card text-muted-foreground border-border hover:bg-muted hover:text-foreground"
+            }`}
+          >
+            <m.icon className="w-4 h-4" />
+            <div className="text-left">
+              <div className="font-semibold">{m.label}</div>
+              <div className="text-[9px] opacity-70">{m.desc}</div>
             </div>
+          </button>
+        ))}
+      </div>
 
-            <div className="px-3 py-2 bg-muted/30 border-b">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] text-muted-foreground font-medium">
-                  Contract Progress: {filledCount}/{totalCount} sections
-                </span>
-                <span className="text-[10px] font-semibold text-foreground">
-                  {Math.round((filledCount / totalCount) * 100)}%
-                </span>
-              </div>
-              <div className="w-full bg-muted rounded-full h-1.5">
-                <div className="bg-secondary h-1.5 rounded-full transition-all duration-500" style={{ width: `${(filledCount / totalCount) * 100}%` }} />
-              </div>
-            </div>
-
-            {activeView === "chat" ? (
-              <>
-                <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
-                  {messages.map((m) => (
-                    <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[85%] rounded-xl px-3.5 py-2.5 text-xs leading-relaxed ${
-                        m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-                      }`}>
-                        <div className="whitespace-pre-line">{m.text}</div>
-                        {m.options && m.role === "assistant" && !isComplete && currentStep === parseInt(m.id.replace("step-", "")) && (
-                          <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2 border-t border-border/30">
-                            {m.options.filter(o => !o.includes("Custom")).map(opt => (
-                              <button
-                                key={opt}
-                                onClick={() => handleSend(opt)}
-                                className="text-[10px] px-2.5 py-1 rounded-full bg-background text-foreground border hover:bg-accent hover:text-accent-foreground transition-colors"
-                              >
-                                {opt}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        {m.clauseAdded && (
-                          <div className="mt-2 pt-1.5 border-t border-border/30 flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                            <span className="text-[10px] font-medium text-emerald-600">Added: {m.clauseAdded}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  {loading && (
-                    <div className="flex justify-start">
-                      <div className="bg-muted rounded-xl px-3.5 py-2.5 text-xs animate-pulse">
-                        <Bot className="w-3 h-3 inline mr-1.5" />Drafting clause...
-                      </div>
-                    </div>
-                  )}
-                  <div ref={bottomRef} />
+      {mode === "guided" ? (
+        <div className="bg-card border rounded-xl flex flex-col h-[600px]">
+          <GuidedModePanel />
+        </div>
+      ) : mode === "freeform" ? (
+        <div className="bg-card border rounded-xl flex flex-col h-[600px]">
+          <FreeformModePanel />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <div className="bg-card border rounded-xl flex flex-col h-[650px]">
+              <div className="p-3 border-b flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Bot className="w-4 h-4 text-secondary" />
+                  <span className="font-semibold text-sm">ContractCoPilot — AI Contract Agent</span>
                 </div>
-
-                <div className="p-2.5 border-t flex gap-2">
-                  <input
-                    className="flex-1 border rounded-lg px-3 py-2 text-xs bg-background"
-                    placeholder={isComplete ? "Contract complete! Switch to Document View to review." : "Type your answer or pick an option above…"}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                    disabled={isComplete || loading}
-                  />
-                  <button onClick={() => handleSend()} disabled={isComplete || loading}
-                    className="bg-secondary text-secondary-foreground p-2 rounded-lg hover:opacity-90 disabled:opacity-50">
-                    <Send className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => setActiveView("chat")}
+                    className={`text-[10px] px-2.5 py-1 rounded font-medium transition-colors ${activeView === "chat" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+                    💬 Chat
+                  </button>
+                  <button onClick={() => setActiveView("document")}
+                    className={`text-[10px] px-2.5 py-1 rounded font-medium transition-colors ${activeView === "document" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+                    📄 Document {isComplete && "✅"}
                   </button>
                 </div>
-              </>
-            ) : (
-              renderDocumentView()
+              </div>
+
+              <div className="px-3 py-2 bg-muted/30 border-b">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] text-muted-foreground font-medium">
+                    Contract Progress: {filledCount}/{totalCount} sections {signaturePhase === "captured" ? "• ✍️ Signed" : ""}
+                  </span>
+                  <span className="text-[10px] font-semibold text-foreground">
+                    {isComplete ? "100%" : `${Math.round((filledCount / totalCount) * 100)}%`}
+                  </span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-1.5">
+                  <div className="bg-secondary h-1.5 rounded-full transition-all duration-500" style={{ width: isComplete ? "100%" : `${(filledCount / totalCount) * 100}%` }} />
+                </div>
+              </div>
+
+              {activeView === "chat" ? (
+                <>
+                  <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
+                    {messages.map((m) => (
+                      <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                        <div className={`max-w-[85%] rounded-xl px-3.5 py-2.5 text-xs leading-relaxed ${
+                          m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                        }`}>
+                          <div className="whitespace-pre-line">{m.text}</div>
+                          {/* Option buttons */}
+                          {m.options && m.role === "assistant" && signaturePhase === "none" && currentStep === parseInt(m.id.replace("step-", "")) && (
+                            <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2 border-t border-border/30">
+                              {m.options.filter(o => !o.includes("Custom")).map(opt => (
+                                <button
+                                  key={opt}
+                                  onClick={() => handleSend(opt)}
+                                  className="text-[10px] px-2.5 py-1 rounded-full bg-background text-foreground border hover:bg-accent hover:text-accent-foreground transition-colors"
+                                >
+                                  {opt}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {m.clauseAdded && (
+                            <div className="mt-2 pt-1.5 border-t border-border/30 flex items-center gap-1.5">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                              <span className="text-[10px] font-medium text-emerald-600">Added: {m.clauseAdded}</span>
+                            </div>
+                          )}
+                          {/* Signature panel inline */}
+                          {m.isSignaturePrompt && signaturePhase === "awaiting" && (
+                            <div className="mt-3 pt-2 border-t border-border/30 space-y-2">
+                              <div className="flex gap-1.5">
+                                <button onClick={() => setSignatureMode("draw")}
+                                  className={`text-[10px] px-2.5 py-1 rounded-lg flex items-center gap-1 ${signatureMode === "draw" ? "bg-secondary text-secondary-foreground" : "bg-background text-foreground border"}`}>
+                                  <Pen className="w-3 h-3" /> Draw
+                                </button>
+                                <button onClick={() => setSignatureMode("upload")}
+                                  className={`text-[10px] px-2.5 py-1 rounded-lg flex items-center gap-1 ${signatureMode === "upload" ? "bg-secondary text-secondary-foreground" : "bg-background text-foreground border"}`}>
+                                  <ImagePlus className="w-3 h-3" /> Upload
+                                </button>
+                              </div>
+                              {signatureMode === "draw" ? (
+                                <SignaturePad onSave={handleSignatureCaptured} />
+                              ) : (
+                                <div className="space-y-2">
+                                  <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleSignatureUpload}
+                                    className="hidden"
+                                  />
+                                  <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="w-full border-2 border-dashed border-muted-foreground/30 rounded-lg py-6 text-center hover:bg-muted/30 transition-colors"
+                                  >
+                                    <ImagePlus className="w-6 h-6 mx-auto text-muted-foreground mb-1.5" />
+                                    <span className="text-[10px] text-muted-foreground">Click to upload signature image</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {/* Confirm prompt buttons */}
+                          {m.isConfirmPrompt && confirmPhase === "awaiting" && (
+                            <div className="mt-3 pt-2 border-t border-border/30 flex gap-2">
+                              <button onClick={() => handleConfirm(true)}
+                                className="text-[10px] px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg font-medium hover:opacity-90 flex items-center gap-1">
+                                <Check className="w-3 h-3" /> Yes, generate contract
+                              </button>
+                              <button onClick={() => handleConfirm(false)}
+                                className="text-[10px] px-3 py-1.5 bg-background text-foreground border rounded-lg font-medium hover:bg-muted">
+                                Let me review first
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {loading && (
+                      <div className="flex justify-start">
+                        <div className="bg-muted rounded-xl px-3.5 py-2.5 text-xs animate-pulse">
+                          <Bot className="w-3 h-3 inline mr-1.5" />Drafting clause...
+                        </div>
+                      </div>
+                    )}
+                    <div ref={bottomRef} />
+                  </div>
+
+                  <div className="p-2.5 border-t flex gap-2">
+                    <input
+                      className="flex-1 border rounded-lg px-3 py-2 text-xs bg-background"
+                      placeholder={isComplete ? "Contract generated! View in Document tab." : signaturePhase === "awaiting" ? "Please provide your signature above…" : "Type your answer or pick an option above…"}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                      disabled={isComplete || signaturePhase === "awaiting" || loading}
+                    />
+                    <button onClick={() => handleSend()} disabled={isComplete || signaturePhase === "awaiting" || loading}
+                      className="bg-secondary text-secondary-foreground p-2 rounded-lg hover:opacity-90 disabled:opacity-50">
+                      <Send className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                renderDocumentView()
+              )}
+            </div>
+          </div>
+
+          {/* Right sidebar */}
+          <div className="space-y-4">
+            <div className="bg-card border rounded-xl p-4">
+              <h3 className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5">
+                <ClipboardList className="w-3.5 h-3.5 text-secondary" /> Contract Sections
+              </h3>
+              <div className="space-y-1.5">
+                {agentSteps.map((step, i) => {
+                  const filled = clauses.find(c => c.id === `clause-${step.id}`);
+                  const isCurrent = i === currentStep && signaturePhase === "none" && !isComplete;
+                  return (
+                    <div key={step.id} className={`flex items-center gap-2 text-[11px] px-2 py-1.5 rounded-lg transition-colors ${
+                      isCurrent ? "bg-secondary/10 border border-secondary/30" :
+                      filled ? "bg-emerald-50" : ""
+                    }`}>
+                      {filled ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                      ) : isCurrent ? (
+                        <Bot className="w-3.5 h-3.5 text-secondary flex-shrink-0 animate-pulse" />
+                      ) : (
+                        <div className="w-3.5 h-3.5 rounded-full border border-muted-foreground/30 flex-shrink-0" />
+                      )}
+                      <span className={`${filled ? "text-foreground" : isCurrent ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                        {step.sectionNumber} {step.clauseTitle}
+                      </span>
+                      {filled?.status === "edited" && (
+                        <span className="text-[8px] px-1 py-0.5 bg-amber-100 text-amber-700 rounded ml-auto">edited</span>
+                      )}
+                    </div>
+                  );
+                })}
+                {/* Signature status in checklist */}
+                <div className={`flex items-center gap-2 text-[11px] px-2 py-1.5 rounded-lg transition-colors ${
+                  signaturePhase === "captured" ? "bg-emerald-50" :
+                  signaturePhase === "awaiting" ? "bg-secondary/10 border border-secondary/30" : ""
+                }`}>
+                  {signaturePhase === "captured" ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                  ) : signaturePhase === "awaiting" ? (
+                    <Pen className="w-3.5 h-3.5 text-secondary flex-shrink-0 animate-pulse" />
+                  ) : (
+                    <div className="w-3.5 h-3.5 rounded-full border border-muted-foreground/30 flex-shrink-0" />
+                  )}
+                  <span className={signaturePhase !== "none" ? "text-foreground font-medium" : "text-muted-foreground"}>
+                    ✍️ Signature
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card border rounded-xl p-4">
+              <h3 className="text-xs font-semibold text-foreground mb-3">Draft Summary</h3>
+              <div className="space-y-2 text-[11px]">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Sections Drafted</span>
+                  <span className="font-semibold text-foreground">{filledCount}/{totalCount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Edited by User</span>
+                  <span className="font-semibold text-foreground">{clauses.filter(c => c.status === "edited").length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Signature</span>
+                  <span className={`font-semibold ${signaturePhase === "captured" ? "text-emerald-600" : "text-muted-foreground"}`}>
+                    {signaturePhase === "captured" ? "✅ Captured" : signaturePhase === "awaiting" ? "⏳ Pending" : "—"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Status</span>
+                  <span className={`font-semibold ${isComplete ? "text-emerald-600" : "text-amber-600"}`}>
+                    {isComplete ? "✅ Generated" : "🔄 In Progress"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Signature preview */}
+            {signatureDataUrl && (
+              <div className="bg-card border rounded-xl p-4">
+                <h3 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                  <Pen className="w-3.5 h-3.5 text-secondary" /> Your Signature
+                </h3>
+                <div className="border rounded-lg p-2 bg-background">
+                  <img src={signatureDataUrl} alt="Your signature" className="max-h-12 mx-auto" />
+                </div>
+              </div>
             )}
           </div>
         </div>
-
-        <div className="space-y-4">
-          <div className="bg-card border rounded-xl p-4">
-            <h3 className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5">
-              <ClipboardList className="w-3.5 h-3.5 text-secondary" /> Contract Sections
-            </h3>
-            <div className="space-y-1.5">
-              {agentSteps.map((step, i) => {
-                const filled = clauses.find(c => c.id === `clause-${step.id}`);
-                const isCurrent = i === currentStep && !isComplete;
-                return (
-                  <div key={step.id} className={`flex items-center gap-2 text-[11px] px-2 py-1.5 rounded-lg transition-colors ${
-                    isCurrent ? "bg-secondary/10 border border-secondary/30" :
-                    filled ? "bg-emerald-50" : ""
-                  }`}>
-                    {filled ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                    ) : isCurrent ? (
-                      <Bot className="w-3.5 h-3.5 text-secondary flex-shrink-0 animate-pulse" />
-                    ) : (
-                      <div className="w-3.5 h-3.5 rounded-full border border-muted-foreground/30 flex-shrink-0" />
-                    )}
-                    <span className={`${filled ? "text-foreground" : isCurrent ? "text-foreground font-medium" : "text-muted-foreground"}`}>
-                      {step.sectionNumber} {step.clauseTitle}
-                    </span>
-                    {filled?.status === "edited" && (
-                      <span className="text-[8px] px-1 py-0.5 bg-amber-100 text-amber-700 rounded ml-auto">edited</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="bg-card border rounded-xl p-4">
-            <h3 className="text-xs font-semibold text-foreground mb-3">Draft Summary</h3>
-            <div className="space-y-2 text-[11px]">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Sections Drafted</span>
-                <span className="font-semibold text-foreground">{filledCount}/{totalCount}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Edited by User</span>
-                <span className="font-semibold text-foreground">{clauses.filter(c => c.status === "edited").length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Pending</span>
-                <span className="font-semibold text-foreground">{totalCount - filledCount}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Status</span>
-                <span className={`font-semibold ${isComplete ? "text-emerald-600" : "text-amber-600"}`}>
-                  {isComplete ? "✅ Complete" : "🔄 In Progress"}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
-
 function UploadContractTab() {
   const [uploadMode, setUploadMode] = useState<"single" | "bulk">("single");
 
