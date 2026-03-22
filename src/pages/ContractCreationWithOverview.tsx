@@ -259,10 +259,22 @@ interface SavedContract {
   parties: string;
 }
 
+const seedContracts: SavedContract[] = [
+  { id: "seed-1", name: "Northwell Health – Provider Agreement", family: "Provider Agreements", type: "Provider Services", clauses: [], signatureDataUrl: null, createdAt: "2025-11-14T10:30:00Z", status: "final", parties: "Optum Health Plan & Northwell Health" },
+  { id: "seed-2", name: "Mercy Health – Delegate Agreement", family: "Delegate Agreements", type: "Delegate", clauses: [], signatureDataUrl: null, createdAt: "2025-12-02T14:15:00Z", status: "final", parties: "UnitedHealthcare & Mercy Health System" },
+  { id: "seed-3", name: "Cleveland Clinic – Ancillary Services", family: "Provider Agreements", type: "Ancillary", clauses: [], signatureDataUrl: null, createdAt: "2026-01-08T09:00:00Z", status: "draft", parties: "Optum Health Plan & Cleveland Clinic" },
+  { id: "seed-4", name: "Kaiser Permanente – Behavioral Health", family: "Behavioral Health", type: "Specialty", clauses: [], signatureDataUrl: null, createdAt: "2026-02-18T11:45:00Z", status: "final", parties: "UnitedHealthcare & Kaiser Permanente" },
+  { id: "seed-5", name: "Mount Sinai – Renewal Amendment", family: "Provider Agreements", type: "Amendment", clauses: [], signatureDataUrl: null, createdAt: "2026-03-05T16:20:00Z", status: "draft", parties: "Optum Health Plan & Mount Sinai Health" },
+];
+
 function getSavedContracts(): SavedContract[] {
   try {
-    return JSON.parse(localStorage.getItem("oci_generated_contracts") || "[]");
-  } catch { return []; }
+    const stored = JSON.parse(localStorage.getItem("oci_generated_contracts") || "[]");
+    // Merge seed contracts (only add seeds not already present)
+    const ids = new Set(stored.map((c: SavedContract) => c.id));
+    const merged = [...stored, ...seedContracts.filter(s => !ids.has(s.id))];
+    return merged;
+  } catch { return [...seedContracts]; }
 }
 
 function saveContractToStorage(contract: SavedContract) {
