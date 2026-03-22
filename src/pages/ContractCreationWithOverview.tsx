@@ -971,7 +971,7 @@ function ContractCoPilotTab() {
       const sigMsg: CoPilotMessage = {
         id: `sig-prompt-${Date.now()}`,
         role: "assistant",
-        text: "🖊️ **All contract sections are drafted!**\n\nNow, please provide your **signature** to finalize the agreement. You can:\n- **Draw** your signature directly\n- **Upload** a signature image\n\nUse the signature panel below:",
+        text: "🖊️ **All contract sections are drafted!**\n\nNow, please provide your **signature** to finalize the agreement. You can:\n- **Draw** your signature directly\n- **Upload** a signature image\n- **Sign Later** — skip signature for now and generate the contract as a draft\n\nUse the signature panel below:",
         time: new Date().toISOString(),
         isSignaturePrompt: true,
       };
@@ -992,6 +992,20 @@ function ContractCoPilotTab() {
       isConfirmPrompt: true,
     };
     setMessages(prev => [...prev, sigDoneMsg]);
+    setConfirmPhase("awaiting");
+  };
+
+  const handleSignLater = () => {
+    setSignaturePhase("captured");
+    setSignatureDataUrl(null);
+    const sigLaterMsg: CoPilotMessage = {
+      id: `sig-later-${Date.now()}`,
+      role: "assistant",
+      text: "⏭️ **Signature skipped for now.** You can add your signature later.\n\n📝 Your contract with **" + agentSteps.length + " sections** is ready as a draft.\n\n**Would you like me to generate the contract document?**",
+      time: new Date().toISOString(),
+      isConfirmPrompt: true,
+    };
+    setMessages(prev => [...prev, sigLaterMsg]);
     setConfirmPhase("awaiting");
   };
 
@@ -1305,6 +1319,10 @@ function ContractCoPilotTab() {
                                 <button onClick={() => setSignatureMode("upload")}
                                   className={`text-[10px] px-2.5 py-1 rounded-lg flex items-center gap-1 ${signatureMode === "upload" ? "bg-secondary text-secondary-foreground" : "bg-background text-foreground border"}`}>
                                   <ImagePlus className="w-3 h-3" /> Upload
+                                </button>
+                                <button onClick={handleSignLater}
+                                  className="text-[10px] px-2.5 py-1 rounded-lg flex items-center gap-1 bg-background text-muted-foreground border hover:bg-muted ml-auto">
+                                  <Clock className="w-3 h-3" /> Sign Later
                                 </button>
                               </div>
                               {signatureMode === "draw" ? (
