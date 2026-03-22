@@ -481,7 +481,7 @@ export default function ContractViewerPage() {
                   { label: "Parties", value: "Health Plan / Provider" },
                   { label: "Effective Date", value: "Jan 1, 2025" },
                   { label: "Termination Date", value: "Dec 31, 2027" },
-                  { label: "Jurisdiction", value: result?.family.jurisdiction || "NY" },
+                  { label: "Jurisdiction", value: (result?.family as any)?.jurisdiction || result?.family.region || "NY" },
                   { label: "Status", value: result?.doc.status || "Active" },
                 ].map(m => (
                   <div key={m.label} className="flex justify-between">
