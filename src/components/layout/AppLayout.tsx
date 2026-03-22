@@ -243,16 +243,17 @@ export function AppLayout({ children, onLogout }: Props) {
         {/* Sidebar collapse toggle - floats on the border between sidebar and main */}
         <button
           onClick={() => {
-            const cur = localStorage.getItem("oci_sidebar_collapsed") === "true";
-            localStorage.setItem("oci_sidebar_collapsed", String(!cur));
+            const next = !sidebarCollapsed;
+            localStorage.setItem("oci_sidebar_collapsed", String(next));
+            setSidebarCollapsed(next);
             window.dispatchEvent(new StorageEvent("storage", { key: "oci_sidebar_collapsed" }));
           }}
-          className="absolute top-3 left-0 z-30 -translate-x-1/2 w-6 h-6 rounded-full border bg-card shadow-md flex items-center justify-center hover:bg-muted transition-colors"
-          title="Toggle sidebar"
+          className="absolute top-3 left-0 z-30 -translate-x-1/2 w-7 h-7 rounded-full border-2 border-border bg-card shadow-lg flex items-center justify-center hover:bg-accent transition-colors"
+          title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {localStorage.getItem("oci_sidebar_collapsed") === "true"
-            ? <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
-            : <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground" />}
+          {sidebarCollapsed
+            ? <ChevronRight className="w-4 h-4 text-foreground" />
+            : <ChevronLeft className="w-4 h-4 text-foreground" />}
         </button>
         <header className="h-12 flex items-center justify-between px-4 border-b bg-card gap-3">
           {/* Left: spacer */}
