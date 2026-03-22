@@ -623,8 +623,103 @@ function ContractCoPilotTab() {
   const [signaturePhase, setSignaturePhase] = useState<"none" | "awaiting" | "captured">("none");
   const [confirmPhase, setConfirmPhase] = useState<"none" | "awaiting" | "confirmed">("none");
   const [signatureMode, setSignatureMode] = useState<"draw" | "upload">("draw");
+  const [contractId] = useState(() => `contract-${Date.now()}`);
+  const [isSaved, setIsSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const documentRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const getContractName = () => {
+    const partiesClause = clauses.find(c => c.id === "clause-parties");
+    if (partiesClause?.filledFrom) return partiesClause.filledFrom.split("&")[0]?.trim() + " – PSA";
+    return "Provider Services Agreement";
+  };
+
+  const getContractFamily = () => {
+    const typeClause = clauses.find(c => c.id === "clause-contractType");
+    return typeClause?.filledFrom || "Provider Services";
+  };
+
+  const getParties = () => {
+    const partiesClause = clauses.find(c => c.id === "clause-parties");
+    return partiesClause?.filledFrom || "";
+  };
+
+  const handleSaveContract = () => {
+    const contract: SavedContract = {
+      id: contractId,
+      name: getContractName(),
+      family: getContractFamily(),
+      type: clauses.find(c => c.id === "clause-contractType")?.filledFrom || "PSA",
+      clauses,
+      signatureDataUrl,
+      createdAt: new Date().toISOString(),
+      status: isComplete ? "final" : "draft",
+      parties: getParties(),
+    };
+    saveContractToStorage(contract);
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
+  };
+
+  const handleDownloadPDF = () => {
+    if (!documentRef.current) return;
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <html><head><title>${getContractName()}</title>
+      <style>
+        body { font-family: 'Times New Roman', Georgia, serif; margin: 40px; color: #1a1a1a; }
+        h1, h2, p { margin: 0 0 8px 0; }
+        .section-title { text-align: center; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-top: 20px; }
+        .clause-body { text-align: justify; line-height: 1.7; font-size: 12px; white-space: pre-line; margin-bottom: 16px; }
+        .signature-img { max-height: 60px; border-bottom: 1px solid #ccc; }
+        .footer { border-top: 1px solid #ddd; padding-top: 8px; font-size: 9px; color: #888; display: flex; justify-content: space-between; margin-top: 40px; font-family: Arial, sans-serif; }
+        hr { border: none; border-top: 1px solid #ddd; margin: 16px 0; }
+        @media print { body { margin: 20px; } }
+      </style></head><body>
+      <h1 style="text-align:center;font-size:14px;letter-spacing:2px;">OPTUMHEALTH CARE SOLUTIONS, LLC</h1>
+      <h2 style="text-align:center;font-size:12px;letter-spacing:1px;">PROVIDER SERVICES AGREEMENT</h2>
+      <p style="font-size:11px;text-align:justify;line-height:1.7;margin-bottom:16px;">THIS AGREEMENT ("Agreement") is entered into by and between the parties identified herein, setting forth the terms and conditions under which Provider shall participate in networks developed and maintained by Plan.</p>
+      <hr/>
+      ${clauses.map(c => `
+        <div class="section-title" style="font-size:13px;">SECTION ${c.sectionNumber}</div>
+        <div class="section-title" style="font-size:12px;margin-bottom:8px;">${c.title}</div>
+        <div class="clause-body">${c.body}</div>
+      `).join("")}
+      ${signatureDataUrl && isComplete ? `
+        <div style="margin-top:30px;border-top:1px solid #ddd;padding-top:16px;text-align:center;">
+          <p style="font-weight:bold;font-size:12px;text-transform:uppercase;letter-spacing:1px;">AUTHORIZED SIGNATURE</p>
+          <img src="${signatureDataUrl}" class="signature-img" style="display:block;margin:8px auto;" />
+          <p style="font-size:10px;color:#888;">Digitally signed on ${new Date().toLocaleDateString()}</p>
+        </div>
+      ` : ""}
+      <div class="footer">
+        <span>OHCS-ProviderAgmt(v2025)</span>
+        <span>${isComplete ? "Final" : "Draft"}</span>
+        <span>Confidential and Proprietary</span>
+      </div>
+      </body></html>
+    `);
+    printWindow.document.close();
+    setTimeout(() => { printWindow.print(); }, 500);
+  };
+
+  const handleCopyText = () => {
+    const text = clauses.map(c => `SECTION ${c.sectionNumber} – ${c.title}\n\n${c.body}`).join("\n\n---\n\n");
+    navigator.clipboard.writeText(text);
+  };
+
+  const handleLoadContract = (saved: SavedContract) => {
+    setClauses(saved.clauses);
+    setSignatureDataUrl(saved.signatureDataUrl);
+    setIsComplete(saved.status === "final");
+    setSignaturePhase(saved.signatureDataUrl ? "captured" : "none");
+    setConfirmPhase(saved.status === "final" ? "confirmed" : "none");
+    setCurrentStep(saved.clauses.length);
+    setActiveView("document");
+    setMode("copilot");
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
