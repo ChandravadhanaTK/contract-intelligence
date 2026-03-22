@@ -1746,7 +1746,7 @@ export default function ContractCreationWithOverview() {
           <UploadContractTab />
         </TabsContent>
         <TabsContent value="intake">
-          <ContractCreation embedded initialTab="intake" />
+          <DelegationPipelineTabs />
         </TabsContent>
         <TabsContent value="coauthor">
           <ContractCoPilotTab />
