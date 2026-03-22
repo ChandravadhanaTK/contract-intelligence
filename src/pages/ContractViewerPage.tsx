@@ -121,6 +121,27 @@ export default function ContractViewerPage() {
   const result = id ? getDocById(id) : null;
   const docName = result?.doc.name || "Contract Document";
   const familyName = result?.family.name || "";
+  const docStatus = result?.doc.status || "Active";
+  const isEditable = docStatus !== "Active";
+
+  const startSectionEdit = (sectionId: string, content: string) => {
+    setEditingSectionId(sectionId);
+    setEditContent(sectionEdits[sectionId] ?? content);
+  };
+
+  const saveSectionEdit = () => {
+    if (!editingSectionId) return;
+    setSectionEdits(prev => ({ ...prev, [editingSectionId]: editContent }));
+    setEditingSectionId(null);
+    setEditContent("");
+    toast.success("Section updated successfully");
+  };
+
+  const cancelSectionEdit = () => {
+    setEditingSectionId(null);
+    setEditContent("");
+  };
+  const familyName = result?.family.name || "";
 
   // Filtered clauses
   const filteredClauses = useMemo(() => {
