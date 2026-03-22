@@ -5,7 +5,7 @@ import {
   FileText, Layers, BookOpen, ArrowRight, ArrowLeft, Bot, Send, ChevronDown, ChevronRight,
   Edit3, MessageSquare, Plus, Upload, Download, RotateCcw, Save, Check, X,
   CheckCircle2, AlertCircle, XCircle, Info, Sparkles, ToggleLeft, ToggleRight,
-  Eye, Copy, Trash2, Search, FolderOpen,
+  Eye, Copy, Trash2, Search, FolderOpen, ArrowUp, ArrowDown,
 } from "lucide-react";
 import { toast } from "sonner";
 
