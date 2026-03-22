@@ -2,8 +2,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { BackToPipelineBanner } from "@/components/BackToPipelineBanner";
 import { useNavigate } from "react-router-dom";
 import {
-  FileText, Layers, BookOpen, ArrowRight, Bot, Send, ChevronDown, ChevronRight,
-  Edit3, MessageSquare, Highlighter, Plus, Upload, Download, RotateCcw, Save,
+  FileText, Layers, BookOpen, ArrowRight, ArrowLeft, Bot, Send, ChevronDown, ChevronRight,
+  Edit3, MessageSquare, Plus, Upload, Download, RotateCcw, Save, Check, X,
   CheckCircle2, AlertCircle, XCircle, Info, Sparkles, ToggleLeft, ToggleRight,
   Eye, Copy, Trash2, Search, FolderOpen,
 } from "lucide-react";
