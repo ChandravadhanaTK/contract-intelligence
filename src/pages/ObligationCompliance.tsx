@@ -100,6 +100,7 @@ function generateReport(obligations: TrackerObligation[], format: "json" | "csv"
 }
 
 export default function ObligationCompliance() {
+  const navigate = useNavigate();
   const [obligations, setObligations] = useState<TrackerObligation[]>([]);
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
