@@ -28,6 +28,7 @@ interface ExtractedClause {
   confidence: "High" | "Medium" | "Low";
   alignment: "aligned" | "nonAligned" | "missing";
   summary: string;
+  complianceScore: number;
 }
 
 const extractedClauses: ExtractedClause[] = [
