@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   FileText, Search, Upload, ScanLine, Eye, RefreshCw, MoreHorizontal,
   CheckCircle2, Clock, AlertTriangle, XCircle, Loader2, X, ChevronLeft,
+  Pencil, Download, Printer,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
 import type { DigitizationDocument } from "@/data/seed";
