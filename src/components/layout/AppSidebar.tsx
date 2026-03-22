@@ -70,7 +70,7 @@ export function AppSidebar() {
                     if (collapsed) {
                       navigate(item.path);
                     } else {
-                      setContractsOpen(!contractsOpen);
+                      navigate(item.path);
                     }
                   }}
                   className={`sidebar-nav-item w-full justify-between ${
@@ -82,13 +82,6 @@ export function AppSidebar() {
                     <item.icon className="w-4 h-4 flex-shrink-0" />
                     {!collapsed && <span className="truncate">{item.label}</span>}
                   </span>
-                  {!collapsed && (
-                    <ChevronDown
-                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                        contractsOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  )}
                 </button>
                 {!collapsed && contractsOpen && (
                   <div className="ml-6 mt-1 space-y-0.5 border-l border-sidebar-border pl-3">
