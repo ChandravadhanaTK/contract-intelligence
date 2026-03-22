@@ -6,13 +6,22 @@ import {
   AlertTriangle, CheckCircle, Info, Pencil, Save,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
-import { seedContractFamilies } from "@/data/seed";
+import { seedContractFamilies, seedDigitizationDocs } from "@/data/seed";
 import { toast } from "sonner";
 
 function getDocById(id: string) {
+  // Check contract families first
   for (const fam of seedContractFamilies) {
     const doc = fam.documents.find(d => d.id === id);
     if (doc) return { doc, family: fam };
+  }
+  // Fallback: check digitization docs
+  const digDoc = seedDigitizationDocs.find(d => d.id === id);
+  if (digDoc) {
+    return {
+      doc: { id: digDoc.id, name: digDoc.name, type: digDoc.type as any, status: digDoc.status === "Completed" ? "Active" as const : "Under Review" as const, effectiveDate: "2024-01-01", expirationDate: "2027-01-01" },
+      family: { id: `dig-fam-${digDoc.id}`, name: digDoc.payer, payer: digDoc.payer, region: "National", documents: [] },
+    };
   }
   return null;
 }
@@ -472,7 +481,7 @@ export default function ContractViewerPage() {
                   { label: "Parties", value: "Health Plan / Provider" },
                   { label: "Effective Date", value: "Jan 1, 2025" },
                   { label: "Termination Date", value: "Dec 31, 2027" },
-                  { label: "Jurisdiction", value: result?.family.jurisdiction || "NY" },
+                  { label: "Jurisdiction", value: (result?.family as any)?.jurisdiction || (result?.family as any)?.region || "NY" },
                   { label: "Status", value: result?.doc.status || "Active" },
                 ].map(m => (
                   <div key={m.label} className="flex justify-between">
