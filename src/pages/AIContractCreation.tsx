@@ -275,6 +275,28 @@ export default function AIContractCreation() {
     setTimeout(() => scrollToSection(newId), 100);
   };
 
+  const handleDeleteSection = (id: string) => {
+    setSections(prev => {
+      const filtered = prev.filter(s => s.id !== id);
+      return filtered.map((s, i) => ({ ...s, headingNumber: `§${i + 1}` }));
+    });
+    if (selectedSection === id) setSelectedSection(null);
+    if (editingSection === id) setEditingSection(null);
+    toast.success("Clause deleted");
+  };
+
+  const handleMoveSection = (id: string, direction: "up" | "down") => {
+    setSections(prev => {
+      const idx = prev.findIndex(s => s.id === id);
+      if (idx < 0) return prev;
+      const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+      if (targetIdx < 0 || targetIdx >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[targetIdx]] = [next[targetIdx], next[idx]];
+      return next.map((s, i) => ({ ...s, headingNumber: `§${i + 1}` }));
+    });
+  };
+
   const completionPercent = sections.length > 0
     ? Math.round((sections.filter(s => s.status === "drafted" || s.status === "updated").length / sections.length) * 100)
     : 0;
