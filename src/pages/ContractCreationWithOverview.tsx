@@ -67,419 +67,6 @@ function ComplianceDeviationGraph() {
   );
 }
 
-/* ─── ContractPilot – AI Contract Coauthor Tab ─── */
-const contractPilotClauses = [
-  { id: "conf", name: "Confidentiality", body: "Both parties agree to maintain the confidentiality of all proprietary information exchanged during the term of this Agreement. Confidential Information shall not be disclosed to any third party without prior written consent.", category: "Standard" },
-  { id: "liab", name: "Limitation of Liability", body: "Neither party shall be liable for any indirect, incidental, special, consequential, or punitive damages, regardless of the cause of action or the theory of liability.", category: "Standard" },
-  { id: "pay", name: "Payment Terms", body: "Provider shall submit claims within thirty (30) days of service delivery. Plan shall remit payment within forty-five (45) days of clean claim receipt, subject to the fee schedule in Exhibit A.", category: "Financial" },
-  { id: "term", name: "Termination", body: "Either party may terminate this Agreement without cause upon ninety (90) days' prior written notice. Termination for cause may be immediate upon material breach that remains uncured after thirty (30) days' written notice.", category: "Standard" },
-  { id: "disp", name: "Dispute Resolution", body: "Any dispute arising under this Agreement shall first be submitted to mediation. If mediation fails within sixty (60) days, the dispute shall be resolved by binding arbitration under the rules of the American Arbitration Association.", category: "Legal" },
-  { id: "hipaa", name: "HIPAA Compliance", body: "Provider agrees to comply with all applicable provisions of the Health Insurance Portability and Accountability Act (HIPAA), including the Privacy Rule, Security Rule, and Breach Notification Rule.", category: "Compliance" },
-];
-
-const pilotQuickPrompts = [
-  "Draft full Provider Services Agreement",
-  "Add Payment & Rate section",
-  "Add Termination clause",
-  "Add HIPAA Compliance clause",
-  "Insert Exhibit A – Fee Schedule",
-  "Review and improve current draft",
-  "Highlight missing clauses",
-];
-
-interface PilotMessage {
-  id: string;
-  role: "user" | "assistant";
-  text: string;
-  time: string;
-  suggestion?: { clause: string; body: string; reason: string };
-}
-
-interface DraftClause {
-  id: string;
-  name: string;
-  body: string;
-  version: number;
-  status: "draft" | "accepted" | "rejected";
-  history: { version: number; body: string; timestamp: string }[];
-}
-
-function ContractPilotTab() {
-  const [mode, setMode] = useState<"pilot" | "guided" | "freeform">("freeform");
-  const [messages, setMessages] = useState<PilotMessage[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      text: "👋 Welcome to **ContractPilot** — your AI Contract Coauthor!\n\nI work like GitHub Copilot, but for contracts. I can:\n• **Suggest clauses** like autocomplete snippets\n• **Explain why** each clause matters\n• **Help you draft** in guided or freeform mode\n\nChoose **Guided Mode** for step-by-step drafting, or stay in **Freeform** to type naturally and get inline suggestions.\n\nWhat would you like to draft today?",
-      time: new Date().toISOString(),
-    }
-  ]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [draftClauses, setDraftClauses] = useState<DraftClause[]>([]);
-  const [guidedStep, setGuidedStep] = useState(0);
-  const [showDiff, setShowDiff] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<"chat" | "document" | "history">("chat");
-  const bottomRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
-
-  const guidedSteps = [
-    { field: "Contract Type", question: "What type of contract are you drafting? (e.g., Provider Services Agreement, Vendor Agreement, Amendment)", sample: "Provider Services Agreement" },
-    { field: "Parties", question: "Who are the parties involved? Please provide full legal entity names.", sample: "Optum Health Plan, Inc. & Northwell Health Systems, LLC" },
-    { field: "Effective Date", question: "What is the effective date of this agreement?", sample: "January 1, 2025" },
-    { field: "Term", question: "What is the contract term (duration)?", sample: "3 years with auto-renewal" },
-    { field: "Services Scope", question: "Describe the scope of services covered.", sample: "Inpatient, outpatient, and emergency medical services across all network facilities" },
-    { field: "Payment Terms", question: "What are the payment terms and rate structure?", sample: "Fee-for-service based on Medicare RBRVS with 110% multiplier" },
-    { field: "Key Clauses", question: "Any specific clauses you'd like included? (confidentiality, termination, HIPAA, etc.)", sample: "Confidentiality, Termination, HIPAA Compliance, Dispute Resolution, Indemnification" },
-  ];
-
-  const addAssistantMessage = (text: string, suggestion?: PilotMessage["suggestion"]) => {
-    const msg: PilotMessage = {
-      id: `pilot-${Date.now()}-${Math.random()}`,
-      role: "assistant",
-      text,
-      time: new Date().toISOString(),
-      suggestion,
-    };
-    setMessages(prev => [...prev, msg]);
-    return msg;
-  };
-
-  const handleSend = async (text?: string) => {
-    const msg = text || input;
-    if (!msg.trim()) return;
-
-    const userMsg: PilotMessage = { id: `user-${Date.now()}`, role: "user", text: msg, time: new Date().toISOString() };
-    setMessages(prev => [...prev, userMsg]);
-    setInput("");
-    setLoading(true);
-
-    await new Promise(r => setTimeout(r, 800 + Math.random() * 600));
-
-    const lower = msg.toLowerCase();
-
-    if (lower.includes("confidentiality") || lower.includes("payment") || lower.includes("termination") || lower.includes("hipaa") || lower.includes("dispute") || lower.includes("liability")) {
-      const matched = contractPilotClauses.find(c => lower.includes(c.name.toLowerCase()));
-      if (matched) {
-        addAssistantMessage(
-          `📋 **Suggested: ${matched.name} Clause**\n\n> ${matched.body}\n\n💡 **Why this matters:** This is a standard ${matched.category.toLowerCase()} clause that protects both parties and ensures regulatory compliance. It follows industry best practices for healthcare contracts.\n\nWould you like to **Accept**, **Edit**, or **Reject** this clause?`,
-          { clause: matched.name, body: matched.body, reason: `Standard ${matched.category} clause` }
-        );
-      }
-    } else if (lower.includes("draft full") || lower.includes("full contract") || lower.includes("full provider")) {
-      addAssistantMessage(
-        "📝 **Generating full Provider Services Agreement...**\n\nI'll create a comprehensive contract with these sections:\n\n1. **Parties & Definitions**\n2. **Scope of Services**\n3. **Compensation & Payment**\n4. **Term & Termination**\n5. **Confidentiality & HIPAA**\n6. **Representations & Warranties**\n7. **Indemnification**\n8. **Dispute Resolution**\n9. **General Provisions**\n\nEach clause is modular — you can rearrange, edit, or replace any section. Shall I proceed with all sections?"
-      );
-      contractPilotClauses.forEach(c => {
-        if (!draftClauses.find(dc => dc.id === c.id)) {
-          setDraftClauses(prev => [...prev, { id: c.id, name: c.name, body: c.body, version: 1, status: "draft", history: [{ version: 1, body: c.body, timestamp: new Date().toISOString() }] }]);
-        }
-      });
-    } else if (lower.includes("review") || lower.includes("improve")) {
-      addAssistantMessage(
-        "🔍 **Reviewing current draft...**\n\n**Findings:**\n- ✅ Confidentiality clause is well-structured\n- ⚠️ Payment terms could include late fee provisions\n- ⚠️ Missing Force Majeure clause (recommended post-pandemic)\n- ✅ Termination clause covers both cause and convenience\n- ⚠️ Consider adding a data breach notification timeline\n\n**Suggested improvements:**\n1. Add milestone-based payment schedule with late fee clause\n2. Insert Force Majeure provision\n3. Specify 72-hour breach notification requirement\n\nWould you like me to draft any of these improvements?"
-      );
-    } else if (lower.includes("missing")) {
-      addAssistantMessage(
-        "📊 **Clause Gap Analysis:**\n\n| Clause | Status |\n|--------|--------|\n| Parties & Definitions | ✅ Present |\n| Scope of Services | ⚠️ Needs detail |\n| Payment Terms | ✅ Present |\n| Termination | ✅ Present |\n| Confidentiality | ✅ Present |\n| HIPAA Compliance | ✅ Present |\n| Force Majeure | ❌ Missing |\n| Indemnification | ❌ Missing |\n| Insurance Requirements | ❌ Missing |\n| Amendment Procedures | ❌ Missing |\n\nWould you like me to draft the missing clauses?"
-      );
-    } else {
-      addAssistantMessage(
-        `I understand you'd like to work on: **"${msg}"**\n\nLet me suggest some relevant content:\n\n> *Based on your input, consider adding specific terms, conditions, or definitions that clarify the scope and obligations of both parties.*\n\n💡 **Tip:** You can ask me to:\n- \"Add [clause name] clause\"\n- \"Review and improve current draft\"\n- \"Highlight missing clauses\"\n- Or type naturally and I'll suggest improvements inline.`
-      );
-    }
-    setLoading(false);
-  };
-
-  const handleAcceptClause = (suggestion: PilotMessage["suggestion"]) => {
-    if (!suggestion) return;
-    const existing = draftClauses.find(c => c.name === suggestion.clause);
-    if (existing) {
-      setDraftClauses(prev => prev.map(c => c.name === suggestion.clause ? { ...c, status: "accepted" } : c));
-    } else {
-      setDraftClauses(prev => [...prev, {
-        id: `clause-${Date.now()}`, name: suggestion.clause, body: suggestion.body,
-        version: 1, status: "accepted",
-        history: [{ version: 1, body: suggestion.body, timestamp: new Date().toISOString() }],
-      }]);
-    }
-    addAssistantMessage(`✅ **${suggestion.clause}** clause accepted and added to the draft document.`);
-  };
-
-  const handleRejectClause = (suggestion: PilotMessage["suggestion"]) => {
-    if (!suggestion) return;
-    addAssistantMessage(`⏭️ **${suggestion.clause}** clause rejected. I can suggest an alternative if you'd like.`);
-  };
-
-  const handleGuidedNext = () => {
-    if (guidedStep < guidedSteps.length) {
-      const step = guidedSteps[guidedStep];
-      addAssistantMessage(`**Step ${guidedStep + 1} of ${guidedSteps.length}: ${step.field}**\n\n${step.question}\n\n*💡 Example: "${step.sample}"*`);
-      setGuidedStep(prev => prev + 1);
-    } else {
-      addAssistantMessage("🎉 **All steps complete!** I have all the information needed.\n\n📝 **Shall I generate the full contract now?** Type **\"Draft full contract\"** or click the quick prompt above.");
-    }
-  };
-
-  const renderDocumentView = () => (
-    <div className="p-4">
-      <div className="bg-white border shadow-sm max-w-[650px] mx-auto px-10 py-8" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
-        {/* Optum-style document header */}
-        <h1 className="text-center font-bold text-sm text-foreground mb-4 uppercase tracking-wide leading-snug">
-          OPTUMHEALTH CARE SOLUTIONS, LLC<br />PROVIDER AGREEMENT
-        </h1>
-        <p className="text-[12px] text-foreground leading-[1.7] text-justify mb-4">
-          THIS AGREEMENT ("Agreement") is entered into by and between OptumHealth Care Solutions, LLC. ("Optum") and the undersigned Provider, setting forth the terms and conditions under which Provider shall participate in networks developed by Optum.
-        </p>
-        <hr className="border-muted my-4" />
-
-        {draftClauses.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-8" style={{ fontFamily: "'Inter', sans-serif" }}>No clauses drafted yet. Start a conversation to build your contract.</p>
-        ) : (
-          draftClauses.map((clause, idx) => (
-            <div key={clause.id} className={`mb-5 rounded px-2 py-1.5 transition-all ${
-              clause.status === "accepted" ? "bg-emerald-50/40" :
-              clause.status === "rejected" ? "bg-red-50/40 opacity-60" : ""
-            }`}>
-              {/* Section header — centered bold like Optum format */}
-              <div className="text-center mb-2 mt-3">
-                <p className="font-bold text-[13px] text-foreground uppercase tracking-wide">SECTION {idx + 1}</p>
-                <p className="font-bold text-[13px] text-foreground">{clause.name}</p>
-              </div>
-
-              <div className="flex items-center gap-1.5 justify-end mb-1" style={{ fontFamily: "'Inter', sans-serif" }}>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                  clause.status === "accepted" ? "bg-emerald-100 text-emerald-700" :
-                  clause.status === "rejected" ? "bg-red-100 text-red-700" :
-                  "bg-amber-100 text-amber-700"
-                }`}>{clause.status}</span>
-                <span className="text-[10px] text-muted-foreground">v{clause.version}</span>
-              </div>
-
-              <p className="text-[12px] text-foreground leading-[1.7] text-justify">{clause.body}</p>
-
-              <div className="flex gap-1.5 mt-2" style={{ fontFamily: "'Inter', sans-serif" }}>
-                {clause.status === "draft" && (
-                  <>
-                    <button onClick={() => setDraftClauses(prev => prev.map(c => c.id === clause.id ? { ...c, status: "accepted" } : c))} className="text-[10px] px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200">
-                      <Check className="w-3 h-3 inline mr-0.5" /> Accept
-                    </button>
-                    <button onClick={() => setDraftClauses(prev => prev.map(c => c.id === clause.id ? { ...c, status: "rejected" } : c))} className="text-[10px] px-2 py-0.5 bg-red-100 text-red-700 rounded hover:bg-red-200">
-                      <X className="w-3 h-3 inline mr-0.5" /> Reject
-                    </button>
-                  </>
-                )}
-                <button onClick={() => setShowDiff(showDiff === clause.id ? null : clause.id)} className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground rounded hover:bg-muted/80">
-                  <History className="w-3 h-3 inline mr-0.5" /> History
-                </button>
-              </div>
-              {showDiff === clause.id && (
-                <div className="mt-2 border-t pt-2 space-y-1" style={{ fontFamily: "'Inter', sans-serif" }}>
-                  {clause.history.map(h => (
-                    <div key={h.version} className="text-[10px] text-muted-foreground flex items-center gap-1.5">
-                      <GitCommit className="w-3 h-3" />
-                      <span>v{h.version} — {new Date(h.timestamp).toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))
-        )}
-
-        {/* Footer */}
-        <div className="mt-8 pt-3 border-t border-muted flex items-center justify-between text-[9px] text-muted-foreground" style={{ fontFamily: "'Arial', sans-serif" }}>
-          <span>OHCS-PhysHealthProviderAgmt(v2011)</span>
-          <span>Draft</span>
-          <span>Confidential and Proprietary</span>
-        </div>
-      </div>
-    </div>
-  );
-
-  const chatModes = [
-    { id: "pilot" as const, label: "ContractPilot", icon: Bot, desc: "AI autocomplete & clause suggestions" },
-    { id: "freeform" as const, label: "Freeform", icon: MessageSquare, desc: "Type naturally, get inline suggestions" },
-    { id: "guided" as const, label: "Guided", icon: Zap, desc: "Step-by-step interview drafting" },
-  ];
-
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Main chat panel */}
-        <div className="lg:col-span-2">
-          <div className="bg-card border rounded-xl flex flex-col h-[650px]">
-            {/* Mode selector icons */}
-            <div className="p-3 border-b flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                {chatModes.map(m => (
-                  <button
-                    key={m.id}
-                    onClick={() => setMode(m.id)}
-                    title={`${m.label}: ${m.desc}`}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                      mode === m.id
-                        ? "bg-secondary text-secondary-foreground shadow-sm"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                  >
-                    <m.icon className="w-3.5 h-3.5" />
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-1.5">
-                {(["chat", "document", "history"] as const).map(v => (
-                  <button key={v} onClick={() => setActiveView(v)}
-                    className={`text-[10px] px-2 py-1 rounded font-medium transition-colors ${
-                      activeView === v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
-                    }`}>
-                    {v === "chat" ? "💬" : v === "document" ? "📄" : "📜"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Mode context banner */}
-            <div className="px-3 py-1.5 bg-accent/40 border-b flex items-center gap-2">
-              <span className="text-[10px] text-accent-foreground">
-                {mode === "pilot" && "🤖 ContractPilot — AI autocomplete for clauses with Accept/Reject/Edit workflow"}
-                {mode === "freeform" && "✍️ Freeform — Type naturally and get inline clause suggestions & improvements"}
-                {mode === "guided" && `📋 Guided Interview — Step ${Math.min(guidedStep + 1, guidedSteps.length)} of ${guidedSteps.length}`}
-              </span>
-              {mode === "guided" && (
-                <button onClick={handleGuidedNext} className="ml-auto text-[10px] px-2.5 py-0.5 bg-secondary text-secondary-foreground rounded font-medium">
-                  {guidedStep === 0 ? "Start" : guidedStep >= guidedSteps.length ? "Complete" : "Next Step"}
-                </button>
-              )}
-            </div>
-
-            {activeView === "chat" ? (
-              <>
-                {/* Quick prompts */}
-                <div className="p-2 flex flex-wrap gap-1 border-b">
-                  {pilotQuickPrompts.map(p => (
-                    <button key={p} onClick={() => handleSend(p)} className="text-[10px] px-2 py-0.5 rounded-full bg-accent text-accent-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors">
-                      {p}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
-                  {messages.map(m => (
-                    <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                      <div className="max-w-[85%]">
-                        <div className={`rounded-lg px-3 py-2 text-sm ${
-                          m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-                        }`}>
-                          <pre className="whitespace-pre-wrap font-sans text-sm">{m.text}</pre>
-                        </div>
-                        {m.suggestion && (
-                          <div className="flex gap-1.5 mt-1.5">
-                            <button onClick={() => handleAcceptClause(m.suggestion)} className="text-[10px] px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 font-medium flex items-center gap-1">
-                              <Check className="w-3 h-3" /> Accept
-                            </button>
-                            <button onClick={() => handleRejectClause(m.suggestion)} className="text-[10px] px-2.5 py-1 bg-red-100 text-red-700 rounded-full hover:bg-red-200 font-medium flex items-center gap-1">
-                              <X className="w-3 h-3" /> Reject
-                            </button>
-                            <button className="text-[10px] px-2.5 py-1 bg-muted text-muted-foreground rounded-full hover:bg-muted/80 font-medium flex items-center gap-1">
-                              <Edit3 className="w-3 h-3" /> Edit
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  {loading && <div className="flex justify-start"><div className="bg-muted rounded-lg px-3 py-2 text-sm animate-pulse">✨ Drafting...</div></div>}
-                  <div ref={bottomRef} />
-                </div>
-
-                {/* Input */}
-                <div className="p-2 border-t flex gap-1.5">
-                  <input
-                    className="flex-1 border rounded-lg px-3 py-1.5 text-sm bg-background"
-                    placeholder={
-                      mode === "pilot" ? "Ask ContractPilot to draft, review, or suggest clauses..." :
-                      mode === "freeform" ? "Type naturally — I'll suggest clauses inline..." :
-                      "Answer the guided question or type freely..."
-                    }
-                    value={input}
-                    onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && handleSend()}
-                  />
-                  <button onClick={() => handleSend()} className="bg-secondary text-secondary-foreground p-1.5 rounded-lg hover:opacity-90">
-                    <Send className="w-4 h-4" />
-                  </button>
-                </div>
-              </>
-            ) : activeView === "document" ? (
-              <div className="flex-1 overflow-y-auto">
-                {renderDocumentView()}
-              </div>
-            ) : (
-              <div className="flex-1 overflow-y-auto p-4">
-                <h3 className="text-sm font-semibold mb-3">📜 Version History</h3>
-                {draftClauses.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-8">No changes recorded yet.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {draftClauses.flatMap(c => c.history.map(h => ({ ...h, clauseName: c.name, clauseId: c.id }))).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).map((entry, i) => (
-                      <div key={i} className="flex items-start gap-2 border-l-2 border-secondary/30 pl-3 py-1">
-                        <GitCommit className="w-3.5 h-3.5 text-secondary mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="text-xs font-medium text-foreground">{entry.clauseName} — v{entry.version}</p>
-                          <p className="text-[10px] text-muted-foreground">{new Date(entry.timestamp).toLocaleString()}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-4">
-          <div className="bg-card border rounded-xl p-4">
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
-              <Library className="w-4 h-4 text-secondary" /> Clause Library
-            </h3>
-            <div className="space-y-2">
-              {contractPilotClauses.map(c => (
-                <button key={c.id} onClick={() => handleSend(`Add ${c.name} clause`)}
-                  className="w-full text-left rounded-lg border p-2 hover:border-secondary/50 hover:bg-accent/50 transition-all">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-foreground">{c.name}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 bg-muted rounded text-muted-foreground">{c.category}</span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{c.body}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-card border rounded-xl p-4">
-            <h3 className="text-sm font-semibold text-foreground mb-2">Draft Stats</h3>
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Total Clauses</span><span className="font-semibold">{draftClauses.length}</span></div>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Accepted</span><span className="font-semibold text-emerald-600">{draftClauses.filter(c => c.status === "accepted").length}</span></div>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Pending</span><span className="font-semibold text-amber-600">{draftClauses.filter(c => c.status === "draft").length}</span></div>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Rejected</span><span className="font-semibold text-red-600">{draftClauses.filter(c => c.status === "rejected").length}</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-    </div>
-  );
-}
-
 const kpiCards = [
   { label: "Total Documents", value: 42, icon: <FileText className="w-4 h-4" />, accent: "bg-primary/10 text-primary", route: "/contracts" },
   { label: "Deviation Score", value: "3.2%", icon: <TrendingDown className="w-4 h-4" />, accent: "bg-red-100 text-red-700", route: "/deviation" },
@@ -492,7 +79,6 @@ const pipelineCounts = [12, 8, 7, 5, 6, 4];
 
 function ContractWorkflowPipeline() {
   const pipelineTotal = pipelineCounts.reduce((a, b) => a + b, 0) || 1;
-
   return (
     <div className="bg-card border rounded-lg p-5">
       <h3 className="text-sm font-semibold mb-3">NewGen Contract Digitization Pipeline</h3>
@@ -510,6 +96,487 @@ function ContractWorkflowPipeline() {
             <span className="text-muted-foreground">{stage} ({pipelineCounts[i]})</span>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── ContractCoPilot – Interactive AI Contract Agent ─── */
+
+interface CoPilotMessage {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  time: string;
+  clauseAdded?: string;
+  options?: string[];
+}
+
+interface ContractClause {
+  id: string;
+  sectionNumber: string;
+  title: string;
+  body: string;
+  status: "pending" | "filled" | "edited";
+  filledFrom?: string;
+}
+
+const agentSteps = [
+  {
+    id: "parties",
+    question: "Let's draft your contract! First, **who are the contracting parties?**\n\nPlease provide:\n- **Party A** (Plan/Payer)\n- **Party B** (Provider)",
+    sectionNumber: "1.0",
+    clauseTitle: "PARTIES AND DEFINITIONS",
+    options: ["Optum Health Plan & Northwell Health", "UnitedHealthcare & Mercy Health System", "Custom (type below)"],
+    buildClause: (answer: string) => {
+      const parts = answer.includes("&") ? answer.split("&").map(s => s.trim()) : [answer, "Provider Organization"];
+      return `This Provider Services Agreement ("Agreement") is entered into by and between:\n\n**Party A:** ${parts[0]} ("Plan")\n**Party B:** ${parts[1] || "Provider Organization"} ("Provider")\n\n**Definitions:**\n- "Covered Services" – health care services covered under a Member's benefit plan.\n- "Member" – an individual enrolled in a health benefit plan administered by Plan.\n- "Clean Claim" – a claim submitted with no defect, including all required data elements.\n- "Network" – the panel of providers contracted to deliver Covered Services to Members.`;
+    },
+  },
+  {
+    id: "contractType",
+    question: "What **type of contract** is this?",
+    sectionNumber: "1.1",
+    clauseTitle: "CONTRACT TYPE",
+    options: ["Facility – Inpatient/Outpatient", "Professional Services", "Ancillary Services", "Behavioral Health"],
+    buildClause: (answer: string) => `This Agreement governs the provision of **${answer}** between the parties. The scope of contracted services shall be as defined in the applicable Exhibits and Attachments hereto.`,
+  },
+  {
+    id: "effectiveDate",
+    question: "What is the **effective date** and **term** of this agreement?",
+    sectionNumber: "2.0",
+    clauseTitle: "EFFECTIVE DATE AND TERM",
+    options: ["Jan 1, 2025 – 3 years with auto-renewal", "Jul 1, 2025 – 2 years with auto-renewal", "Custom (type below)"],
+    buildClause: (answer: string) => {
+      const hasDate = answer.match(/(\w+ \d+,?\s*\d{4})/);
+      const date = hasDate ? hasDate[1] : "January 1, 2025";
+      const hasTerm = answer.match(/(\d+)\s*year/i);
+      const term = hasTerm ? `${hasTerm[1]} year(s)` : "Three (3) years";
+      return `**Effective Date:** ${date}\n**Initial Term:** ${term}\n\nThis Agreement shall automatically renew for successive one (1) year terms unless either party provides written notice of non-renewal at least one hundred eighty (180) days prior to the expiration of the then-current term.`;
+    },
+  },
+  {
+    id: "services",
+    question: "Describe the **scope of services** the Provider will deliver.\n\nInclude specialties, service types, and locations if applicable.",
+    sectionNumber: "3.0",
+    clauseTitle: "SCOPE OF SERVICES",
+    options: ["Full-service hospital (inpatient, outpatient, ED, labs)", "Cardiology & Orthopedics specialty clinic", "Multi-specialty physician group", "Custom (type below)"],
+    buildClause: (answer: string) => `**3.1 Services.** Provider shall deliver all medically necessary Covered Services to eligible Members, including but not limited to: ${answer}.\n\n**3.2 Standards of Care.** All services shall be rendered in accordance with generally accepted medical practices and all applicable state and federal requirements.\n\n**3.3 Availability.** Provider shall maintain office hours and on-call coverage sufficient to meet the needs of Members seeking Covered Services.\n\n**3.4 Referrals.** Provider shall refer Members to in-network providers when reasonably available and clinically appropriate.`,
+  },
+  {
+    id: "payment",
+    question: "What **payment model and rates** should we use?",
+    sectionNumber: "4.0",
+    clauseTitle: "COMPENSATION AND PAYMENT TERMS",
+    options: ["Fee-for-Service at 110% of Medicare", "DRG-based case rates at 115% of Medicare", "Blended: DRG inpatient + FFS outpatient", "Custom (type below)"],
+    buildClause: (answer: string) => `**4.1 Reimbursement.** Plan shall reimburse Provider for Covered Services rendered to Members in accordance with the following methodology: ${answer}.\n\n**4.2 Claims Submission.** Provider shall submit Clean Claims within ninety (90) days of the date of service.\n\n**4.3 Payment Timeline.** Plan shall process and pay Clean Claims within thirty (30) calendar days of receipt. Contested claims shall be resolved within sixty (60) calendar days.\n\n**4.4 Coordination of Benefits.** Provider shall cooperate with Plan in coordinating benefits with other payors to avoid duplicate payment.`,
+  },
+  {
+    id: "escalator",
+    question: "Should we include a **rate escalator**? If yes, what percentage and schedule?",
+    sectionNumber: "4.5",
+    clauseTitle: "RATE ESCALATOR",
+    options: ["2.5% annual CPI-U adjustment", "3% fixed annual increase", "No escalator", "Custom (type below)"],
+    buildClause: (answer: string) => {
+      if (answer.toLowerCase().includes("no")) return "No rate escalator provisions apply to this Agreement. Rate adjustments shall be mutually agreed upon in writing by both parties.";
+      return `**4.5 Rate Escalator.** Reimbursement rates shall be adjusted annually as follows: ${answer}, effective January 1 of each contract year, subject to a maximum annual cap of four percent (4%). Any adjustment exceeding the cap shall require mutual written agreement.`;
+    },
+  },
+  {
+    id: "termination",
+    question: "What **termination provisions** should be included?\n\nSpecify notice periods for with-cause and without-cause termination.",
+    sectionNumber: "5.0",
+    clauseTitle: "TERMINATION",
+    options: ["180 days without cause, 60 days for cause", "90 days without cause, 30 days for cause", "Custom (type below)"],
+    buildClause: (answer: string) => {
+      const match90 = answer.includes("90");
+      const withoutCause = match90 ? "ninety (90)" : "one hundred eighty (180)";
+      const forCause = match90 ? "thirty (30)" : "sixty (60)";
+      return `**5.1 Termination Without Cause.** Either party may terminate this Agreement without cause by providing ${withoutCause} days prior written notice to the other party.\n\n**5.2 Termination For Cause.** Either party may terminate for material breach upon ${forCause} days written notice, provided the breaching party fails to cure within thirty (30) days of receiving such notice.\n\n**5.3 Immediate Termination.** Plan may terminate immediately upon: (a) loss of Provider's license or accreditation; (b) exclusion from federal healthcare programs; (c) conviction of fraud or criminal activity.\n\n**5.4 Continuity of Care.** Upon termination, Provider shall continue providing services to Members with active treatment plans for up to ninety (90) days.`;
+    },
+  },
+  {
+    id: "compliance",
+    question: "Which **compliance and regulatory** provisions should be included?",
+    sectionNumber: "6.0",
+    clauseTitle: "COMPLIANCE AND REGULATORY",
+    options: ["Full compliance suite (HIPAA, FWA, credentialing, audits)", "HIPAA and credentialing only", "Custom (type below)"],
+    buildClause: (answer: string) => `**6.1 Legal Compliance.** Both parties shall comply with all applicable federal, state, and local laws and regulations governing health care services and health insurance.\n\n**6.2 HIPAA.** All Protected Health Information (PHI) shall be handled in accordance with the Health Insurance Portability and Accountability Act (HIPAA) Privacy and Security Rules. PHI shall be encrypted at rest and in transit using AES-256 encryption.\n\n**6.3 Fraud, Waste, and Abuse.** Provider shall maintain an active FWA compliance program and shall cooperate with Plan's Special Investigations Unit.\n\n**6.4 Audits.** Plan may audit Provider's records, facilities, and claims upon reasonable notice. Provider shall retain records for a minimum of ten (10) years.\n\n**6.5 Credentialing.** Provider shall maintain all required credentials per NCQA standards and shall promptly notify Plan of any changes to licensure, certifications, or privileges.`,
+  },
+  {
+    id: "disputes",
+    question: "How should **disputes** be resolved?",
+    sectionNumber: "7.0",
+    clauseTitle: "DISPUTE RESOLUTION",
+    options: ["Progressive: Negotiation → Mediation → Arbitration", "Direct binding arbitration (AAA)", "Litigation in state court", "Custom (type below)"],
+    buildClause: (answer: string) => {
+      if (answer.toLowerCase().includes("litigation")) return `**7.1 Governing Law.** This Agreement shall be governed by the laws of the state in which the services are primarily rendered.\n\n**7.2 Jurisdiction.** Any dispute arising under this Agreement shall be resolved exclusively in the state courts of competent jurisdiction.\n\n**7.3 Legal Fees.** Each party shall bear its own legal fees and costs unless otherwise ordered by the court.`;
+      return `**7.1 Negotiation.** The parties shall first attempt to resolve any dispute through good-faith negotiation within thirty (30) days of written notice.\n\n**7.2 Mediation.** If negotiation fails, the parties shall submit the dispute to mediation within sixty (60) days, with costs shared equally.\n\n**7.3 Binding Arbitration.** If mediation is unsuccessful, the dispute shall be resolved by binding arbitration under the rules of the American Arbitration Association. The arbitrator's decision shall be final and enforceable in any court of competent jurisdiction.\n\n**7.4 Costs.** Each party shall bear its own costs of arbitration, with arbitrator fees shared equally.`;
+    },
+  },
+  {
+    id: "exhibits",
+    question: "Which **exhibits and attachments** should be referenced?",
+    sectionNumber: "8.0",
+    clauseTitle: "EXHIBITS AND ATTACHMENTS",
+    options: ["Full suite (Fee Schedule, Service Area, Quality Metrics, BAA, Credentialing)", "Fee Schedule and BAA only", "Custom (type below)"],
+    buildClause: (answer: string) => {
+      const full = answer.toLowerCase().includes("full") || answer.toLowerCase().includes("fee schedule, service");
+      if (full) return `The following Exhibits are incorporated by reference and made a part of this Agreement:\n\n- **Exhibit A** – Fee Schedule (Reimbursement rates for Covered Services)\n- **Exhibit B** – Service Area Map (Geographic coverage definition)\n- **Exhibit C** – Quality Performance Metrics & Pay-for-Performance Incentives\n- **Exhibit D** – HIPAA Business Associate Agreement\n- **Exhibit E** – Credentialing Requirements and Standards\n\nEach Exhibit may be amended by mutual written agreement of the parties.`;
+      return `The following Exhibits are incorporated by reference and made a part of this Agreement:\n\n- **Exhibit A** – Fee Schedule (Reimbursement rates for Covered Services)\n- **Exhibit D** – HIPAA Business Associate Agreement\n\nAdditional Exhibits may be added by mutual written agreement of the parties.`;
+    },
+  },
+  {
+    id: "signatures",
+    question: "Who are the **authorized signatories** for each party?",
+    sectionNumber: "9.0",
+    clauseTitle: "SIGNATURE",
+    options: ["VP Network + CEO", "Chief Medical Officer + Medical Director", "Custom (type below)"],
+    buildClause: (answer: string) => `IN WITNESS WHEREOF, the parties have executed this Agreement as of the Effective Date.\n\n**PLAN:**\nBy: ___________________________\nName: _________________________\nTitle: ${answer.includes("VP") ? "VP of Network Management" : "Authorized Representative"}\nDate: _________________________\n\n**PROVIDER:**\nBy: ___________________________\nName: _________________________\nTitle: ${answer.includes("CEO") ? "Chief Executive Officer" : "Authorized Representative"}\nDate: _________________________`,
+  },
+];
+
+function ContractCoPilotTab() {
+  const [messages, setMessages] = useState<CoPilotMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [currentStep, setCurrentStep] = useState(0);
+  const [clauses, setClauses] = useState<ContractClause[]>([]);
+  const [activeView, setActiveView] = useState<"chat" | "document">("chat");
+  const [editingClause, setEditingClause] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const [isComplete, setIsComplete] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([{
+        id: "welcome",
+        role: "assistant",
+        text: "👋 Welcome to **ContractCoPilot** — your interactive AI contract drafting agent!\n\nI'll walk you through each section of your Provider Services Agreement. For each section, I'll ask you a question, and based on your answer I'll draft the clause and append it to your contract document.\n\nYou can pick a suggested option or type your own answer. Let's begin!",
+        time: new Date().toISOString(),
+      }, {
+        id: "step-0",
+        role: "assistant",
+        text: agentSteps[0].question,
+        time: new Date().toISOString(),
+        options: agentSteps[0].options,
+      }]);
+    }
+  }, []);
+
+  const processAnswer = async (answer: string) => {
+    const userMsg: CoPilotMessage = { id: `user-${Date.now()}`, role: "user", text: answer, time: new Date().toISOString() };
+    setMessages(prev => [...prev, userMsg]);
+    setInput("");
+    setLoading(true);
+
+    await new Promise(r => setTimeout(r, 600 + Math.random() * 400));
+
+    const step = agentSteps[currentStep];
+    const clauseBody = step.buildClause(answer);
+
+    const newClause: ContractClause = {
+      id: `clause-${step.id}`,
+      sectionNumber: step.sectionNumber,
+      title: step.clauseTitle,
+      body: clauseBody,
+      status: "filled",
+      filledFrom: answer,
+    };
+    setClauses(prev => [...prev, newClause]);
+
+    const confirmMsg: CoPilotMessage = {
+      id: `confirm-${Date.now()}`,
+      role: "assistant",
+      text: `✅ **Section ${step.sectionNumber} – ${step.clauseTitle}** has been drafted and added to your contract.\n\n📄 *Switch to Document View to see the full contract so far.*`,
+      time: new Date().toISOString(),
+      clauseAdded: step.clauseTitle,
+    };
+
+    const nextStep = currentStep + 1;
+    if (nextStep < agentSteps.length) {
+      const nextQ: CoPilotMessage = {
+        id: `step-${nextStep}`,
+        role: "assistant",
+        text: `**${agentSteps.length - nextStep} of ${agentSteps.length} sections remaining.**\n\n${agentSteps[nextStep].question}`,
+        time: new Date().toISOString(),
+        options: agentSteps[nextStep].options,
+      };
+      setMessages(prev => [...prev, confirmMsg, nextQ]);
+      setCurrentStep(nextStep);
+    } else {
+      const doneMsg: CoPilotMessage = {
+        id: `done-${Date.now()}`,
+        role: "assistant",
+        text: "🎉 **All sections complete!** Your Provider Services Agreement has been fully drafted.\n\n📄 Switch to **Document View** to review, edit, and finalize the contract. You can click **Edit** on any section to modify the language.\n\n*The contract is ready for review and signature.*",
+        time: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, confirmMsg, doneMsg]);
+      setIsComplete(true);
+    }
+    setLoading(false);
+  };
+
+  const handleSend = (text?: string) => {
+    const msg = text || input;
+    if (!msg.trim() || loading) return;
+    processAnswer(msg);
+  };
+
+  const handleEditSave = (clauseId: string) => {
+    setClauses(prev => prev.map(c => c.id === clauseId ? { ...c, body: editText, status: "edited" } : c));
+    setEditingClause(null);
+    setEditText("");
+  };
+
+  const pendingClauses = agentSteps.filter((_, i) => i >= currentStep + (isComplete ? 0 : 1)).map(s => s.clauseTitle);
+  const filledCount = clauses.length;
+  const totalCount = agentSteps.length;
+
+  const renderDocumentView = () => (
+    <div className="p-4 overflow-y-auto flex-1">
+      <div className="bg-white border shadow-sm max-w-[700px] mx-auto px-10 py-8" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+        <h1 className="text-center font-bold text-sm text-foreground mb-1 uppercase tracking-wide leading-snug">
+          OPTUMHEALTH CARE SOLUTIONS, LLC
+        </h1>
+        <h2 className="text-center font-bold text-xs text-foreground mb-4 uppercase tracking-wide">
+          PROVIDER SERVICES AGREEMENT
+        </h2>
+        <p className="text-[11px] text-foreground leading-[1.7] text-justify mb-4">
+          THIS AGREEMENT ("Agreement") is entered into by and between the parties identified herein, setting forth the terms and conditions under which Provider shall participate in networks developed and maintained by Plan.
+        </p>
+        <hr className="border-muted my-4" />
+
+        {clauses.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-12" style={{ fontFamily: "'Inter', sans-serif" }}>
+            No clauses drafted yet. Answer questions in the chat to build your contract.
+          </p>
+        ) : (
+          clauses.map((clause) => (
+            <div key={clause.id} className="mb-6 group">
+              <div className="text-center mb-2 mt-3">
+                <p className="font-bold text-[13px] text-foreground uppercase tracking-wide">
+                  SECTION {clause.sectionNumber}
+                </p>
+                <p className="font-bold text-[12px] text-foreground">{clause.title}</p>
+              </div>
+
+              {editingClause === clause.id ? (
+                <div style={{ fontFamily: "'Inter', sans-serif" }}>
+                  <textarea
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    className="w-full border rounded-lg p-3 text-xs min-h-[150px] bg-background"
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={() => handleEditSave(clause.id)} className="text-[10px] px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg font-medium hover:bg-emerald-200">
+                      <Check className="w-3 h-3 inline mr-1" />Save
+                    </button>
+                    <button onClick={() => setEditingClause(null)} className="text-[10px] px-3 py-1 bg-muted text-muted-foreground rounded-lg font-medium hover:bg-muted/80">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-[12px] text-foreground leading-[1.7] text-justify whitespace-pre-line">
+                    {clause.body}
+                  </div>
+                  <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontFamily: "'Inter', sans-serif" }}>
+                    <button
+                      onClick={() => { setEditingClause(clause.id); setEditText(clause.body); }}
+                      className="text-[10px] px-2.5 py-0.5 bg-accent text-accent-foreground rounded hover:bg-accent/80 flex items-center gap-1"
+                    >
+                      <Edit3 className="w-3 h-3" /> Edit
+                    </button>
+                    {clause.status === "edited" && (
+                      <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full">Edited</span>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          ))
+        )}
+
+        {pendingClauses.length > 0 && (
+          <div className="mt-6 border-t border-dashed pt-4" style={{ fontFamily: "'Inter', sans-serif" }}>
+            <p className="text-[10px] text-muted-foreground font-semibold mb-2">⏳ Pending Sections:</p>
+            {pendingClauses.map(name => (
+              <p key={name} className="text-[10px] text-muted-foreground ml-3">• {name}</p>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-8 pt-3 border-t border-muted flex items-center justify-between text-[9px] text-muted-foreground" style={{ fontFamily: "'Arial', sans-serif" }}>
+          <span>OHCS-ProviderAgmt(v2025)</span>
+          <span>{isComplete ? "Complete" : "Draft"}</span>
+          <span>Confidential and Proprietary</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          <div className="bg-card border rounded-xl flex flex-col h-[650px]">
+            <div className="p-3 border-b flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bot className="w-4 h-4 text-secondary" />
+                <span className="font-semibold text-sm">ContractCoPilot — AI Contract Agent</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => setActiveView("chat")}
+                  className={`text-[10px] px-2.5 py-1 rounded font-medium transition-colors ${activeView === "chat" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+                  💬 Chat
+                </button>
+                <button onClick={() => setActiveView("document")}
+                  className={`text-[10px] px-2.5 py-1 rounded font-medium transition-colors ${activeView === "document" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+                  📄 Document
+                </button>
+              </div>
+            </div>
+
+            <div className="px-3 py-2 bg-muted/30 border-b">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] text-muted-foreground font-medium">
+                  Contract Progress: {filledCount}/{totalCount} sections
+                </span>
+                <span className="text-[10px] font-semibold text-foreground">
+                  {Math.round((filledCount / totalCount) * 100)}%
+                </span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-1.5">
+                <div className="bg-secondary h-1.5 rounded-full transition-all duration-500" style={{ width: `${(filledCount / totalCount) * 100}%` }} />
+              </div>
+            </div>
+
+            {activeView === "chat" ? (
+              <>
+                <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
+                  {messages.map((m) => (
+                    <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                      <div className={`max-w-[85%] rounded-xl px-3.5 py-2.5 text-xs leading-relaxed ${
+                        m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                      }`}>
+                        <div className="whitespace-pre-line">{m.text}</div>
+                        {m.options && m.role === "assistant" && !isComplete && currentStep === parseInt(m.id.replace("step-", "")) && (
+                          <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2 border-t border-border/30">
+                            {m.options.filter(o => !o.includes("Custom")).map(opt => (
+                              <button
+                                key={opt}
+                                onClick={() => handleSend(opt)}
+                                className="text-[10px] px-2.5 py-1 rounded-full bg-background text-foreground border hover:bg-accent hover:text-accent-foreground transition-colors"
+                              >
+                                {opt}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {m.clauseAdded && (
+                          <div className="mt-2 pt-1.5 border-t border-border/30 flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                            <span className="text-[10px] font-medium text-emerald-600">Added: {m.clauseAdded}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {loading && (
+                    <div className="flex justify-start">
+                      <div className="bg-muted rounded-xl px-3.5 py-2.5 text-xs animate-pulse">
+                        <Bot className="w-3 h-3 inline mr-1.5" />Drafting clause...
+                      </div>
+                    </div>
+                  )}
+                  <div ref={bottomRef} />
+                </div>
+
+                <div className="p-2.5 border-t flex gap-2">
+                  <input
+                    className="flex-1 border rounded-lg px-3 py-2 text-xs bg-background"
+                    placeholder={isComplete ? "Contract complete! Switch to Document View to review." : "Type your answer or pick an option above…"}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                    disabled={isComplete || loading}
+                  />
+                  <button onClick={() => handleSend()} disabled={isComplete || loading}
+                    className="bg-secondary text-secondary-foreground p-2 rounded-lg hover:opacity-90 disabled:opacity-50">
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              renderDocumentView()
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="bg-card border rounded-xl p-4">
+            <h3 className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5">
+              <ClipboardList className="w-3.5 h-3.5 text-secondary" /> Contract Sections
+            </h3>
+            <div className="space-y-1.5">
+              {agentSteps.map((step, i) => {
+                const filled = clauses.find(c => c.id === `clause-${step.id}`);
+                const isCurrent = i === currentStep && !isComplete;
+                return (
+                  <div key={step.id} className={`flex items-center gap-2 text-[11px] px-2 py-1.5 rounded-lg transition-colors ${
+                    isCurrent ? "bg-secondary/10 border border-secondary/30" :
+                    filled ? "bg-emerald-50" : ""
+                  }`}>
+                    {filled ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                    ) : isCurrent ? (
+                      <Bot className="w-3.5 h-3.5 text-secondary flex-shrink-0 animate-pulse" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border border-muted-foreground/30 flex-shrink-0" />
+                    )}
+                    <span className={`${filled ? "text-foreground" : isCurrent ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                      {step.sectionNumber} {step.clauseTitle}
+                    </span>
+                    {filled?.status === "edited" && (
+                      <span className="text-[8px] px-1 py-0.5 bg-amber-100 text-amber-700 rounded ml-auto">edited</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="bg-card border rounded-xl p-4">
+            <h3 className="text-xs font-semibold text-foreground mb-3">Draft Summary</h3>
+            <div className="space-y-2 text-[11px]">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Sections Drafted</span>
+                <span className="font-semibold text-foreground">{filledCount}/{totalCount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Edited by User</span>
+                <span className="font-semibold text-foreground">{clauses.filter(c => c.status === "edited").length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Pending</span>
+                <span className="font-semibold text-foreground">{totalCount - filledCount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Status</span>
+                <span className={`font-semibold ${isComplete ? "text-emerald-600" : "text-amber-600"}`}>
+                  {isComplete ? "✅ Complete" : "🔄 In Progress"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -586,7 +653,7 @@ export default function ContractCreationWithOverview() {
             <ArrowRight className="w-3.5 h-3.5" /> Provider Intake Contract
           </TabsTrigger>
           <TabsTrigger value="coauthor" className="flex items-center gap-1.5 text-xs">
-            <Bot className="w-3.5 h-3.5" /> Talk to your Agent - Your CoAuthor
+            <Bot className="w-3.5 h-3.5" /> ContractCoPilot
           </TabsTrigger>
         </TabsList>
 
@@ -700,7 +767,7 @@ export default function ContractCreationWithOverview() {
           <ContractCreation embedded initialTab="intake" />
         </TabsContent>
         <TabsContent value="coauthor">
-          <ContractPilotTab />
+          <ContractCoPilotTab />
         </TabsContent>
       </Tabs>
     </div>
