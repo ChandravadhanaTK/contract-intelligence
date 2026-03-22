@@ -351,6 +351,11 @@ export default function ContractViewerPage() {
                     <div className="flex items-center gap-1.5 mb-1">
                       <CatIcon className="w-3 h-3 flex-shrink-0" />
                       <span className="text-xs font-medium flex-1 truncate">{clause.name}</span>
+                      {clause.complianceScore > 0 && (() => {
+                        const s = clause.complianceScore;
+                        const color = s >= 80 ? "text-emerald-700 bg-emerald-50" : s >= 60 ? "text-amber-700 bg-amber-50" : "text-red-700 bg-red-50";
+                        return <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${color}`}>{s}%</span>;
+                      })()}
                       {clause.alignment === "missing" && <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />}
                     </div>
                     <div className="flex items-center gap-1 flex-wrap">
