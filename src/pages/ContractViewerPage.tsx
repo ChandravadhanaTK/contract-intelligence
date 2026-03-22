@@ -293,64 +293,79 @@ export default function ContractViewerPage() {
                   {(section as any).isTitle ? (
                     <h1 className="text-center font-bold text-sm text-foreground mb-6 uppercase leading-snug whitespace-pre-line tracking-wide">{section.title}</h1>
                   ) : (
-                    <div className="flex items-center justify-between mb-4 mt-8">
-                      <div className="text-center flex-1">
-                        <p className="font-bold text-sm text-foreground uppercase tracking-wide">{(section as any).sectionNum}</p>
-                        <p className="font-bold text-sm text-foreground">{section.title}</p>
+                    <div
+                      className="flex items-center justify-between mb-2 mt-8 cursor-pointer select-none"
+                      onClick={e => { e.stopPropagation(); toggleSection(section.id); }}
+                    >
+                      <div className="flex items-center gap-2">
+                        {collapsedSections[section.id]
+                          ? <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        }
+                        <div>
+                          <p className="font-bold text-sm text-foreground uppercase tracking-wide">{(section as any).sectionNum}</p>
+                          <p className="font-bold text-sm text-foreground">{section.title}</p>
+                        </div>
                       </div>
-                      {sectionConfidence[section.id] !== undefined && (() => {
-                        const conf = sectionConfidence[section.id];
-                        const color = conf >= 80 ? "text-emerald-700 bg-emerald-50 border-emerald-200" : conf >= 60 ? "text-amber-700 bg-amber-50 border-amber-200" : "text-red-700 bg-red-50 border-red-200";
-                        const dotColor = conf >= 80 ? "bg-emerald-500" : conf >= 60 ? "bg-amber-500" : "bg-red-500";
-                        return (
-                          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-[10px] font-semibold ${color}`} style={{ fontFamily: "'Inter', sans-serif" }}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
-                            {conf}%
-                          </div>
-                        );
-                      })()}
+                      <div className="flex items-center gap-2">
+                        {sectionEdits[section.id] && (
+                          <span className="text-[9px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>
+                            Edited
+                          </span>
+                        )}
+                        {sectionConfidence[section.id] !== undefined && (() => {
+                          const conf = sectionConfidence[section.id];
+                          const color = conf >= 80 ? "text-emerald-700 bg-emerald-50 border-emerald-200" : conf >= 60 ? "text-amber-700 bg-amber-50 border-amber-200" : "text-red-700 bg-red-50 border-red-200";
+                          const dotColor2 = conf >= 80 ? "bg-emerald-500" : conf >= 60 ? "bg-amber-500" : "bg-red-500";
+                          return (
+                            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-[10px] font-semibold ${color}`} style={{ fontFamily: "'Inter', sans-serif" }}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${dotColor2}`} />
+                              {conf}%
+                            </div>
+                          );
+                        })()}
+                      </div>
                     </div>
                   )}
 
-                  {/* Section content */}
-                  {editingSectionId === section.id ? (
-                    <div className="space-y-2" onClick={e => e.stopPropagation()}>
-                      <textarea
-                        className="w-full border rounded-lg px-3 py-2 text-[13px] bg-background min-h-[180px] resize-y leading-[1.7] text-justify"
-                        style={{ fontFamily: "'Times New Roman', Georgia, serif" }}
-                        value={editContent}
-                        onChange={e => setEditContent(e.target.value)}
-                        autoFocus
-                      />
-                      <div className="flex gap-2" style={{ fontFamily: "'Inter', sans-serif" }}>
-                        <button onClick={saveSectionEdit} className="flex items-center gap-1 px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium">
-                          <Save className="w-3 h-3" /> Save
-                        </button>
-                        <button onClick={cancelSectionEdit} className="px-3 py-1.5 border rounded text-xs font-medium hover:bg-muted">
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="relative group">
-                      <div className="text-[13px] text-foreground leading-[1.7] whitespace-pre-wrap text-justify" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
-                        {sectionEdits[section.id] ?? section.content}
-                      </div>
-                      {isEditable && !(section as any).isTitle && (
-                        <button
-                          onClick={e => { e.stopPropagation(); startSectionEdit(section.id, section.content); }}
-                          className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-muted rounded-md text-xs flex items-center gap-1 shadow-sm border"
-                          style={{ fontFamily: "'Inter', sans-serif" }}
-                        >
-                          <Pencil className="w-3 h-3" /> Edit
-                        </button>
+                  {/* Section content — collapsible */}
+                  {!(section as any).isTitle && collapsedSections[section.id] ? null : (
+                    <>
+                      {editingSectionId === section.id ? (
+                        <div className="space-y-2" onClick={e => e.stopPropagation()}>
+                          <textarea
+                            className="w-full border rounded-lg px-3 py-2 text-[13px] bg-background min-h-[180px] resize-y leading-[1.7] text-justify"
+                            style={{ fontFamily: "'Times New Roman', Georgia, serif" }}
+                            value={editContent}
+                            onChange={e => setEditContent(e.target.value)}
+                            autoFocus
+                          />
+                          <div className="flex gap-2" style={{ fontFamily: "'Inter', sans-serif" }}>
+                            <button onClick={saveSectionEdit} className="flex items-center gap-1 px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium">
+                              <Save className="w-3 h-3" /> Save
+                            </button>
+                            <button onClick={cancelSectionEdit} className="px-3 py-1.5 border rounded text-xs font-medium hover:bg-muted">
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="relative group">
+                          <div className="text-[13px] text-foreground leading-[1.7] whitespace-pre-wrap text-justify" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                            {sectionEdits[section.id] ?? section.content}
+                          </div>
+                          {isEditable && !(section as any).isTitle && (
+                            <button
+                              onClick={e => { e.stopPropagation(); startSectionEdit(section.id, section.content); }}
+                              className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-muted rounded-md text-xs flex items-center gap-1 shadow-sm border"
+                              style={{ fontFamily: "'Inter', sans-serif" }}
+                            >
+                              <Pencil className="w-3 h-3" /> Edit
+                            </button>
+                          )}
+                        </div>
                       )}
-                      {sectionEdits[section.id] && (
-                        <span className="absolute top-0 left-0 text-[9px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>
-                          Edited
-                        </span>
-                      )}
-                    </div>
+                    </>
                   )}
 
                   {/* Clause popover/tooltip */}

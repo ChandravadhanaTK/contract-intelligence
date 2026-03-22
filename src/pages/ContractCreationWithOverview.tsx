@@ -1194,51 +1194,69 @@ function ContractCoPilotTab() {
             No clauses drafted yet. Answer questions in the chat to build your contract.
           </p>
         ) : (
-          clauses.map((clause) => (
-            <div key={clause.id} className="mb-6 group">
-              <div className="text-center mb-2 mt-3">
-                <p className="font-bold text-[13px] text-foreground uppercase tracking-wide">
-                  SECTION {clause.sectionNumber}
-                </p>
-                <p className="font-bold text-[12px] text-foreground">{clause.title}</p>
-              </div>
-
-              {editingClause === clause.id ? (
-                <div style={{ fontFamily: "'Inter', sans-serif" }}>
-                  <textarea
-                    value={editText}
-                    onChange={(e) => setEditText(e.target.value)}
-                    className="w-full border rounded-lg p-3 text-xs min-h-[150px] bg-background"
-                  />
-                  <div className="flex gap-2 mt-2">
-                    <button onClick={() => handleEditSave(clause.id)} className="text-[10px] px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg font-medium hover:bg-emerald-200">
-                      <Check className="w-3 h-3 inline mr-1" />Save
-                    </button>
-                    <button onClick={() => setEditingClause(null)} className="text-[10px] px-3 py-1 bg-muted text-muted-foreground rounded-lg font-medium hover:bg-muted/80">
-                      Cancel
-                    </button>
+          clauses.map((clause) => {
+            const isSectionCollapsed = copilotCollapsed[clause.id];
+            return (
+              <div key={clause.id} className="mb-6">
+                {/* Collapsible header */}
+                <div
+                  className="flex items-center gap-2 mb-2 mt-3 cursor-pointer select-none hover:bg-muted/30 rounded px-1 py-0.5 transition-colors"
+                  onClick={() => setCopilotCollapsed(prev => ({ ...prev, [clause.id]: !prev[clause.id] }))}
+                  style={{ fontFamily: "'Inter', sans-serif" }}
+                >
+                  {isSectionCollapsed
+                    ? <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                    : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                  }
+                  <div className="flex-1 text-center">
+                    <p className="font-bold text-[13px] text-foreground uppercase tracking-wide" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                      SECTION {clause.sectionNumber}
+                    </p>
+                    <p className="font-bold text-[12px] text-foreground" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>{clause.title}</p>
                   </div>
-                </div>
-              ) : (
-                <>
-                  <div className="text-[12px] text-foreground leading-[1.7] text-justify whitespace-pre-line">
-                    {clause.body}
-                  </div>
-                  <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontFamily: "'Inter', sans-serif" }}>
-                    <button
-                      onClick={() => { setEditingClause(clause.id); setEditText(clause.body); }}
-                      className="text-[10px] px-2.5 py-0.5 bg-accent text-accent-foreground rounded hover:bg-accent/80 flex items-center gap-1"
-                    >
-                      <Edit3 className="w-3 h-3" /> Edit
-                    </button>
+                  <div className="flex items-center gap-1.5">
                     {clause.status === "edited" && (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full">Edited</span>
+                      <span className="text-[9px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">Edited</span>
+                    )}
+                    {!isSectionCollapsed && editingClause !== clause.id && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setEditingClause(clause.id); setEditText(clause.body); }}
+                        className="text-[10px] px-2 py-0.5 bg-accent text-accent-foreground rounded hover:bg-accent/80 flex items-center gap-1"
+                      >
+                        <Edit3 className="w-3 h-3" /> Edit
+                      </button>
                     )}
                   </div>
-                </>
-              )}
-            </div>
-          ))
+                </div>
+
+                {!isSectionCollapsed && (
+                  <>
+                    {editingClause === clause.id ? (
+                      <div style={{ fontFamily: "'Inter', sans-serif" }}>
+                        <textarea
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          className="w-full border rounded-lg p-3 text-xs min-h-[150px] bg-background"
+                        />
+                        <div className="flex gap-2 mt-2">
+                          <button onClick={() => handleEditSave(clause.id)} className="text-[10px] px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg font-medium hover:bg-emerald-200">
+                            <Check className="w-3 h-3 inline mr-1" />Save
+                          </button>
+                          <button onClick={() => setEditingClause(null)} className="text-[10px] px-3 py-1 bg-muted text-muted-foreground rounded-lg font-medium hover:bg-muted/80">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-[12px] text-foreground leading-[1.7] text-justify whitespace-pre-line">
+                        {clause.body}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })
         )}
 
         {/* Signature on document */}
