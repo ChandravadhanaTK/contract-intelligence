@@ -971,7 +971,7 @@ function ContractCoPilotTab() {
       const sigMsg: CoPilotMessage = {
         id: `sig-prompt-${Date.now()}`,
         role: "assistant",
-        text: "🖊️ **All contract sections are drafted!**\n\nNow, please provide your **signature** to finalize the agreement. You can:\n- **Draw** your signature directly\n- **Upload** a signature image\n\nUse the signature panel below:",
+        text: "🖊️ **All contract sections are drafted!**\n\nNow, please provide your **signature** to finalize the agreement. You can:\n- **Draw** your signature directly\n- **Upload** a signature image\n- **Sign Later** — skip signature for now and generate the contract as a draft\n\nUse the signature panel below:",
         time: new Date().toISOString(),
         isSignaturePrompt: true,
       };
