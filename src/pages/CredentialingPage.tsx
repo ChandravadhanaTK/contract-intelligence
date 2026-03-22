@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { BackToPipelineBanner } from "@/components/BackToPipelineBanner";
 import { CheckCircle, XCircle, AlertTriangle, Shield, RotateCcw, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
