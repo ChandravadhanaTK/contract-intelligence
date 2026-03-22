@@ -233,16 +233,15 @@ export function AppLayout({ children, onLogout }: Props) {
     <div className="flex min-h-screen w-full bg-background">
       <AppSidebar />
       <div className="flex-1 flex flex-col min-w-0 relative">
-        {/* Sidebar collapse toggle - pinned between sidebar and main content */}
+        {/* Sidebar collapse toggle - floats on the border between sidebar and main */}
         <button
           onClick={() => {
             const cur = localStorage.getItem("oci_sidebar_collapsed") === "true";
             localStorage.setItem("oci_sidebar_collapsed", String(!cur));
-            window.dispatchEvent(new Event("storage"));
-            window.location.reload();
+            window.dispatchEvent(new StorageEvent("storage", { key: "oci_sidebar_collapsed" }));
           }}
           className="absolute top-3 left-0 z-30 -translate-x-1/2 w-6 h-6 rounded-full border bg-card shadow-md flex items-center justify-center hover:bg-muted transition-colors"
-          title={localStorage.getItem("oci_sidebar_collapsed") === "true" ? "Expand sidebar" : "Collapse sidebar"}
+          title="Toggle sidebar"
         >
           {localStorage.getItem("oci_sidebar_collapsed") === "true"
             ? <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
