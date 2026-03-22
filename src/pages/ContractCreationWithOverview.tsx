@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 import WorkflowPage from "./WorkflowPage";
 import ContractCreation from "./ContractCreation";
+import DelegationPipelineTabs from "@/components/DelegationPipelineTabs";
 
 const complianceScoreData = [
   { name: "Compliant", value: 24 },
@@ -1745,7 +1746,7 @@ export default function ContractCreationWithOverview() {
           <UploadContractTab />
         </TabsContent>
         <TabsContent value="intake">
-          <ContractCreation embedded initialTab="intake" />
+          <DelegationPipelineTabs />
         </TabsContent>
         <TabsContent value="coauthor">
           <ContractCoPilotTab />
