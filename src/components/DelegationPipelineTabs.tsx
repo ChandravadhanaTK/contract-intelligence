@@ -38,6 +38,10 @@ export default function DelegationPipelineTabs() {
 
   const filteredDocs = docs.filter(d => {
     if (d.delegationType !== activeTab) return false;
+    if (selectedStageIdx !== null) {
+      const stageList = d.delegationType === "Delegated" ? DELEGATED_STAGES : NON_DELEGATED_STAGES;
+      if (stageList.indexOf(d.pipelineStage) !== selectedStageIdx) return false;
+    }
     if (statusFilter !== "All Statuses" && d.status !== statusFilter) return false;
     if (typeFilter !== "All Types" && d.contractType !== typeFilter) return false;
     if (sourceFilter !== "All Sources" && d.source !== sourceFilter) return false;
