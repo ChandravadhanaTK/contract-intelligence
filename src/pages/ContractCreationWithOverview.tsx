@@ -1280,6 +1280,9 @@ function ContractCoPilotTab() {
                 </div>
               </div>
             )}
+
+            {/* My Generated Contracts */}
+            <MyContractsPanel onLoad={handleLoadContract} />
           </div>
         </div>
       )}
