@@ -44,7 +44,7 @@ const obligations: Obligation[] = [
   { id: "o8", title: "PHI Breach Response Plan Review", description: "Review and update breach notification procedures", owner: "Privacy Officer", dueDate: "2025-03-01", frequency: "Annually", status: "InProgress", evidenceLinks: [] },
 ];
 
-const makeWorkflow = (id: string, stage: "Draft" | "Review" | "Redline"): WorkflowInstance => ({
+const makeWorkflow = (id: string, stage: "Draft" | "Internal Review" | "Redlining & Review"): WorkflowInstance => ({
   id,
   stage,
   tasks: [
@@ -58,7 +58,7 @@ const makeWorkflow = (id: string, stage: "Draft" | "Review" | "Redline"): Workfl
   history: [
     { time: "2025-01-08T09:00:00Z", stage: "Draft", actor: "System", note: "Contract uploaded and processing initiated" },
     { time: "2025-01-08T09:15:00Z", stage: "Draft", actor: "Intake Agent", note: "Metadata extracted and clauses identified" },
-    { time: "2025-01-10T14:00:00Z", stage: "Review", actor: "Sarah Johnson", note: "Moved to Review after initial analysis" },
+    { time: "2025-01-10T14:00:00Z", stage: "Internal Review", actor: "Sarah Johnson", note: "Moved to Internal Review after initial analysis" },
   ],
 });
 
@@ -421,7 +421,7 @@ export const seedContract: Contract = {
   rawText: "",
   clauses: [...missingClauses, ...nonAlignedClauses, ...alignedClauses],
   obligations,
-  workflow: makeWorkflow("wf1", "Review"),
+  workflow: makeWorkflow("wf1", "Internal Review"),
   documents: reviewDocuments.filter((d) => d.contractId === "contract-001"),
 };
 
@@ -445,7 +445,7 @@ export const seedContract3: Contract = {
   rawText: "",
   clauses: [...missingClauses.slice(0, 3), ...nonAlignedClauses, ...alignedClauses],
   obligations: obligations.slice(2, 7),
-  workflow: makeWorkflow("wf3", "Redline"),
+  workflow: makeWorkflow("wf3", "Redlining & Review"),
   documents: reviewDocuments.filter((d) => d.contractId === "contract-003"),
 };
 

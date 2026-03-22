@@ -10,7 +10,7 @@ import type { Contract, ReviewDocument, ReviewRequest, WorkflowStage, IntegrityF
 
 function get<T>(key: string, fb: T): T { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; }
 
-const STAGES: WorkflowStage[] = ["Draft", "Review", "Redline", "Approval", "Signature", "Published"];
+const STAGES: WorkflowStage[] = ["Draft", "Collaborative Drafting", "Redlining & Review", "Internal Review", "Credentialing Validation", "Contract Pricing Analysis", "Provider Review", "Pricing Team Review", "Legal Team Review", "Negotiation & Review", "Signature", "Published", "Data Loading"];
 
 const statusChipClass: Record<string, string> = {
   "Manual review": "status-chip-error",
@@ -204,11 +204,15 @@ export default function WorkflowPage({ embedded = false, initialTab }: WorkflowP
       {activeTab === "workflow" && wf && (
         <>
           <div className="bg-card border rounded-lg p-5">
-            <div className="flex items-center gap-1">
+            <div className="grid grid-cols-7 gap-1">
               {STAGES.map((stage, i) => (
-                <div key={stage} className="flex items-center flex-1">
-                  <div className={`flex-1 text-center py-2 rounded-md text-xs font-semibold transition-colors ${i < currentIdx ? "bg-success/20 text-success" : i === currentIdx ? "bg-secondary text-secondary-foreground" : "bg-muted text-muted-foreground"}`}>{stage}</div>
-                  {i < STAGES.length - 1 && <div className={`w-4 h-0.5 ${i < currentIdx ? "bg-success" : "bg-muted"}`} />}
+                <div key={stage} className="flex flex-col items-center gap-1">
+                  <div className={`w-full text-center py-1.5 rounded-md text-[10px] font-semibold transition-colors leading-tight px-1 ${i < currentIdx ? "bg-success/20 text-success" : i === currentIdx ? "bg-secondary text-secondary-foreground" : "bg-muted text-muted-foreground"}`}>
+                    {stage}
+                  </div>
+                  {i < STAGES.length - 1 && (
+                    <div className={`w-3 h-0.5 ${i < currentIdx ? "bg-success" : "bg-muted"} self-end translate-x-1/2`} />
+                  )}
                 </div>
               ))}
             </div>
