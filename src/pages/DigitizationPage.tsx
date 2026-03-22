@@ -443,7 +443,7 @@ export default function DigitizationPage({ onBack }: { onBack?: () => void }) {
                     </td>
                     <td className="p-3 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <button className="p-1 hover:bg-muted rounded" title="View Contract" onClick={() => setViewingDoc(d)}>
+                        <button className="p-1 hover:bg-muted rounded" title="View Contract" onClick={() => navigate(`/contracts/${d.id}`)}>
                           <Eye className="w-3.5 h-3.5 text-muted-foreground" />
                         </button>
                         <button className="p-1 hover:bg-muted rounded" title="Retry" onClick={() => handleRetry(d)}>
