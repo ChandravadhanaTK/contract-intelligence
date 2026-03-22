@@ -295,6 +295,8 @@ function deleteContractFromStorage(id: string) {
 function MyContractsPanel({ onLoad }: { onLoad: (contract: SavedContract) => void }) {
   const [contracts, setContracts] = useState<SavedContract[]>(getSavedContracts());
   const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const handleStorage = () => setContracts(getSavedContracts());
@@ -319,7 +321,28 @@ function MyContractsPanel({ onLoad }: { onLoad: (contract: SavedContract) => voi
 
   const handleDelete = (id: string) => {
     deleteContractFromStorage(id);
+    setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
     setContracts(getSavedContracts());
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const handlePushToPipeline = () => {
+    if (selectedIds.size === 0) return;
+    setSubmitting(true);
+    setTimeout(() => {
+      const counts = getPipelineCounts();
+      counts[0] += selectedIds.size; // Add to "Draft" stage
+      setPipelineCounts(counts);
+      setSelectedIds(new Set());
+      setSubmitting(false);
+    }, 600);
   };
 
   if (contracts.length === 0) {
@@ -354,6 +377,12 @@ function MyContractsPanel({ onLoad }: { onLoad: (contract: SavedContract) => voi
               <div className="ml-5 space-y-0.5">
                 {items.map(c => (
                   <div key={c.id} className="flex items-center gap-1.5 text-[10px] px-2 py-1.5 rounded hover:bg-muted/50 group">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(c.id)}
+                      onChange={() => toggleSelect(c.id)}
+                      className="w-3 h-3 rounded border-border accent-primary flex-shrink-0 cursor-pointer"
+                    />
                     <FileText className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                     <button onClick={() => onLoad(c)} className="flex-1 text-left text-foreground truncate hover:text-primary">
                       {c.name}
@@ -372,6 +401,16 @@ function MyContractsPanel({ onLoad }: { onLoad: (contract: SavedContract) => voi
           </div>
         ))}
       </div>
+      {selectedIds.size > 0 && (
+        <button
+          onClick={handlePushToPipeline}
+          disabled={submitting}
+          className="mt-3 w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-lg py-2 text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-60"
+        >
+          <Send className="w-3.5 h-3.5" />
+          {submitting ? "Submitting..." : `Submit ${selectedIds.size} to Digitization Pipeline`}
+        </button>
+      )}
     </div>
   );
 }
