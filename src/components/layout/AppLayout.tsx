@@ -190,11 +190,18 @@ export function AppLayout({ children, onLogout }: Props) {
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem("oci_sidebar_collapsed") === "true");
   const [notifications, setNotifications] = useState<{ id: string; text: string; time: string; read: boolean }[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     api.getNotifications().then(setNotifications);
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setSidebarCollapsed(localStorage.getItem("oci_sidebar_collapsed") === "true");
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
   }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
