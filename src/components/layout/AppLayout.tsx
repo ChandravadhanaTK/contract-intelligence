@@ -4,7 +4,7 @@ import { AuditLogDrawer } from "../AuditLogDrawer";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  ChevronDown, LogOut, Search, Bell, Upload, ScanLine, Sparkles, X,
+  ChevronDown, ChevronLeft, ChevronRight, LogOut, Search, Bell, Upload, ScanLine, Sparkles, X,
   FileText, BookOpen, ClipboardList, Send, Bot, FilePlus,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
