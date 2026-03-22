@@ -339,8 +339,15 @@ export const seedContractFamilies: ContractFamily[] = [
 ];
 
 // ─── Redlining clause groups ───
+export interface RedlineDocument {
+  id: string;
+  name: string;
+  contractId?: string;
+}
+
 export interface RedlineClauseGroup {
   id: string;
+  documentId: string;
   name: string;
   added: number;
   removed: number;
@@ -356,9 +363,16 @@ export interface RedlineChange {
   status: "pending" | "accepted" | "rejected";
 }
 
+export const seedRedlineDocuments: RedlineDocument[] = [
+  { id: "rdoc-1", name: "UHC_Provider_Agreement_2025_Northeast_Region.pdf", contractId: "contract-001" },
+  { id: "rdoc-2", name: "UHC_Provider_Agreement_2025_Southeast_Region.pdf", contractId: "contract-002" },
+  { id: "rdoc-3", name: "UHC_Provider_Agreement_2025_Midwest_Region.pdf", contractId: "contract-003" },
+];
+
 export const seedRedlineGroups: RedlineClauseGroup[] = [
+  // ── Document 1: Northeast ──
   {
-    id: "rg-1", name: "Termination", added: 1, removed: 0, modified: 2,
+    id: "rg-1", documentId: "rdoc-1", name: "Termination", added: 1, removed: 0, modified: 2,
     changes: [
       { id: "rc-1", originalText: "Plan may terminate with 90 days notice.", proposedText: "Either party may terminate with 180 days written notice.", type: "modified", status: "pending" },
       { id: "rc-2", originalText: "", proposedText: "Upon termination, Provider shall ensure continuity of care for all enrolled members for 90 days post-termination.", type: "added", status: "pending" },
@@ -366,7 +380,7 @@ export const seedRedlineGroups: RedlineClauseGroup[] = [
     ],
   },
   {
-    id: "rg-2", name: "Payment Terms", added: 2, removed: 1, modified: 1,
+    id: "rg-2", documentId: "rdoc-1", name: "Payment Terms", added: 2, removed: 1, modified: 1,
     changes: [
       { id: "rc-4", originalText: "Claims will be processed within 45 business days.", proposedText: "All clean claims shall be processed within 30 calendar days of receipt.", type: "modified", status: "pending" },
       { id: "rc-5", originalText: "Contested claims timeline is not specified.", proposedText: "", type: "removed", status: "pending" },
@@ -375,32 +389,55 @@ export const seedRedlineGroups: RedlineClauseGroup[] = [
     ],
   },
   {
-    id: "rg-3", name: "Liability", added: 0, removed: 0, modified: 2,
+    id: "rg-3", documentId: "rdoc-1", name: "Liability", added: 0, removed: 0, modified: 2,
     changes: [
       { id: "rc-8", originalText: "Provider's total liability shall not exceed the fees paid in the prior 12 months.", proposedText: "Each party's total liability shall not exceed the greater of $5M or fees paid in the prior 12 months.", type: "modified", status: "pending" },
       { id: "rc-9", originalText: "Consequential damages are excluded.", proposedText: "Consequential damages are excluded except in cases of willful misconduct, gross negligence, or breach of confidentiality.", type: "modified", status: "pending" },
     ],
   },
+  // ── Document 2: Southeast ──
   {
-    id: "rg-4", name: "Confidentiality", added: 1, removed: 0, modified: 1,
+    id: "rg-4", documentId: "rdoc-2", name: "Confidentiality", added: 1, removed: 0, modified: 1,
     changes: [
       { id: "rc-10", originalText: "Confidential information shall be protected for 2 years after termination.", proposedText: "Confidential information shall be protected for 5 years after termination.", type: "modified", status: "pending" },
       { id: "rc-11", originalText: "", proposedText: "All confidential information must be returned or destroyed within 30 days of written request.", type: "added", status: "pending" },
     ],
   },
   {
-    id: "rg-5", name: "HIPAA Compliance", added: 1, removed: 0, modified: 1,
+    id: "rg-5", documentId: "rdoc-2", name: "HIPAA Compliance", added: 1, removed: 0, modified: 1,
     changes: [
       { id: "rc-12", originalText: "Provider shall comply with HIPAA regulations.", proposedText: "Provider shall comply with all HIPAA Privacy and Security Rules. PHI shall be encrypted at rest (AES-256) and in transit (TLS 1.2+).", type: "modified", status: "pending" },
       { id: "rc-13", originalText: "", proposedText: "Any breach of PHI must be reported within 24 hours of discovery. Provider shall maintain cyber liability insurance of no less than $5M.", type: "added", status: "pending" },
     ],
   },
   {
-    id: "rg-6", name: "Data Protection", added: 0, removed: 1, modified: 2,
+    id: "rg-6", documentId: "rdoc-2", name: "Provider Obligations", added: 1, removed: 0, modified: 1,
+    changes: [
+      { id: "rc-20", originalText: "Provider shall maintain staffing levels.", proposedText: "Provider shall maintain staffing levels sufficient to ensure appointment availability within 14 days for routine care and 48 hours for urgent care.", type: "modified", status: "pending" },
+      { id: "rc-21", originalText: "", proposedText: "Provider shall participate in Plan's quality improvement initiatives and submit required data within 30 days of request.", type: "added", status: "pending" },
+    ],
+  },
+  // ── Document 3: Midwest ──
+  {
+    id: "rg-7", documentId: "rdoc-3", name: "Data Protection", added: 0, removed: 1, modified: 2,
     changes: [
       { id: "rc-14", originalText: "Data may be retained indefinitely by Provider.", proposedText: "Data shall be retained per applicable regulatory requirements and destroyed upon contract termination.", type: "modified", status: "pending" },
       { id: "rc-15", originalText: "Provider may share data with affiliates without notice.", proposedText: "", type: "removed", status: "pending" },
       { id: "rc-16", originalText: "Data access controls shall be maintained.", proposedText: "Role-based access controls with quarterly access reviews and audit logging shall be maintained.", type: "modified", status: "pending" },
+    ],
+  },
+  {
+    id: "rg-8", documentId: "rdoc-3", name: "Dispute Resolution", added: 1, removed: 0, modified: 1,
+    changes: [
+      { id: "rc-17", originalText: "All disputes shall be resolved through binding arbitration.", proposedText: "Disputes shall be resolved through progressive escalation: negotiation (30 days), mediation (60 days), then binding arbitration under AAA rules.", type: "modified", status: "pending" },
+      { id: "rc-18", originalText: "", proposedText: "Arbitration costs shall be split equally between the parties.", type: "added", status: "pending" },
+    ],
+  },
+  {
+    id: "rg-9", documentId: "rdoc-3", name: "Credentialing", added: 1, removed: 0, modified: 1,
+    changes: [
+      { id: "rc-19", originalText: "Provider shall credential practitioners.", proposedText: "Provider shall credential and recredential all practitioners per NCQA standards within 180 days of initial application.", type: "modified", status: "pending" },
+      { id: "rc-22", originalText: "", proposedText: "Provider must notify Plan within 30 days of any adverse credentialing action or license restriction.", type: "added", status: "pending" },
     ],
   },
 ];
@@ -490,6 +527,7 @@ export function initializeSeedData() {
     localStorage.setItem("oci_contract_families", JSON.stringify(seedContractFamilies));
     localStorage.setItem("oci_tracker_obligations", JSON.stringify(seedTrackerObligations));
     localStorage.setItem("oci_redline_groups", JSON.stringify(seedRedlineGroups));
+    localStorage.setItem("oci_redline_documents", JSON.stringify(seedRedlineDocuments));
     localStorage.setItem("oci_notifications", JSON.stringify(seedNotifications));
     localStorage.setItem("oci_initialized", "true");
   }
@@ -512,6 +550,9 @@ export function initializeSeedData() {
   }
   if (!localStorage.getItem("oci_redline_groups")) {
     localStorage.setItem("oci_redline_groups", JSON.stringify(seedRedlineGroups));
+  }
+  if (!localStorage.getItem("oci_redline_documents")) {
+    localStorage.setItem("oci_redline_documents", JSON.stringify(seedRedlineDocuments));
   }
   if (!localStorage.getItem("oci_notifications")) {
     localStorage.setItem("oci_notifications", JSON.stringify(seedNotifications));
