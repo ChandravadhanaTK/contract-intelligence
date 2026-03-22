@@ -76,8 +76,21 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <KPI label="BAA Compliance" value="87%" icon={<ShieldCheck className="w-4 h-4" />} accent="bg-emerald-100 text-emerald-700" />
         <KPI label="Network Adequacy" value="92%" icon={<Users2 className="w-4 h-4" />} accent="bg-blue-100 text-blue-700" />
-        <KPI label="Overdue Obligations" value={3} icon={<AlertTriangle className="w-4 h-4" />} accent="bg-red-100 text-red-700" />
-        <KPI label="Credentialing Pending" value={3} sub="Providers awaiting approval" icon={<Clock className="w-4 h-4" />} accent="bg-amber-100 text-amber-700" />
+        <button onClick={() => navigate("/obligation-tracker")} className="kpi-card flex items-start gap-3 text-left hover:ring-1 hover:ring-primary/30 transition-all cursor-pointer">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-red-100 text-red-700"><AlertTriangle className="w-4 h-4" /></div>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground font-medium">Overdue Obligations</p>
+            <p className="text-xl font-bold text-foreground">3</p>
+          </div>
+        </button>
+        <button onClick={() => navigate("/credentialing")} className="kpi-card flex items-start gap-3 text-left hover:ring-1 hover:ring-primary/30 transition-all cursor-pointer">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-amber-100 text-amber-700"><Clock className="w-4 h-4" /></div>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground font-medium">Credentialing Pending</p>
+            <p className="text-xl font-bold text-foreground">3</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Providers awaiting approval</p>
+          </div>
+        </button>
         <button onClick={() => navigate("/renewals")} className="kpi-card flex items-start gap-3 text-left hover:ring-1 hover:ring-primary/30 transition-all cursor-pointer">
           <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple-100 text-purple-700"><RefreshCw className="w-4 h-4" /></div>
           <div className="min-w-0">
