@@ -308,9 +308,45 @@ export default function ContractViewerPage() {
                   )}
 
                   {/* Section content */}
-                  <div className="text-[13px] text-foreground leading-[1.7] whitespace-pre-wrap text-justify" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
-                    {section.content}
-                  </div>
+                  {editingSectionId === section.id ? (
+                    <div className="space-y-2" onClick={e => e.stopPropagation()}>
+                      <textarea
+                        className="w-full border rounded-lg px-3 py-2 text-[13px] bg-background min-h-[180px] resize-y leading-[1.7] text-justify"
+                        style={{ fontFamily: "'Times New Roman', Georgia, serif" }}
+                        value={editContent}
+                        onChange={e => setEditContent(e.target.value)}
+                        autoFocus
+                      />
+                      <div className="flex gap-2" style={{ fontFamily: "'Inter', sans-serif" }}>
+                        <button onClick={saveSectionEdit} className="flex items-center gap-1 px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium">
+                          <Save className="w-3 h-3" /> Save
+                        </button>
+                        <button onClick={cancelSectionEdit} className="px-3 py-1.5 border rounded text-xs font-medium hover:bg-muted">
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative group">
+                      <div className="text-[13px] text-foreground leading-[1.7] whitespace-pre-wrap text-justify" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                        {sectionEdits[section.id] ?? section.content}
+                      </div>
+                      {isEditable && !(section as any).isTitle && (
+                        <button
+                          onClick={e => { e.stopPropagation(); startSectionEdit(section.id, section.content); }}
+                          className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-muted rounded-md text-xs flex items-center gap-1 shadow-sm border"
+                          style={{ fontFamily: "'Inter', sans-serif" }}
+                        >
+                          <Pencil className="w-3 h-3" /> Edit
+                        </button>
+                      )}
+                      {sectionEdits[section.id] && (
+                        <span className="absolute top-0 left-0 text-[9px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>
+                          Edited
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   {/* Clause popover/tooltip */}
                   {popoverClauseId === clause?.id && clause && (
