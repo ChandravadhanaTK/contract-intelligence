@@ -172,7 +172,6 @@ export default function AIContractCreation() {
   const [autoApply, setAutoApply] = useState(false);
   const [drafts, setDrafts] = useState<DraftMeta[]>(() => get("oci_my_drafts", []));
   const [draftSearch, setDraftSearch] = useState("");
-  const [collapsedPanels, setCollapsedPanels] = useState<Record<string, boolean>>({ sections: false, summary: true, drafts: true });
   const centerRef = useRef<HTMLDivElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
