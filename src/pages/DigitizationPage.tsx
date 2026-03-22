@@ -29,48 +29,145 @@ function getOcrPageProgress(doc: DigitizationDocument): { scanned: number; total
   return { scanned, total: doc.pages };
 }
 
-/* ── Contract Viewer Modal ── */
+/* ── Contract Viewer Modal (PDF-style with Edit/View modes) ── */
 function ContractViewerModal({ open, onClose, doc }: { open: boolean; onClose: () => void; doc: DigitizationDocument | null }) {
+  const [mode, setMode] = useState<"view" | "edit">("view");
+  const [editedSections, setEditedSections] = useState<Record<string, string>>({});
+
+  // Reset state when doc changes
+  useEffect(() => {
+    if (doc) {
+      setMode("view");
+      setEditedSections({});
+    }
+  }, [doc?.id]);
+
   if (!open || !doc) return null;
 
-  const mockContent = [
-    `PROVIDER SERVICES AGREEMENT`,
-    ``,
-    `Payer: ${doc.payer}`,
-    `Document: ${doc.name}`,
-    `Type: ${doc.type}`,
-    `Pages: ${doc.pages}`,
-    `OCR Score: ${doc.ocrScore > 0 ? `${doc.ocrScore}%` : "Not yet scanned"}`,
-    ``,
-    `ARTICLE I — SCOPE OF AGREEMENT`,
-    `This Agreement is entered into between ${doc.payer} ("Plan") and the Provider for the delivery of Covered Services to enrolled Members within the designated Service Area.`,
-    ``,
-    `ARTICLE II — TERM`,
-    `This Agreement shall be effective upon execution and continue for a period of three (3) years unless terminated earlier pursuant to Article VII.`,
-    ``,
-    `ARTICLE III — PROVIDER OBLIGATIONS`,
-    `Provider shall deliver all medically necessary services in accordance with accepted standards of medical practice and applicable regulatory requirements.`,
-    ``,
-    `ARTICLE IV — COMPENSATION`,
-    `Reimbursement shall be in accordance with the Fee Schedule attached as Exhibit A.`,
-    ``,
-    `[Document continues for ${doc.pages} pages...]`,
-  ].join("\n");
+  const isCompleted = doc.status === "Completed";
+  const canEdit = !isCompleted;
+
+  const sections = [
+    { id: "header", title: "", content: `PROVIDER SERVICES AGREEMENT\n\nPayer: ${doc.payer}\nDocument: ${doc.name}\nType: ${doc.type}\nPages: ${doc.pages}\nOCR Score: ${doc.ocrScore > 0 ? `${doc.ocrScore}%` : "Not yet scanned"}` },
+    { id: "art1", title: "ARTICLE I — SCOPE OF AGREEMENT", content: `This Agreement is entered into between ${doc.payer} ("Plan") and the Provider for the delivery of Covered Services to enrolled Members within the designated Service Area. The Provider agrees to furnish medically necessary services in accordance with the terms of this Agreement.` },
+    { id: "art2", title: "ARTICLE II — TERM", content: `This Agreement shall be effective upon execution and continue for a period of three (3) years unless terminated earlier pursuant to Article VII. The Agreement shall automatically renew for successive one (1) year terms unless either party provides written notice of non-renewal at least ninety (90) days prior to the end of the then-current term.` },
+    { id: "art3", title: "ARTICLE III — PROVIDER OBLIGATIONS", content: `Provider shall deliver all medically necessary services in accordance with accepted standards of medical practice and applicable regulatory requirements. Provider shall maintain all required licensure, certifications, and accreditations throughout the term of this Agreement.` },
+    { id: "art4", title: "ARTICLE IV — COMPENSATION", content: `Reimbursement shall be in accordance with the Fee Schedule attached as Exhibit A. Clean Claims shall be processed within thirty (30) calendar days of receipt. Annual rate adjustments shall be applied based on CPI-U methodology effective January 1 of each contract year.` },
+    { id: "art5", title: "ARTICLE V — CONFIDENTIALITY & HIPAA", content: `Provider shall comply with all HIPAA Privacy and Security Rules. Protected Health Information shall be encrypted at rest using AES-256 and in transit using TLS 1.2 or higher. Any breach of PHI must be reported within twenty-four (24) hours of discovery.` },
+    { id: "art6", title: "ARTICLE VI — TERMINATION", content: `Either party may terminate this Agreement without cause upon one hundred eighty (180) days prior written notice. Optum may terminate immediately for cause, including loss of license, exclusion from federal healthcare programs, or fraud. Upon termination, Provider shall continue care for hospitalized Members until discharge.` },
+    { id: "art7", title: "ARTICLE VII — GENERAL PROVISIONS", content: `This Agreement constitutes the entire agreement between the parties. Any dispute shall first be submitted to mediation. This Agreement shall be governed by the laws of the State in which Covered Services are rendered.\n\n[Document continues for ${doc.pages} pages...]` },
+  ];
+
+  const getSectionContent = (id: string, original: string) => editedSections[id] ?? original;
+
+  const handleSectionEdit = (id: string, value: string) => {
+    setEditedSections(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleDownloadPdf = () => {
+    const printContent = sections.map(s => {
+      const content = getSectionContent(s.id, s.content);
+      return `${s.title ? `<h2 style="font-size:14px;font-weight:bold;margin:18px 0 8px 0;font-family:'Times New Roman',serif;">${s.title}</h2>` : ""}
+      <p style="font-size:12px;line-height:1.8;font-family:'Times New Roman',serif;white-space:pre-wrap;margin:0 0 12px 0;">${content}</p>`;
+    }).join("");
+
+    const html = `<!DOCTYPE html><html><head><title>${doc.name}</title>
+      <style>@page{margin:1in;}body{font-family:'Times New Roman',serif;padding:0;margin:0;}</style>
+    </head><body style="padding:40px;">${printContent}</body></html>`;
+
+    const w = window.open("", "_blank");
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+      w.setTimeout(() => { w.print(); }, 400);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative bg-card border rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col z-10">
-        <div className="p-4 border-b flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-bold">{doc.name}</h2>
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-card border rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col z-10">
+        {/* Header */}
+        <div className="p-4 border-b flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold truncate">{doc.name}</h2>
             <p className="text-xs text-muted-foreground">{doc.payer} • {doc.type} • {doc.pages} pages</p>
           </div>
-          <button onClick={onClose}><X className="w-4 h-4" /></button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Edit/View toggle — only for non-completed */}
+            {canEdit && (
+              <div className="flex items-center bg-muted rounded-lg p-0.5">
+                <button
+                  onClick={() => setMode("view")}
+                  className={`flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${mode === "view" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <Eye className="w-3 h-3" /> View
+                </button>
+                <button
+                  onClick={() => setMode("edit")}
+                  className={`flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${mode === "edit" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <Pencil className="w-3 h-3" /> Edit
+                </button>
+              </div>
+            )}
+            {isCompleted && (
+              <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                <CheckCircle2 className="w-3 h-3" /> Completed
+              </span>
+            )}
+            <button onClick={handleDownloadPdf} className="p-1.5 hover:bg-muted rounded-lg" title="Download / Print PDF">
+              <Download className="w-4 h-4 text-muted-foreground" />
+            </button>
+            <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-6">
-          <pre className="text-sm text-foreground whitespace-pre-wrap font-sans leading-relaxed">{mockContent}</pre>
+
+        {/* PDF-style body */}
+        <div className="flex-1 overflow-y-auto bg-muted/30 p-6">
+          <div className="bg-white mx-auto max-w-[680px] shadow-lg rounded border p-10" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
+            {sections.map((section) => {
+              const content = getSectionContent(section.id, section.content);
+              return (
+                <div key={section.id} className="mb-5">
+                  {section.title && (
+                    <h2 className="text-sm font-bold mb-2" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
+                      {section.title}
+                    </h2>
+                  )}
+                  {mode === "edit" && canEdit ? (
+                    <textarea
+                      value={content}
+                      onChange={e => handleSectionEdit(section.id, e.target.value)}
+                      className="w-full text-xs leading-relaxed bg-yellow-50/60 border border-yellow-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-yellow-400 resize-y min-h-[60px]"
+                      style={{ fontFamily: "'Times New Roman', Times, serif", minHeight: 80 }}
+                      rows={content.split("\n").length + 1}
+                    />
+                  ) : (
+                    <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
+                      {content}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
+
+        {/* Footer */}
+        {mode === "edit" && canEdit && (
+          <div className="p-3 border-t bg-muted/20 flex items-center justify-between">
+            <p className="text-[10px] text-muted-foreground">Editing mode — changes are local to this session</p>
+            <button
+              onClick={() => { setMode("view"); toast.success("Changes applied to preview"); }}
+              className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-medium hover:opacity-90"
+            >
+              Done Editing
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
