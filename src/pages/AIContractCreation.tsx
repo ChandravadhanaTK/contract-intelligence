@@ -611,6 +611,20 @@ export default function AIContractCreation() {
                             <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${statusConfig[s.status].color}`}>
                               {statusConfig[s.status].label}
                             </span>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleMoveSection(s.id, "up"); }}
+                              disabled={i === 0}
+                              className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed" title="Move up"
+                            >
+                              <ArrowUp className="w-3 h-3 text-muted-foreground" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleMoveSection(s.id, "down"); }}
+                              disabled={i === sections.length - 1}
+                              className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed" title="Move down"
+                            >
+                              <ArrowDown className="w-3 h-3 text-muted-foreground" />
+                            </button>
                             {isEditing ? (
                               <>
                                 <button
@@ -622,7 +636,6 @@ export default function AIContractCreation() {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    // revert: reload from saved
                                     const saved = get<ContractSection[] | null>("oci_create_sections", null);
                                     const original = saved?.find(x => x.id === s.id);
                                     if (original) setSections(prev => prev.map(p => p.id === s.id ? original : p));
@@ -641,6 +654,12 @@ export default function AIContractCreation() {
                                 <Edit3 className="w-3 h-3 text-muted-foreground" />
                               </button>
                             )}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeleteSection(s.id); }}
+                              className="p-1 rounded hover:bg-destructive/10 text-destructive" title="Delete clause"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
                             <button className="p-1 rounded hover:bg-muted" title="Comment"><MessageSquare className="w-3 h-3 text-muted-foreground" /></button>
                           </div>
                         </div>
