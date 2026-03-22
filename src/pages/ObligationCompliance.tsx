@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle, CheckCircle2, Clock, ShieldAlert, Calendar, FileDown,
-  FileText, Search, ChevronDown,
+  FileText, Search, ChevronDown, Eye,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
 import type { TrackerObligation } from "@/data/seed";
