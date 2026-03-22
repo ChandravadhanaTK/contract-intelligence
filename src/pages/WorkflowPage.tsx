@@ -10,7 +10,7 @@ import type { Contract, ReviewDocument, ReviewRequest, WorkflowStage, IntegrityF
 
 function get<T>(key: string, fb: T): T { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; }
 
-const STAGES: WorkflowStage[] = ["Draft", "Review", "Redline", "Approval", "Signature", "Published"];
+const STAGES: WorkflowStage[] = ["Draft", "Collaborative Drafting", "Redlining & Review", "Internal Review", "Credentialing Validation", "Contract Pricing Analysis", "Provider Review", "Pricing Team Review", "Legal Team Review", "Negotiation & Review", "Signature", "Published", "Data Loading"];
 
 const statusChipClass: Record<string, string> = {
   "Manual review": "status-chip-error",

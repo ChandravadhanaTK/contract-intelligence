@@ -50,7 +50,7 @@ export interface WorkflowInstance {
   history: StatusEvent[];
 }
 
-export type WorkflowStage = "Draft" | "Review" | "Redline" | "Approval" | "Signature" | "Published";
+export type WorkflowStage = "Draft" | "Collaborative Drafting" | "Redlining & Review" | "Internal Review" | "Credentialing Validation" | "Contract Pricing Analysis" | "Provider Review" | "Pricing Team Review" | "Legal Team Review" | "Negotiation & Review" | "Signature" | "Published" | "Data Loading";
 
 export interface Task {
   id: string;
