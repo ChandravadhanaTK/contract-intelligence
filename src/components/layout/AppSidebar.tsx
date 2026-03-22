@@ -2,7 +2,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Send, ShieldCheck, ChevronLeft, ChevronRight,
   LayoutDashboard, Users, FolderOpen, Shield,
-  ScanLine, FileText, ChevronDown,
+  ScanLine, FileText,
 } from "lucide-react";
 import { useState } from "react";
 import optumLogo from "@/assets/optum-logo.png";
