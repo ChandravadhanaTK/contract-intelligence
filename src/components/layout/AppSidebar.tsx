@@ -27,6 +27,7 @@ const navItems = [
   { label: "Compliance", path: "/compliance-hub", icon: Shield },
   { label: "Obligation Tracker", path: "/obligation-tracker", icon: ShieldCheck },
   { label: "Downstream Feed", path: "/downstream", icon: Send },
+  { label: "Renewals", path: "/renewals", icon: RefreshCw },
   { label: "User Management", path: "/users", icon: Users },
 ];
 
