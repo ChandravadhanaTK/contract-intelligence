@@ -67,6 +67,117 @@ function ComplianceDeviationGraph() {
   );
 }
 
+function ComplianceOverviewCard() {
+  const [graphView, setGraphView] = useState<"score" | "category" | "deviation">("score");
+
+  return (
+    <div className="bg-card border rounded-lg p-5">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <h3 className="text-sm font-semibold">Compliance Overview</h3>
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+          {([
+            { value: "score", label: "Compliance Score" },
+            { value: "category", label: "By Category" },
+            { value: "deviation", label: "Deviation by Clause" },
+          ] as const).map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => setGraphView(opt.value)}
+              className={`px-3 py-1 text-[11px] font-medium rounded-md transition-colors ${graphView === opt.value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-start gap-6">
+        {/* Left: Always-visible donut */}
+        <div className="flex flex-col items-center gap-2 flex-shrink-0">
+          <div className="relative w-28 h-28">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={complianceScoreData} dataKey="value" innerRadius={35} outerRadius={52} startAngle={90} endAngle={-270} paddingAngle={2}>
+                  {complianceScoreData.map((_, i) => <Cell key={i} fill={complianceScoreColors[i]} />)}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-lg font-bold">{compliancePercent}%</span>
+            </div>
+          </div>
+          <div className="text-center">
+            <p className="text-xs font-semibold text-foreground">Compliance Score</p>
+            <p className="text-[10px] text-muted-foreground">{complianceScoreData[0].value}/{complianceTotal} compliant</p>
+          </div>
+          <div className="flex flex-wrap gap-x-3 gap-y-1 justify-center max-w-[180px]">
+            {complianceScoreData.map((d, i) => (
+              <div key={d.name} className="flex items-center gap-1">
+                <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: complianceScoreColors[i] }} />
+                <span className="text-[10px] text-muted-foreground">{d.name} ({d.value})</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right: Toggled detail view */}
+        <div className="flex-1 min-w-0">
+          {graphView === "score" && (
+            <div className="grid grid-cols-2 gap-3">
+              {complianceMetrics.map(m => (
+                <div key={m.label} className="flex items-start gap-2.5 p-3 rounded-lg border bg-muted/30">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${m.accent}`}>{m.icon}</div>
+                  <div>
+                    <p className="text-lg font-bold text-foreground">{m.value}</p>
+                    <p className="text-[10px] font-medium text-foreground">{m.label}</p>
+                    <p className="text-[10px] text-muted-foreground">{m.subtitle}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {graphView === "category" && (
+            <div className="space-y-2.5 pt-1">
+              {categoryCompliance.map(c => {
+                const pct = c.total ? Math.round((c.compliant / c.total) * 100) : 0;
+                return (
+                  <div key={c.category} className="flex items-center gap-3">
+                    <span className="text-xs text-foreground w-24 truncate">{c.category}</span>
+                    <div className="flex-1 bg-muted rounded-full h-2.5">
+                      <div
+                        className={`h-2.5 rounded-full transition-all ${pct >= 80 ? "bg-emerald-500" : pct >= 60 ? "bg-amber-400" : "bg-destructive"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-muted-foreground w-14 text-right">{c.compliant}/{c.total} ({pct}%)</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {graphView === "deviation" && (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={deviationData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="name" tick={{ fontSize: 9 }} className="fill-muted-foreground" interval={0} angle={-25} textAnchor="end" height={50} />
+                <YAxis tick={{ fontSize: 9 }} className="fill-muted-foreground" domain={[0, 6]} />
+                <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }} />
+                <Bar dataKey="score" radius={[4, 4, 0, 0]} name="Deviation Score">
+                  {deviationData.map((entry, index) => (
+                    <Cell key={index} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const kpiCards = [
   { label: "Total Documents", value: 42, icon: <FileText className="w-4 h-4" />, accent: "bg-primary/10 text-primary", route: "/contracts" },
   { label: "Deviation Score", value: "3.2%", icon: <TrendingDown className="w-4 h-4" />, accent: "bg-red-100 text-red-700", route: "/deviation" },
@@ -1385,74 +1496,8 @@ export default function ContractCreationWithOverview() {
               </div>
             </div>
 
-            {/* Consolidated Compliance Overview card */}
-            <div className="bg-card border rounded-lg p-5">
-              <h3 className="text-sm font-semibold mb-4">Compliance Overview</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Left: Compliance Score Donut + legend */}
-                <div className="flex flex-col items-center gap-3">
-                  <div className="relative w-28 h-28">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={complianceScoreData} dataKey="value" innerRadius={35} outerRadius={52} startAngle={90} endAngle={-270} paddingAngle={2}>
-                          {complianceScoreData.map((_, i) => <Cell key={i} fill={complianceScoreColors[i]} />)}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-lg font-bold">{compliancePercent}%</span>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs font-semibold text-foreground">Compliance Score</p>
-                    <p className="text-[10px] text-muted-foreground">{complianceScoreData[0].value}/{complianceTotal} compliant</p>
-                    <p className="text-[10px] text-muted-foreground">{complianceScoreData[3].value} overdue · {complianceScoreData[1].value} review</p>
-                  </div>
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 justify-center">
-                    {complianceScoreData.map((d, i) => (
-                      <div key={d.name} className="flex items-center gap-1">
-                        <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: complianceScoreColors[i] }} />
-                        <span className="text-[10px] text-muted-foreground">{d.name} ({d.value})</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Center: Compliance by Category progress bars */}
-                <div>
-                  <h4 className="text-xs font-semibold mb-2.5 text-foreground">By Category</h4>
-                  <div className="space-y-2">
-                    {categoryCompliance.map(c => (
-                      <div key={c.category} className="flex items-center gap-2">
-                        <span className="text-[10px] text-foreground w-20 truncate">{c.category}</span>
-                        <div className="flex-1 bg-muted rounded-full h-2">
-                          <div className="h-2 rounded-full bg-emerald-500 transition-all" style={{ width: c.total ? `${(c.compliant / c.total) * 100}%` : "0%" }} />
-                        </div>
-                        <span className="text-[10px] text-muted-foreground w-8 text-right">{c.compliant}/{c.total}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Right: Deviation Score bar chart */}
-                <div>
-                  <h4 className="text-xs font-semibold mb-2.5 text-foreground">Deviation by Clause</h4>
-                  <ResponsiveContainer width="100%" height={170}>
-                    <BarChart data={deviationData} margin={{ top: 0, right: 5, left: -15, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis dataKey="name" tick={{ fontSize: 8 }} className="fill-muted-foreground" interval={0} angle={-30} textAnchor="end" height={45} />
-                      <YAxis tick={{ fontSize: 9 }} className="fill-muted-foreground" domain={[0, 6]} />
-                      <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }} />
-                      <Bar dataKey="score" radius={[3, 3, 0, 0]} name="Deviation Score">
-                        {deviationData.map((entry, index) => (
-                          <Cell key={index} fill={entry.fill} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
+            {/* Unified Compliance Overview card */}
+            <ComplianceOverviewCard />
 
             <ContractWorkflowPipeline />
             <WorkflowPage embedded initialTab="workflow" />
