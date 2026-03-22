@@ -113,6 +113,11 @@ export default function ContractViewerPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  // Editable sections state (for non-Active documents)
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [sectionEdits, setSectionEdits] = useState<Record<string, string>>({});
+
   const result = id ? getDocById(id) : null;
   const docName = result?.doc.name || "Contract Document";
   const familyName = result?.family.name || "";
