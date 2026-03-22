@@ -2,8 +2,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { BackToPipelineBanner } from "@/components/BackToPipelineBanner";
 import { useNavigate } from "react-router-dom";
 import {
-  FileText, Layers, BookOpen, ArrowRight, Bot, Send, ChevronDown, ChevronRight,
-  Edit3, MessageSquare, Highlighter, Plus, Upload, Download, RotateCcw, Save,
+  FileText, Layers, BookOpen, ArrowRight, ArrowLeft, Bot, Send, ChevronDown, ChevronRight,
+  Edit3, MessageSquare, Plus, Upload, Download, RotateCcw, Save, Check, X,
   CheckCircle2, AlertCircle, XCircle, Info, Sparkles, ToggleLeft, ToggleRight,
   Eye, Copy, Trash2, Search, FolderOpen,
 } from "lucide-react";
@@ -167,6 +167,7 @@ export default function AIContractCreation() {
     return saved || [];
   });
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const [editingSection, setEditingSection] = useState<string | null>(null);
   const [collapsedPanels, setCollapsedPanels] = useState<Record<string, boolean>>({ sections: false, summary: true, drafts: true });
   const [chatMessages, setChatMessages] = useState<ChatMsg[]>(() => get("oci_create_chat", []));
   const [chatInput, setChatInput] = useState("");
@@ -475,11 +476,19 @@ export default function AIContractCreation() {
           <div className="max-w-3xl mx-auto py-6 px-8">
             {/* Header toolbar */}
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-              <div>
-                <h2 className="text-lg font-bold text-foreground">Contract Document</h2>
-                <p className="text-xs text-muted-foreground">
-                  {mode === "full" ? "Full Draft Generation" : mode === "clause" ? "Clause-by-Clause Co-Authoring" : "Playbook-Guided with AI Review"}
-                </p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => { setMode(null); set("oci_create_mode", null); }}
+                  className="flex items-center gap-1 px-2.5 py-1.5 border rounded-lg text-xs font-medium hover:bg-muted"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" /> Back
+                </button>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">Contract Document</h2>
+                  <p className="text-xs text-muted-foreground">
+                    {mode === "full" ? "Full Draft Generation" : mode === "clause" ? "Clause-by-Clause Co-Authoring" : "Playbook-Guided with AI Review"}
+                  </p>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -562,6 +571,7 @@ export default function AIContractCreation() {
                 <div className="space-y-5">
                   {sections.map(s => {
                     const isSelected = selectedSection === s.id;
+                    const isEditing = editingSection === s.id;
                     return (
                       <div
                         key={s.id}
@@ -579,13 +589,52 @@ export default function AIContractCreation() {
                             <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${statusConfig[s.status].color}`}>
                               {statusConfig[s.status].label}
                             </span>
-                            <button className="p-1 rounded hover:bg-muted" title="Edit"><Edit3 className="w-3 h-3 text-muted-foreground" /></button>
+                            {isEditing ? (
+                              <>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setEditingSection(null); }}
+                                  className="p-1 rounded hover:bg-emerald-100 text-emerald-600" title="Done editing"
+                                >
+                                  <Check className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // revert: reload from saved
+                                    const saved = get<ContractSection[] | null>("oci_create_sections", null);
+                                    const original = saved?.find(x => x.id === s.id);
+                                    if (original) setSections(prev => prev.map(p => p.id === s.id ? original : p));
+                                    setEditingSection(null);
+                                  }}
+                                  className="p-1 rounded hover:bg-red-100 text-destructive" title="Cancel"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setEditingSection(s.id); setSelectedSection(s.id); }}
+                                className="p-1 rounded hover:bg-muted" title="Edit this section"
+                              >
+                                <Edit3 className="w-3 h-3 text-muted-foreground" />
+                              </button>
+                            )}
                             <button className="p-1 rounded hover:bg-muted" title="Comment"><MessageSquare className="w-3 h-3 text-muted-foreground" /></button>
                           </div>
                         </div>
-                        <div className="text-xs text-foreground whitespace-pre-line leading-relaxed text-justify">
-                          {s.body}
-                        </div>
+                        {isEditing ? (
+                          <textarea
+                            className="w-full text-xs text-foreground leading-relaxed text-justify bg-background border rounded-md p-3 min-h-[120px] resize-y focus:outline-none focus:ring-1 focus:ring-primary"
+                            style={{ fontFamily: "'Times New Roman', 'Georgia', serif" }}
+                            value={s.body}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => setSections(prev => prev.map(p => p.id === s.id ? { ...p, body: e.target.value, status: "updated" as SectionStatus } : p))}
+                          />
+                        ) : (
+                          <div className="text-xs text-foreground whitespace-pre-line leading-relaxed text-justify">
+                            {s.body}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
