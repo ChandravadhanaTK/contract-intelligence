@@ -183,6 +183,7 @@ export default function CompliancePage() {
 
   return (
     <div className="page-container">
+      <BackToPipelineBanner />
       <h1 className="page-header">Compliance</h1>
       <p className="text-sm text-muted-foreground -mt-3 mb-4">Contract compliance, standard clauses, deviations, and redlining</p>
 

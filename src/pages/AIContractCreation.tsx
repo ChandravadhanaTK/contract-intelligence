@@ -286,6 +286,7 @@ export default function AIContractCreation() {
   if (!mode) {
     return (
       <div className="page-container max-w-5xl">
+        <BackToPipelineBanner />
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-foreground mb-2">AI Contract Creation</h1>
           <p className="text-muted-foreground">Choose how you'd like to create your healthcare provider contract</p>

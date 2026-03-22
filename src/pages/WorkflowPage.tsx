@@ -159,6 +159,7 @@ export default function WorkflowPage({ embedded = false, initialTab }: WorkflowP
 
   return (
     <div className={embedded ? "space-y-4" : "page-container"}>
+      {!embedded && <BackToPipelineBanner />}
       {!embedded && (
         <>
           <div className="flex items-center justify-between flex-wrap gap-2">

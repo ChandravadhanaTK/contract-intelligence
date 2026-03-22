@@ -79,6 +79,7 @@ export default function RatesPage() {
 
   return (
     <div className="page-container">
+      <BackToPipelineBanner />
       <h1 className="page-header">Rate / Fee Table Extraction</h1>
 
       <div className="flex flex-wrap gap-4 items-end">
