@@ -323,6 +323,7 @@ export interface TrackerObligation {
   contractId: string;
   category: "Compliance" | "Financial" | "Operational" | "Reporting" | "Insurance";
   owner: string;
+  owningTeam: string;
   frequency: "One-time" | "Monthly" | "Quarterly" | "Semi-annually" | "Annually";
   dueDate: string;
   risk: "High" | "Medium" | "Low";
@@ -331,20 +332,20 @@ export interface TrackerObligation {
 }
 
 export const seedTrackerObligations: TrackerObligation[] = [
-  { id: "to-1", title: "Q1 2026 Payment — EHR Analytics SOW", contract: "BCBS Northeast MSA", contractId: "contract-001", category: "Financial", owner: "Jennifer Brown", frequency: "Quarterly", dueDate: "2026-01-15", risk: "High", status: "Overdue", evidence: "Missing" },
-  { id: "to-2", title: "Post-Termination Data Return", contract: "Aetna Provider Agreement", contractId: "contract-002", category: "Compliance", owner: "Michael Rivera", frequency: "One-time", dueDate: "2026-02-28", risk: "High", status: "Overdue", evidence: "Missing" },
-  { id: "to-3", title: "Final Settlement Payment", contract: "Cigna Capitation Agreement", contractId: "contract-003", category: "Financial", owner: "Jennifer Brown", frequency: "One-time", dueDate: "2026-03-01", risk: "High", status: "Overdue", evidence: "Missing" },
-  { id: "to-4", title: "BAA Compliance Certification", contract: "UHG BAA Agreement", contractId: "contract-001", category: "Compliance", owner: "Michael Rivera", frequency: "Annually", dueDate: "2026-04-15", risk: "Medium", status: "At Risk", evidence: "Pending" },
-  { id: "to-5", title: "Annual Insurance Certificate Renewal", contract: "BCBS Northeast MSA", contractId: "contract-001", category: "Insurance", owner: "Sarah Johnson", frequency: "Annually", dueDate: "2026-04-30", risk: "Medium", status: "At Risk", evidence: "Pending" },
-  { id: "to-6", title: "Network Adequacy Report", contract: "Humana Provider Agreement", contractId: "contract-002", category: "Operational", owner: "David Martinez", frequency: "Semi-annually", dueDate: "2026-05-15", risk: "Medium", status: "At Risk", evidence: "Missing" },
-  { id: "to-7", title: "HEDIS Quality Metrics Submission", contract: "Medicare National", contractId: "contract-003", category: "Reporting", owner: "Lisa Patel", frequency: "Annually", dueDate: "2026-05-31", risk: "Low", status: "Compliant", evidence: "Submitted" },
-  { id: "to-8", title: "Provider Directory Attestation", contract: "Aetna Provider Agreement", contractId: "contract-002", category: "Compliance", owner: "James Wilson", frequency: "Quarterly", dueDate: "2026-06-15", risk: "Low", status: "Compliant", evidence: "Submitted" },
-  { id: "to-9", title: "Claims Audit Completion", contract: "BCBS Northeast MSA", contractId: "contract-001", category: "Financial", owner: "Karen Davis", frequency: "Annually", dueDate: "2026-06-30", risk: "Low", status: "Compliant", evidence: "Submitted" },
-  { id: "to-10", title: "Credentialing Re-verification", contract: "Cigna Capitation Agreement", contractId: "contract-003", category: "Operational", owner: "Lisa Patel", frequency: "Semi-annually", dueDate: "2026-07-01", risk: "Low", status: "Compliant", evidence: "Submitted" },
-  { id: "to-11", title: "FWA Training Completion", contract: "UHG BAA Agreement", contractId: "contract-001", category: "Compliance", owner: "Michael Rivera", frequency: "Annually", dueDate: "2026-07-15", risk: "Low", status: "Upcoming", evidence: "Missing" },
-  { id: "to-12", title: "SLA Performance Report", contract: "Humana Provider Agreement", contractId: "contract-002", category: "Reporting", owner: "Robert Kim", frequency: "Monthly", dueDate: "2026-08-01", risk: "Low", status: "Upcoming", evidence: "Missing" },
-  { id: "to-13", title: "Rate Escalator Application", contract: "BCBS Northeast MSA", contractId: "contract-001", category: "Financial", owner: "Jennifer Brown", frequency: "Annually", dueDate: "2026-08-15", risk: "Low", status: "Upcoming", evidence: "Missing" },
-  { id: "to-14", title: "Emergency Services Coverage Review", contract: "Medicare National", contractId: "contract-003", category: "Operational", owner: "David Martinez", frequency: "Quarterly", dueDate: "2026-09-01", risk: "Low", status: "Upcoming", evidence: "Missing" },
+  { id: "to-1", title: "Q1 2026 Payment — EHR Analytics SOW", contract: "BCBS Northeast MSA", contractId: "contract-001", category: "Financial", owner: "Jennifer Brown", owningTeam: "Finance", frequency: "Quarterly", dueDate: "2026-01-15", risk: "High", status: "Overdue", evidence: "Missing" },
+  { id: "to-2", title: "Post-Termination Data Return", contract: "Aetna Provider Agreement", contractId: "contract-002", category: "Compliance", owner: "Michael Rivera", owningTeam: "Legal & Compliance", frequency: "One-time", dueDate: "2026-02-28", risk: "High", status: "Overdue", evidence: "Missing" },
+  { id: "to-3", title: "Final Settlement Payment", contract: "Cigna Capitation Agreement", contractId: "contract-003", category: "Financial", owner: "Jennifer Brown", owningTeam: "Finance", frequency: "One-time", dueDate: "2026-03-01", risk: "High", status: "Overdue", evidence: "Missing" },
+  { id: "to-4", title: "BAA Compliance Certification", contract: "UHG BAA Agreement", contractId: "contract-001", category: "Compliance", owner: "Michael Rivera", owningTeam: "Legal & Compliance", frequency: "Annually", dueDate: "2026-04-15", risk: "Medium", status: "At Risk", evidence: "Pending" },
+  { id: "to-5", title: "Annual Insurance Certificate Renewal", contract: "BCBS Northeast MSA", contractId: "contract-001", category: "Insurance", owner: "Sarah Johnson", owningTeam: "Risk Management", frequency: "Annually", dueDate: "2026-04-30", risk: "Medium", status: "At Risk", evidence: "Pending" },
+  { id: "to-6", title: "Network Adequacy Report", contract: "Humana Provider Agreement", contractId: "contract-002", category: "Operational", owner: "David Martinez", owningTeam: "Provider Relations", frequency: "Semi-annually", dueDate: "2026-05-15", risk: "Medium", status: "At Risk", evidence: "Missing" },
+  { id: "to-7", title: "HEDIS Quality Metrics Submission", contract: "Medicare National", contractId: "contract-003", category: "Reporting", owner: "Lisa Patel", owningTeam: "Quality & Reporting", frequency: "Annually", dueDate: "2026-05-31", risk: "Low", status: "Compliant", evidence: "Submitted" },
+  { id: "to-8", title: "Provider Directory Attestation", contract: "Aetna Provider Agreement", contractId: "contract-002", category: "Compliance", owner: "James Wilson", owningTeam: "Provider Relations", frequency: "Quarterly", dueDate: "2026-06-15", risk: "Low", status: "Compliant", evidence: "Submitted" },
+  { id: "to-9", title: "Claims Audit Completion", contract: "BCBS Northeast MSA", contractId: "contract-001", category: "Financial", owner: "Karen Davis", owningTeam: "Claims Operations", frequency: "Annually", dueDate: "2026-06-30", risk: "Low", status: "Compliant", evidence: "Submitted" },
+  { id: "to-10", title: "Credentialing Re-verification", contract: "Cigna Capitation Agreement", contractId: "contract-003", category: "Operational", owner: "Lisa Patel", owningTeam: "Credentialing", frequency: "Semi-annually", dueDate: "2026-07-01", risk: "Low", status: "Compliant", evidence: "Submitted" },
+  { id: "to-11", title: "FWA Training Completion", contract: "UHG BAA Agreement", contractId: "contract-001", category: "Compliance", owner: "Michael Rivera", owningTeam: "Legal & Compliance", frequency: "Annually", dueDate: "2026-07-15", risk: "Low", status: "Upcoming", evidence: "Missing" },
+  { id: "to-12", title: "SLA Performance Report", contract: "Humana Provider Agreement", contractId: "contract-002", category: "Reporting", owner: "Robert Kim", owningTeam: "Quality & Reporting", frequency: "Monthly", dueDate: "2026-08-01", risk: "Low", status: "Upcoming", evidence: "Missing" },
+  { id: "to-13", title: "Rate Escalator Application", contract: "BCBS Northeast MSA", contractId: "contract-001", category: "Financial", owner: "Jennifer Brown", owningTeam: "Finance", frequency: "Annually", dueDate: "2026-08-15", risk: "Low", status: "Upcoming", evidence: "Missing" },
+  { id: "to-14", title: "Emergency Services Coverage Review", contract: "Medicare National", contractId: "contract-003", category: "Operational", owner: "David Martinez", owningTeam: "Provider Relations", frequency: "Quarterly", dueDate: "2026-09-01", risk: "Low", status: "Upcoming", evidence: "Missing" },
 ];
 
 // ─── Contract families for accordion list ───

@@ -252,6 +252,7 @@ export default function ObligationCompliance() {
                 <th className="text-left p-3 font-medium">Contract</th>
                 <th className="text-left p-3 font-medium">Category</th>
                 <th className="text-left p-3 font-medium">Owner</th>
+                <th className="text-left p-3 font-medium">Owning Team</th>
                 <th className="text-left p-3 font-medium">Frequency</th>
                 <th className="text-left p-3 font-medium">Due Date</th>
                 <th className="text-left p-3 font-medium">Risk</th>
@@ -267,6 +268,7 @@ export default function ObligationCompliance() {
                   <td className="p-3 text-xs text-muted-foreground">{o.contract}</td>
                   <td className="p-3"><span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">{o.category}</span></td>
                   <td className="p-3 text-xs">{o.owner}</td>
+                  <td className="p-3"><span className="text-xs px-2 py-0.5 rounded bg-secondary text-secondary-foreground">{o.owningTeam}</span></td>
                   <td className="p-3"><span className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">{o.frequency}</span></td>
                   <td className={`p-3 text-xs ${o.status === "Overdue" ? "text-destructive font-medium" : ""}`}>{o.dueDate}</td>
                   <td className="p-3"><span className={`status-chip ${riskChip[o.risk]}`}>{o.risk}</span></td>
