@@ -457,6 +457,93 @@ export default function ContractViewerPage() {
               );
             })}
 
+            {/* Signature Block */}
+            {isSignMode && (
+              <div ref={sigRef} className="mt-12 pt-8 border-t-2 border-foreground/20">
+                <h2 className="text-center font-bold text-sm uppercase tracking-wide mb-8" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                  SIGNATURE PAGE
+                </h2>
+                <p className="text-[12px] text-foreground leading-relaxed mb-8 text-justify" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                  IN WITNESS WHEREOF, the parties hereto have caused this Agreement to be executed by their duly authorized representatives as of the date last written below.
+                </p>
+
+                <div className="grid grid-cols-2 gap-12 mb-8">
+                  {/* Plan signature */}
+                  <div>
+                    <p className="text-[11px] font-bold uppercase mb-4" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                      OPTUMHEALTH CARE SOLUTIONS, LLC
+                    </p>
+                    <div className="border-b border-foreground/40 mb-1 h-8" />
+                    <p className="text-[10px] text-muted-foreground">Authorized Signature</p>
+                    <div className="mt-3 border-b border-foreground/40 mb-1 h-6" />
+                    <p className="text-[10px] text-muted-foreground">Print Name & Title</p>
+                    <div className="mt-3 border-b border-foreground/40 mb-1 h-6" />
+                    <p className="text-[10px] text-muted-foreground">Date</p>
+                  </div>
+
+                  {/* Provider signature */}
+                  <div>
+                    <p className="text-[11px] font-bold uppercase mb-4" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                      PROVIDER
+                    </p>
+                    {signatureDataUrl ? (
+                      <div className="border-b border-foreground/40 mb-1 h-8 flex items-end">
+                        <img src={signatureDataUrl} alt="Signature" className="h-7 object-contain" />
+                      </div>
+                    ) : (
+                      <div className="border-b border-foreground/40 mb-1 h-8" />
+                    )}
+                    <p className="text-[10px] text-muted-foreground">Authorized Signature</p>
+                    <div className="mt-3 border-b border-foreground/40 mb-1 h-6" />
+                    <p className="text-[10px] text-muted-foreground">Print Name & Title</p>
+                    <div className="mt-3 border-b border-foreground/40 mb-1 h-6" />
+                    <p className="text-[10px] text-muted-foreground">Date</p>
+                  </div>
+                </div>
+
+                {/* Draw signature pad */}
+                {!signatureDataUrl && (
+                  <div className="mt-6 p-4 border-2 border-dashed border-primary/30 rounded-lg bg-primary/5" style={{ fontFamily: "'Inter', sans-serif" }}>
+                    <p className="text-xs font-semibold text-foreground mb-2">Draw Your Signature</p>
+                    <canvas
+                      ref={sigCanvasRef}
+                      width={500}
+                      height={120}
+                      className="w-full border rounded bg-white cursor-crosshair"
+                      onMouseDown={startDraw}
+                      onMouseMove={draw}
+                      onMouseUp={endDraw}
+                      onMouseLeave={endDraw}
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={clearSignature} className="text-[11px] px-3 py-1.5 border rounded hover:bg-muted font-medium">Clear</button>
+                      <button onClick={applySignature} disabled={!hasDrawn} className="text-[11px] px-3 py-1.5 bg-primary text-primary-foreground rounded font-medium hover:opacity-90 disabled:opacity-50">
+                        Apply Signature
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {signatureDataUrl && (
+                  <div className="mt-4 flex items-center gap-3" style={{ fontFamily: "'Inter', sans-serif" }}>
+                    <span className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
+                      <CheckCircle className="w-3.5 h-3.5" /> Signature applied
+                    </span>
+                    <button onClick={clearSignature} className="text-[11px] px-2 py-1 border rounded hover:bg-muted font-medium">Re-sign</button>
+                    <button
+                      onClick={() => {
+                        toast.success("Contract signed and submitted successfully!");
+                        setTimeout(() => navigate("/contracts/newgen"), 1200);
+                      }}
+                      className="text-[11px] px-3 py-1.5 bg-primary text-primary-foreground rounded font-medium hover:opacity-90"
+                    >
+                      Submit Signed Contract
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Footer */}
             <div className="mt-12 pt-4 border-t border-muted flex items-center justify-between text-[10px] text-muted-foreground" style={{ fontFamily: "'Arial', sans-serif" }}>
               <span>OHCS-PhysHealthProviderAgmt(v2011) (2)</span>
