@@ -463,6 +463,22 @@ export default function ContractViewerPage() {
                       )}
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{clause.summary}</p>
+                    {clause.complianceScore > 0 && clause.complianceScore < 85 && (
+                      <span
+                        onClick={e => { e.stopPropagation(); setChatOpen(true); sendChat(`How to improve ${clause.name.toLowerCase()}?`); }}
+                        className="inline-flex items-center gap-0.5 mt-1 text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium cursor-pointer hover:bg-primary/20 transition-colors"
+                      >
+                        <Sparkles className="w-2.5 h-2.5" /> Improve Compliance
+                      </span>
+                    )}
+                    {clause.alignment === "missing" && (
+                      <span
+                        onClick={e => { e.stopPropagation(); setChatOpen(true); sendChat(`How to improve ${clause.name.toLowerCase()}?`); }}
+                        className="inline-flex items-center gap-0.5 mt-1 text-[9px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-medium cursor-pointer hover:bg-destructive/20 transition-colors"
+                      >
+                        <Sparkles className="w-2.5 h-2.5" /> Add Missing Clause
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -520,11 +536,19 @@ export default function ContractViewerPage() {
           </button>
           {chatOpen && (
             <div className="flex flex-col">
-              <div className="overflow-y-auto p-3 space-y-2 max-h-48">
-                {chatMessages.length === 0 && <p className="text-[10px] text-muted-foreground text-center mt-4">Ask about this contract…</p>}
+              {/* Quick compliance prompts */}
+              <div className="px-2 pt-2 flex flex-wrap gap-1">
+                {["Improve compliance", "Improve termination without cause", "Improve rate escalator", "Improve dispute resolution"].map(p => (
+                  <button key={p} onClick={() => sendChat(p)} className="text-[9px] px-2 py-0.5 rounded-full bg-accent text-accent-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors">
+                    {p}
+                  </button>
+                ))}
+              </div>
+              <div className="overflow-y-auto p-3 space-y-2 max-h-60">
+                {chatMessages.length === 0 && <p className="text-[10px] text-muted-foreground text-center mt-4">Ask about this contract or click a prompt above…</p>}
                 {chatMessages.map((m, i) => (
                   <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[90%] rounded-lg px-2.5 py-1.5 text-[11px] leading-relaxed ${m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
+                    <div className={`max-w-[90%] rounded-lg px-2.5 py-1.5 text-[11px] leading-relaxed whitespace-pre-wrap ${m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
                       {m.role === "assistant" ? renderCitations(m.text) : m.text}
                     </div>
                   </div>

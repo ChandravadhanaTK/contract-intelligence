@@ -135,6 +135,75 @@ const seedReviewRequests: ReviewRequest[] = [
   ...makeRequests("contract-003", "doc-008", 50, 5),
 ];
 
+export const complianceRecommendations: Record<string, { score: number; why: string; changes: string[] }> = {
+  "termination without cause": {
+    score: 68,
+    why: "The current Termination clause (§7.1–7.5) scores 68% because it lacks several provisions required by Optum Standard Provider Agreement guidelines and CMS regulatory standards. Missing provisions include auto-renewal terms, cure periods for remediable breaches, claims runout/final payment, return of materials/PHI, and member notification requirements.",
+    changes: [
+      "**Add §7.6 Auto-Renewal:** \"This Agreement shall automatically renew for successive one (1) year terms unless either party provides written notice of non-renewal at least 180 days prior to the expiration of the then-current term.\" — *Why: CMS requires continuity provisions to protect enrolled members from coverage gaps.*",
+      "**Add §7.7 Cure Period:** \"For any termination for cause based on a remediable breach, the breaching party shall have thirty (30) days from receipt of written notice to cure such breach.\" — *Why: Due process requirement under state managed care regulations; prevents abrupt network disruptions.*",
+      "**Add §7.8 Claims Runout:** \"Following termination, Plan shall continue to process and pay Clean Claims for Covered Services rendered prior to the termination date for a period of ninety (90) days.\" — *Why: Required by NAIC Model Act §14; ensures Provider receives payment for services already rendered.*",
+      "**Add §7.9 Return of Materials/PHI:** \"Within thirty (30) days of termination, each party shall return or destroy all Confidential Information and PHI of the other party, and certify in writing that it has done so.\" — *Why: HIPAA §164.504(e)(2)(ii)(J) requires BAA termination provisions for PHI return/destruction.*",
+      "**Add §7.10 Member Notification:** \"Plan shall notify affected Members of Provider's termination at least sixty (60) days prior to the effective date of termination.\" — *Why: CMS Medicare Advantage requirements (42 CFR §422.111) mandate advance member notification of network changes.*",
+    ],
+  },
+  "rate escalator": {
+    score: 58,
+    why: "The Rate Escalator clause (§3.10) scores 58% because it specifies a 5% annual escalator but lacks critical guardrails: no cap on cumulative increases, no benchmark tie to CMS fee schedule updates, no mechanism for downward adjustment in deflationary periods, and no dispute resolution for rate disagreements.",
+    changes: [
+      "**Add Escalator Cap:** \"Annual rate escalation shall not exceed the lesser of 5% or CPI-U plus 2%, with a cumulative cap of 15% over the initial term.\" — *Why: Prevents runaway cost escalation; aligns with actuarial soundness requirements for managed care.*",
+      "**Add CMS Benchmark Reference:** \"Rate adjustments shall be benchmarked against CMS Medicare Physician Fee Schedule updates published annually.\" — *Why: Provides objective, federally-published reference point; standard in Optum provider agreements.*",
+      "**Add Downward Adjustment Clause:** \"In the event CPI-U is negative for two consecutive quarters, rates shall remain flat for the following contract year.\" — *Why: Protects Plan from paying above-market rates during deflationary periods.*",
+      "**Add Rate Dispute Mechanism:** \"Any dispute regarding rate adjustments shall be submitted to an independent actuary for binding determination within 60 days.\" — *Why: Prevents contract stalls over rate disagreements; ensures objective resolution.*",
+    ],
+  },
+  "dispute resolution": {
+    score: 45,
+    why: "The Dispute Resolution clause (§2.2) scores only 45% because it jumps directly to binding arbitration without progressive escalation steps, assigns all costs to Provider (unfair allocation), and lacks specification of governing arbitration rules or venue selection.",
+    changes: [
+      "**Add Progressive Escalation:** \"Disputes shall first be submitted to good-faith negotiation between designated representatives for thirty (30) days, followed by mediation with a mutually agreed mediator for sixty (60) days, before proceeding to arbitration.\" — *Why: AMA Model Managed Care Contract guidelines require progressive escalation; reduces litigation costs by 60-70%.*",
+      "**Equalize Cost Allocation:** \"Arbitration costs, including arbitrator fees, shall be shared equally by both parties.\" — *Why: One-sided cost allocation is considered unconscionable in many state jurisdictions and may render the clause unenforceable.*",
+      "**Specify Arbitration Rules:** \"Arbitration shall be conducted under American Arbitration Association (AAA) Healthcare Rules in the state where Covered Services are rendered.\" — *Why: Provides clear procedural framework; AAA Healthcare Rules are industry standard for provider-payer disputes.*",
+      "**Add Injunctive Relief Carve-Out:** \"Nothing in this section shall prevent either party from seeking injunctive or equitable relief in a court of competent jurisdiction for breaches involving PHI or trade secrets.\" — *Why: HIPAA enforcement may require immediate court intervention that arbitration timelines cannot accommodate.*",
+    ],
+  },
+  "network adequacy": {
+    score: 0,
+    why: "Network Adequacy is entirely missing from this contract, scoring 0%. CMS requires all Medicare Advantage organizations and their contracted providers to meet network adequacy standards per 42 CFR §422.116. State DOI regulations also mandate minimum provider-to-member ratios.",
+    changes: [
+      "**Add §12.1 Network Standards:** \"Provider shall maintain sufficient capacity to serve all assigned Members within established time-and-distance standards: primary care within 10 miles/30 minutes; specialists within 30 miles/60 minutes.\" — *Why: CMS Medicare Advantage network adequacy requirements (42 CFR §422.116) mandate specific access standards.*",
+      "**Add §12.2 Capacity Reporting:** \"Provider shall report panel capacity and appointment availability to Plan quarterly using the standard Network Adequacy Template.\" — *Why: CMS requires annual network adequacy submissions; quarterly monitoring ensures ongoing compliance.*",
+      "**Add §12.3 Remediation:** \"If Provider fails to meet adequacy standards, a corrective action plan must be submitted within 30 days with compliance achieved within 90 days.\" — *Why: CMS can impose sanctions for network inadequacy; proactive remediation avoids regulatory action.*",
+    ],
+  },
+  "payment terms": {
+    score: 92,
+    why: "Payment Terms (§4.1) is already well-aligned at 92%. Minor gaps include lack of an explicit prompt-pay interest penalty and no mention of Electronic Funds Transfer (EFT) requirements.",
+    changes: [
+      "**Add Prompt-Pay Interest:** \"Claims not paid within 30 calendar days shall accrue interest at 1.5% per month from the 31st day until payment.\" — *Why: Many states mandate prompt-pay interest (e.g., NY Insurance Law §3224-a); incentivizes timely payment.*",
+      "**Add EFT Requirement:** \"Plan shall remit payment via Electronic Funds Transfer (EFT) using the CAQH CORE EFT & ERA Operating Rules.\" — *Why: ACA §1104 mandates EFT adoption; reduces payment processing delays by 5-7 business days.*",
+    ],
+  },
+  "prior authorization": {
+    score: 84,
+    why: "Prior Authorization (§5.1) scores 84% due to missing provisions for authorization turnaround times, retroactive authorization for emergencies, and continuity of approved services during transitions.",
+    changes: [
+      "**Add Turnaround SLA:** \"Standard prior authorization decisions shall be communicated within 72 hours; urgent/expedited requests within 24 hours.\" — *Why: CMS requires MA plans to decide standard requests within 72 hours (42 CFR §422.568); No Surprises Act reinforces timely decisions.*",
+      "**Add Retroactive Auth:** \"Emergency and urgently needed services shall be eligible for retroactive authorization when submitted within 48 hours of stabilization.\" — *Why: Prudent layperson standard requires coverage of emergency services regardless of prior auth status.*",
+      "**Add Continuity Provision:** \"Approved prior authorizations shall remain valid for a minimum of 90 days or through the approved course of treatment, whichever is longer.\" — *Why: Prevents mid-treatment disruptions; CMS Interoperability Rule (CMS-9115-F) requires honor-period for prior auths.*",
+    ],
+  },
+  "quality & reporting": {
+    score: 82,
+    why: "Quality & Reporting (§6.1) scores 82% because it references HEDIS measures but lacks specific measure targets, CAHPS survey integration, and penalties/incentives tied to quality performance.",
+    changes: [
+      "**Add Specific HEDIS Targets:** \"Provider shall achieve minimum 75th percentile HEDIS scores for: Controlling Blood Pressure (CBP), Comprehensive Diabetes Care (CDC-HbA1c), and Breast Cancer Screening (BCS).\" — *Why: CMS Star Ratings are tied to HEDIS performance; specific targets are required for P4P programs.*",
+      "**Add CAHPS Integration:** \"Provider shall participate in annual CAHPS survey administration and target minimum 80% positive response rate for Getting Care Quickly and Provider Communication measures.\" — *Why: CAHPS accounts for 32% of CMS Star Ratings weight; requires explicit contractual commitment.*",
+      "**Add P4P Incentive Clause:** \"Provider shall be eligible for a quality bonus pool of up to 2% of total annual reimbursement based on achievement of quality targets defined in Exhibit C.\" — *Why: Value-based contracting incentives are now standard in managed care; aligns financial interests with quality outcomes.*",
+    ],
+  },
+};
+
 export const chatAnswerMap: Record<string, string> = {
   "rate escalator": "The rate escalator percentage is 5% annually, applied using CPI-U methodology. See Section 3.10 • Page 43 of the Rate Appendix.",
   "effective date": "The effective date for this contract is January 1, 2025 with a three-year initial term through December 31, 2027. Reference: Section 1.1 • Page 2.",
@@ -147,7 +216,7 @@ export const chatAnswerMap: Record<string, string> = {
   "notice": "The termination notice period is 180 days written notice for either party. For termination with cause (e.g., loss of license, fraud), 60 days notice with a 30-day cure period is required. See Section 7.1 • Page 22 and Section 7.2 • Page 23.",
   "obligation": "Key obligations include: 1) Annual HEDIS data submission (due March 31), 2) Monthly provider directory updates, 3) Quarterly claims processing audits, 4) Annual CAHPS surveys, 5) Credentialing verification, 6) FWA training completion. See Section 12.1 • Page 50.",
   "redlining": "Suggested redlining changes: 1) Claims Processing Timeline — align to 30 calendar days (Section 3.1 • Page 15), 2) Reimbursement Rates — increase from 95% to 110% Medicare (Section 5.1 • Page 18), 3) Termination Notice — equalize to 180 days (Section 7.1 • Page 22), 4) Dispute Resolution — add progressive escalation (Section 9.1 • Page 28).",
-  "default": "I can help you with details about this contract. Try asking about: rate escalator percentage, effective date, provider name, payment appendix type, termination notice, compliance requirements, or obligations.",
+  "default": "I can help you with details about this contract. Try asking about: rate escalator percentage, effective date, provider name, payment appendix type, termination notice, compliance requirements, obligations, or type **\"improve compliance\"** to get recommendations for improving compliance scores.",
 };
 
 // ─── Dashboard seed data ───
