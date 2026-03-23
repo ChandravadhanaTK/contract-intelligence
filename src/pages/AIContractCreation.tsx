@@ -242,16 +242,33 @@ export default function AIContractCreation() {
     scrollToSection(clause.sectionRef);
   };
 
-  const handleSaveDraft = () => {
+  const nameSuggestions = [
+    "Northwell Health – Provider Agreement",
+    "Mercy Health – Delegate Agreement",
+    "Cleveland Clinic – Ancillary Services",
+    "Kaiser Permanente – Behavioral Health",
+    "Mount Sinai – Renewal Amendment",
+    "Community Health – Provider Services Agreement",
+    "Memorial Hospital – Facility Agreement",
+  ];
+
+  const openSaveDialog = () => {
+    setSaveName("");
+    setSaveModalOpen(true);
+  };
+
+  const handleSaveDraft = (name?: string) => {
+    const finalName = name || saveName || "Untitled Provider Agreement";
     const draft: DraftMeta = {
       id: `draft-${Date.now()}`,
-      name: "Payer Agreement – Standard",
+      name: finalName,
       createdAt: new Date().toISOString(),
       status: "Draft",
       sections: [...sections],
     };
-    setDrafts(prev => [draft, ...prev].slice(0, 5));
-    toast.success("Draft saved");
+    setDrafts(prev => [draft, ...prev].slice(0, 10));
+    setSaveModalOpen(false);
+    toast.success(`Saved: ${finalName}`);
   };
 
   const handleLoadDraft = (draft: DraftMeta) => {
