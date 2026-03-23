@@ -197,6 +197,23 @@ export default function ObligationCompliance() {
         ))}
       </div>
 
+      {/* Renewal Contracts card */}
+      <div
+        onClick={() => navigate("/renewals")}
+        className="bg-card border rounded-lg p-4 flex items-center justify-between cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-violet-100 text-violet-700">
+            <RefreshCw className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">Renewal Contracts</p>
+            <p className="text-xs text-muted-foreground">{renewalCount} contracts approaching renewal — review and generate renewal drafts</p>
+          </div>
+        </div>
+        <ArrowRight className="w-4 h-4 text-muted-foreground" />
+      </div>
+
       {/* Compliance Score and By Category — separated */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Compliance Score */}
