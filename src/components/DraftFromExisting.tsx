@@ -278,7 +278,7 @@ export default function DraftFromExisting({ onBack }: { onBack: () => void }) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center">
         <div className="flex items-center justify-between w-full max-w-md mb-12">
-          <span className="text-sm font-semibold text-primary">ContractIQ</span>
+          <span className="text-sm font-semibold text-primary">Contract Intelligence</span>
           <button onClick={handleNewContract} className="px-3 py-1.5 bg-muted text-muted-foreground rounded-lg text-xs font-medium flex items-center gap-1.5 hover:bg-muted/80">
             <Plus className="w-3.5 h-3.5" /> New contract
           </button>
