@@ -52,6 +52,7 @@ const extractedClauses: ExtractedClause[] = [
   { id: "ec-8", name: "Quality & Reporting", sectionId: "s7", sectionRef: "6.1", pageRef: "Page 24", category: "Operational", confidence: "Medium", alignment: "aligned", summary: "HEDIS measures and quarterly reporting required", complianceScore: 82 },
   { id: "ec-9", name: "Network Adequacy", sectionId: "missing", sectionRef: "—", pageRef: "—", category: "Compliance", confidence: "Low", alignment: "missing", summary: "Missing: No network adequacy clause found", complianceScore: 0 },
   { id: "ec-10", name: "Dispute Resolution", sectionId: "s3", sectionRef: "2.2", pageRef: "Page 8", category: "Legal", confidence: "Low", alignment: "nonAligned", summary: "Binding arbitration without progressive escalation", complianceScore: 45 },
+  { id: "ec-11", name: "Rate Schedule Extraction", sectionId: "rate-schedule", sectionRef: "Exhibit A", pageRef: "Page 45", category: "Financial", confidence: "High", alignment: "aligned", summary: "Pharmacy reimbursement rates across Retail, Mail, Specialty, LTC, 340B, Compound & Vaccine channels — 23 line items extracted", complianceScore: 88 },
 ];
 
 // Map section IDs to confidence percentages
