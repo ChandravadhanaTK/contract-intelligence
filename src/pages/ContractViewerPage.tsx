@@ -220,6 +220,13 @@ export default function ContractViewerPage() {
     );
   }, [clauseSearch]);
 
+  // Auto-scroll to signature section when in sign mode
+  useEffect(() => {
+    if (isSignMode && sigRef.current) {
+      setTimeout(() => sigRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 600);
+    }
+  }, [isSignMode]);
+
   // Non-aligned / high-risk iterators
   const nonAlignedIds = extractedClauses.filter(c => c.alignment === "nonAligned").map(c => c.id);
   const highRiskIds = extractedClauses.filter(c => c.confidence === "Low" || c.alignment === "nonAligned").map(c => c.id);
