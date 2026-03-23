@@ -110,6 +110,17 @@ export default function ObligationCompliance() {
     api.getTrackerObligations(statusFilter, categoryFilter).then(setObligations);
   }, [statusFilter, categoryFilter]);
 
+  // Renewal contracts count
+  const [renewalCount, setRenewalCount] = useState(0);
+  useEffect(() => {
+    const stored = localStorage.getItem("oci_renewals");
+    if (stored) {
+      setRenewalCount(JSON.parse(stored).length);
+    } else {
+      setRenewalCount(3); // default seed count
+    }
+  }, []);
+
   const allObs = obligations;
   const overdue = allObs.filter(o => o.status === "Overdue").length;
   const atRisk = allObs.filter(o => o.status === "At Risk").length;
