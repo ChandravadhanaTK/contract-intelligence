@@ -163,8 +163,18 @@ export default function DelegationPipelineTabs() {
                         : "bg-muted text-muted-foreground border-transparent hover:border-muted-foreground/30"
                   }`}
                 >
-                  {stage.split(": ")[1] || stage}
-                  {docsAtStage > 0 && <span className="block text-[9px] mt-0.5 font-normal">({docsAtStage} docs)</span>}
+                  {(() => {
+                    const label = stage.split(": ")[1] || stage;
+                    const bracketMatch = label.match(/^(.*?)(\s*\(.*\))$/);
+                    if (bracketMatch) {
+                      return <>
+                        {bracketMatch[1]}
+                        <span className="block text-[8px] mt-0.5 font-normal opacity-80">{bracketMatch[2].trim()}</span>
+                      </>;
+                    }
+                    return label;
+                  })()}
+                  {docsAtStage > 0 && <span className="block text-[9px] mt-0.5 font-normal">({docsAtStage})</span>}
                 </button>
                 {i < stages.length - 1 && <div className="w-3 h-0.5 bg-muted flex-shrink-0" />}
               </div>
