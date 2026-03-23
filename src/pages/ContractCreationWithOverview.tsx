@@ -1709,7 +1709,7 @@ export default function ContractCreationWithOverview() {
           <div className="space-y-6">
             <div>
               <h1 className="page-header">NewGen Contract Digitization</h1>
-              <p className="text-sm text-muted-foreground mt-1">OCR + AI pipeline for creating payer contracts into structured data</p>
+              <p className="text-sm text-muted-foreground mt-1">OCR + AI pipeline for creating provider contracts into structured data</p>
               <div className="mt-4" />
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {kpiCards.map(kpi => (
