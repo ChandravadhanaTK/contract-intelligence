@@ -3,8 +3,9 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, GitCompare, FileDown, ChevronDown, ChevronRight, Shield, FileText,
   Bot, Send, X, Sparkles, Clock, ChevronUp, Search, ArrowRight,
-  AlertTriangle, CheckCircle, Info, Pencil, Save,
+  AlertTriangle, CheckCircle, Info, Pencil, Save, Table2,
 } from "lucide-react";
+import { defaultRateScheduleTable } from "@/data/rateScheduleData";
 import { api } from "@/services/mockApi";
 import { seedContractFamilies, seedDigitizationDocs } from "@/data/seed";
 import { toast } from "sonner";
