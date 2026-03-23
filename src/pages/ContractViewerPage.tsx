@@ -470,7 +470,7 @@ export default function ContractViewerPage() {
             })}
 
             {/* Rate Schedule Table in Document */}
-            <div className="mt-8 pt-6 border-t border-muted">
+            <div ref={el => { sectionRefs.current["rate-schedule"] = el; }} className="mt-8 pt-6 border-t border-muted">
               <h2 className="text-center font-bold text-sm uppercase tracking-wide mb-1" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
                 EXHIBIT A – RATE SCHEDULE
               </h2>
