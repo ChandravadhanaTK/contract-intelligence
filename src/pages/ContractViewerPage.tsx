@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, GitCompare, FileDown, ChevronDown, ChevronRight, Shield, FileText,
   Bot, Send, X, Sparkles, Clock, ChevronUp, Search, ArrowRight,
