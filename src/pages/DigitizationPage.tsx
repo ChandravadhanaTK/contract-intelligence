@@ -48,8 +48,8 @@ function ContractViewerModal({ open, onClose, doc }: { open: boolean; onClose: (
   const canEdit = !isCompleted;
 
   const sections = [
-    { id: "header", title: "", content: `PROVIDER SERVICES AGREEMENT\n\nPayer: ${doc.payer}\nDocument: ${doc.name}\nType: ${doc.type}\nPages: ${doc.pages}\nOCR Score: ${doc.ocrScore > 0 ? `${doc.ocrScore}%` : "Not yet scanned"}` },
-    { id: "art1", title: "ARTICLE I — SCOPE OF AGREEMENT", content: `This Agreement is entered into between ${doc.payer} ("Plan") and the Provider for the delivery of Covered Services to enrolled Members within the designated Service Area. The Provider agrees to furnish medically necessary services in accordance with the terms of this Agreement.` },
+    { id: "header", title: "", content: `PROVIDER SERVICES AGREEMENT\n\nProvider: ${doc.payer}\nDocument: ${doc.name}\nType: ${doc.type}\nPages: ${doc.pages}\nOCR Score: ${doc.ocrScore > 0 ? `${doc.ocrScore}%` : "Not yet scanned"}` },
+    { id: "art1", title: "ARTICLE I — SCOPE OF AGREEMENT", content: `This Agreement is entered into between ${doc.payer} ("Provider") and the Plan for the delivery of Covered Services to enrolled Members within the designated Service Area. The Provider agrees to furnish medically necessary services in accordance with the terms of this Agreement.` },
     { id: "art2", title: "ARTICLE II — TERM", content: `This Agreement shall be effective upon execution and continue for a period of three (3) years unless terminated earlier pursuant to Article VII. The Agreement shall automatically renew for successive one (1) year terms unless either party provides written notice of non-renewal at least ninety (90) days prior to the end of the then-current term.` },
     { id: "art3", title: "ARTICLE III — PROVIDER OBLIGATIONS", content: `Provider shall deliver all medically necessary services in accordance with accepted standards of medical practice and applicable regulatory requirements. Provider shall maintain all required licensure, certifications, and accreditations throughout the term of this Agreement.` },
     { id: "art4", title: "ARTICLE IV — COMPENSATION", content: `Reimbursement shall be in accordance with the Fee Schedule attached as Exhibit A. Clean Claims shall be processed within thirty (30) calendar days of receipt. Annual rate adjustments shall be applied based on CPI-U methodology effective January 1 of each contract year.` },
@@ -242,9 +242,9 @@ function UploadModal({ open, onClose }: { open: boolean; onClose: () => void }) 
         </div>
         <div className="space-y-3">
           <div>
-            <label className="text-xs font-medium text-foreground block mb-1">Payer</label>
+            <label className="text-xs font-medium text-foreground block mb-1">Provider</label>
             <select value={payer} onChange={e => setPayer(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm bg-background">
-              <option value="">Select payer...</option>
+              <option value="">Select provider...</option>
               {seedPayerOptions.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
@@ -340,7 +340,7 @@ export default function DigitizationPage({ onBack }: { onBack?: () => void }) {
             </button>
           )}
           <h1 className="page-header">Legacy Contract Digitization</h1>
-          <p className="text-sm text-muted-foreground mt-1">OCR + AI pipeline for converting legacy payer contracts into structured data</p>
+          <p className="text-sm text-muted-foreground mt-1">OCR + AI pipeline for converting legacy provider contracts into structured data</p>
         </div>
         <button onClick={() => setUploadOpen(true)} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 flex items-center gap-2">
           <Upload className="w-4 h-4" /> Upload Legacy Contracts
@@ -406,7 +406,7 @@ export default function DigitizationPage({ onBack }: { onBack?: () => void }) {
             <thead>
               <tr className="border-b bg-muted/50 text-xs">
                 <th className="text-left p-3 font-medium">Document</th>
-                <th className="text-left p-3 font-medium">Payer</th>
+                <th className="text-left p-3 font-medium">Provider</th>
                 <th className="text-left p-3 font-medium">Type</th>
                 <th className="text-left p-3 font-medium">Source</th>
                 <th className="text-right p-3 font-medium">Pages</th>
