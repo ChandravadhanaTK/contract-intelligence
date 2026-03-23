@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle, CheckCircle2, Clock, ShieldAlert, Calendar, FileDown,
-  FileText, Search, ChevronDown, Eye,
+  FileText, Search, ChevronDown, Eye, RefreshCw, ArrowRight,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
 import type { TrackerObligation } from "@/data/seed";
@@ -110,6 +110,17 @@ export default function ObligationCompliance() {
     api.getTrackerObligations(statusFilter, categoryFilter).then(setObligations);
   }, [statusFilter, categoryFilter]);
 
+  // Renewal contracts count
+  const [renewalCount, setRenewalCount] = useState(0);
+  useEffect(() => {
+    const stored = localStorage.getItem("oci_renewals");
+    if (stored) {
+      setRenewalCount(JSON.parse(stored).length);
+    } else {
+      setRenewalCount(3); // default seed count
+    }
+  }, []);
+
   const allObs = obligations;
   const overdue = allObs.filter(o => o.status === "Overdue").length;
   const atRisk = allObs.filter(o => o.status === "At Risk").length;
@@ -184,6 +195,23 @@ export default function ObligationCompliance() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Renewal Contracts card */}
+      <div
+        onClick={() => navigate("/renewals")}
+        className="bg-card border rounded-lg p-4 flex items-center justify-between cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-violet-100 text-violet-700">
+            <RefreshCw className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">Renewal Contracts</p>
+            <p className="text-xs text-muted-foreground">{renewalCount} contracts approaching renewal — review and generate renewal drafts</p>
+          </div>
+        </div>
+        <ArrowRight className="w-4 h-4 text-muted-foreground" />
       </div>
 
       {/* Compliance Score and By Category — separated */}
