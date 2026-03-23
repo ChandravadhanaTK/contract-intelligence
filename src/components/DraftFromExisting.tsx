@@ -329,7 +329,7 @@ export default function DraftFromExisting({ onBack }: { onBack: () => void }) {
             <ChevronLeft className="w-4 h-4" /> Back
           </button>
           <div className="w-px h-5 bg-border" />
-          <span className="text-sm font-semibold text-primary">ContractIQ</span>
+          <span className="text-sm font-semibold text-primary">Contract Intelligence</span>
           <span className="text-xs text-muted-foreground">·</span>
           <span className="text-xs text-muted-foreground truncate max-w-[200px]">{fileName}</span>
         </div>
