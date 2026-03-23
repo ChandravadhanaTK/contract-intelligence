@@ -476,7 +476,7 @@ export default function ContractViewerPage() {
                 EXHIBIT A – RATE SCHEDULE
               </h2>
               <p className="text-center text-[11px] text-muted-foreground mb-4" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
-                Pharmacy Reimbursement Rate Schedule
+                Healthcare Provider Contract Rate Schedule
               </p>
               <div className="overflow-x-auto border rounded">
                 <table className="w-full text-[11px]" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
