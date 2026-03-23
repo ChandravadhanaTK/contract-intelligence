@@ -340,7 +340,7 @@ export default function DigitizationPage({ onBack }: { onBack?: () => void }) {
             </button>
           )}
           <h1 className="page-header">Legacy Contract Digitization</h1>
-          <p className="text-sm text-muted-foreground mt-1">OCR + AI pipeline for converting legacy payer contracts into structured data</p>
+          <p className="text-sm text-muted-foreground mt-1">OCR + AI pipeline for converting legacy provider contracts into structured data</p>
         </div>
         <button onClick={() => setUploadOpen(true)} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 flex items-center gap-2">
           <Upload className="w-4 h-4" /> Upload Legacy Contracts
