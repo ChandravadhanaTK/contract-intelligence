@@ -228,7 +228,7 @@ function ContractWorkflowPipeline() {
   const pipelineTotal = counts.reduce((a, b) => a + b, 0) || 1;
   return (
     <div className="bg-card border rounded-lg p-5">
-      <h3 className="text-sm font-semibold mb-3">NewGen Contract Digitization Pipeline</h3>
+      <h3 className="text-sm font-semibold mb-3">NewGen Contract Creation Pipeline</h3>
       <div className="w-full h-4 rounded-full bg-muted flex overflow-hidden">
         {pipelineStages.map((stage, i) => {
           const width = (counts[i] / pipelineTotal) * 100;
