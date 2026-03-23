@@ -95,10 +95,10 @@ const highlightBg: Record<string, string> = {
 };
 
 const mockIntelligence = [
-  { label: "HIPAA Compliance", badge: "Pass", summary: "Full compliance with Privacy and Security Rules. AES-256 encryption verified.", citation: "Section 8.1 • Page 30" },
-  { label: "Data Protection", badge: "Review", summary: "Cyber liability insurance meets $5M minimum. Breach notification within 24 hours.", citation: "Section 8.3 • Page 31" },
-  { label: "Confidentiality", badge: "Pass", summary: "5-year post-termination protection period. Return/destroy provisions included.", citation: "Section 9.1 • Page 35" },
-  { label: "Risk Signals", badge: "2 Found", summary: "Non-compete clause and unilateral rate adjustment identified as potential risks.", citation: "Section 11.1 • Page 40" },
+  { label: "HIPAA Compliance", badge: "Pass", summary: "Full compliance with Privacy and Security Rules. AES-256 encryption verified.", citation: "Section 8.1 • Page 30", sectionId: "s9" },
+  { label: "Data Protection", badge: "Review", summary: "Cyber liability insurance meets $5M minimum. Breach notification within 24 hours.", citation: "Section 8.3 • Page 31", sectionId: "s9" },
+  { label: "Confidentiality", badge: "Pass", summary: "5-year post-termination protection period. Return/destroy provisions included.", citation: "Section 9.1 • Page 35", sectionId: "s10" },
+  { label: "Risk Signals", badge: "2 Found", summary: "Non-compete clause and unilateral rate adjustment identified as potential risks.", citation: "Section 11.1 • Page 40", sectionId: "s10" },
 ];
 
 const badgeColors: Record<string, string> = {
