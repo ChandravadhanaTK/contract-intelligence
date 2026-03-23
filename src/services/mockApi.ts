@@ -1,5 +1,5 @@
 import type { Contract, StandardClause, AuditEntry, DraftContract, ClauseVersion, AgentLog, ReviewDocument, ReviewRequest, ChatMessage } from "@/types";
-import { chatAnswerMap } from "@/data/seed";
+import { chatAnswerMap, complianceRecommendations } from "@/data/seed";
 import type { DigitizationDocument, TrackerObligation, ContractFamily, RedlineClauseGroup, RedlineDocument } from "@/data/seed";
 
 function delay(ms: number) {
