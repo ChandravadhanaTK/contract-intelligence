@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { BackToPipelineBanner } from "@/components/BackToPipelineBanner";
+import DraftFromExisting from "@/components/DraftFromExisting";
 import { useNavigate } from "react-router-dom";
 import {
   FileText, Layers, BookOpen, ArrowRight, ArrowLeft, Bot, Send, ChevronDown, ChevronRight,
