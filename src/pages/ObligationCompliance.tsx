@@ -267,6 +267,7 @@ export default function ObligationCompliance() {
                   <td className="p-3 text-xs text-muted-foreground">{o.contract}</td>
                   <td className="p-3"><span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">{o.category}</span></td>
                   <td className="p-3 text-xs">{o.owner}</td>
+                  <td className="p-3"><span className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">{o.frequency}</span></td>
                   <td className={`p-3 text-xs ${o.status === "Overdue" ? "text-destructive font-medium" : ""}`}>{o.dueDate}</td>
                   <td className="p-3"><span className={`status-chip ${riskChip[o.risk]}`}>{o.risk}</span></td>
                   <td className="p-3"><span className={`text-xs ${evidenceChip[o.evidence]}`}>{o.evidence}</span></td>
