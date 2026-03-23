@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import {
   Building2, TrendingDown, TrendingUp, Clock, DollarSign, ShieldCheck, Users2,
   AlertTriangle, CheckCircle2, ArrowRight, Activity, FileText, BarChart3, RefreshCw,
+  FileStack, FilePlus2, FileSearch, PenLine,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
 import {
   seedPayers, seedProviderFamilies, seedDenialReasons,
-  seedRecentActivity, seedComplianceItems,
+  seedRecentActivity, seedComplianceItems, seedDigitizationDocs,
+  seedContractFamilies, seedRedlineDocuments,
 } from "@/data/seed";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
@@ -52,6 +54,11 @@ export default function Dashboard() {
   const compliantCount = seedComplianceItems.filter(c => c.status === "compliant").length;
   const compliancePct = Math.round((compliantCount / complianceTotal) * 100);
 
+  const digitizedCount = seedDigitizationDocs.length;
+  const newGenCount = seedContractFamilies.reduce((sum, f) => sum + f.documents.length, 0);
+  const totalContracts = digitizedCount + newGenCount;
+  const redliningPending = seedRedlineDocuments.length;
+
   return (
     <div className="page-container">
       {/* Header */}
@@ -60,6 +67,50 @@ export default function Dashboard() {
           <h1 className="page-header">Provider Contract Intelligence</h1>
           <p className="text-sm text-muted-foreground mt-1">Real-time analytics across provider agreements, claims performance & compliance</p>
         </div>
+      </div>
+
+      {/* Contract Metrics Row */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <button onClick={() => navigate("/contracts")} className="kpi-card flex items-start gap-3 text-left hover:ring-1 hover:ring-primary/30 transition-all cursor-pointer">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-primary/10 text-primary"><FileStack className="w-4 h-4" /></div>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground font-medium">Total Contracts</p>
+            <p className="text-xl font-bold text-foreground">{totalContracts}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Legacy + NewGen</p>
+          </div>
+        </button>
+        <button onClick={() => navigate("/contracts/newgen")} className="kpi-card flex items-start gap-3 text-left hover:ring-1 hover:ring-primary/30 transition-all cursor-pointer">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-100 text-emerald-700"><FilePlus2 className="w-4 h-4" /></div>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground font-medium">Contracts Created</p>
+            <p className="text-xl font-bold text-foreground">{newGenCount}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">NewGen Generation</p>
+          </div>
+        </button>
+        <button onClick={() => navigate("/contracts/digitize")} className="kpi-card flex items-start gap-3 text-left hover:ring-1 hover:ring-primary/30 transition-all cursor-pointer">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-100 text-blue-700"><FileSearch className="w-4 h-4" /></div>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground font-medium">Contracts Digitized</p>
+            <p className="text-xl font-bold text-foreground">{digitizedCount}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Digitize Legacy</p>
+          </div>
+        </button>
+        <button onClick={() => navigate("/compliance-hub")} className="kpi-card flex items-start gap-3 text-left hover:ring-1 hover:ring-primary/30 transition-all cursor-pointer">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-100 text-emerald-700"><ShieldCheck className="w-4 h-4" /></div>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground font-medium">Compliance Score</p>
+            <p className="text-xl font-bold text-foreground">{compliancePct}%</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Across all contracts</p>
+          </div>
+        </button>
+        <button onClick={() => navigate("/compliance-hub?tab=redlining")} className="kpi-card flex items-start gap-3 text-left hover:ring-1 hover:ring-primary/30 transition-all cursor-pointer">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-amber-100 text-amber-700"><PenLine className="w-4 h-4" /></div>
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground font-medium">Redlining Pending</p>
+            <p className="text-xl font-bold text-foreground">{redliningPending}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Documents awaiting review</p>
+          </div>
+        </button>
       </div>
 
       {/* KPI Row 1 */}
