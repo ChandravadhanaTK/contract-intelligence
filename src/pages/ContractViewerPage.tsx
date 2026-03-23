@@ -513,13 +513,25 @@ export default function ContractViewerPage() {
               <h3 className="text-xs font-bold text-muted-foreground uppercase mb-3">Contract Intelligence</h3>
               <div className="space-y-2">
                 {mockIntelligence.map(intel => (
-                  <div key={intel.label} className="p-2 rounded border bg-background">
+                  <div
+                    key={intel.label}
+                    onClick={() => {
+                      if (intel.sectionId && sectionRefs.current[intel.sectionId]) {
+                        sectionRefs.current[intel.sectionId]!.scrollIntoView({ behavior: "smooth", block: "center" });
+                        // Expand section if collapsed
+                        setCollapsedSections(prev => ({ ...prev, [intel.sectionId]: false }));
+                      }
+                    }}
+                    className="p-2 rounded border bg-background cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all"
+                  >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-medium">{intel.label}</span>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${badgeColors[intel.badge]}`}>{intel.badge}</span>
                     </div>
                     <p className="text-[10px] text-muted-foreground">{intel.summary}</p>
-                    <span className="inline-flex items-center gap-0.5 mt-1 px-1.5 py-0.5 bg-secondary/10 text-secondary rounded text-[9px] font-medium">{intel.citation}</span>
+                    <span className="inline-flex items-center gap-0.5 mt-1 px-1.5 py-0.5 bg-secondary/10 text-secondary rounded text-[9px] font-medium">
+                      <ArrowRight className="w-2.5 h-2.5" /> {intel.citation}
+                    </span>
                   </div>
                 ))}
               </div>
