@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import {
   Building2, TrendingDown, TrendingUp, Clock, DollarSign, ShieldCheck, Users2,
   AlertTriangle, CheckCircle2, ArrowRight, Activity, FileText, BarChart3, RefreshCw,
+  FileStack, FilePlus2, FileSearch, PenLine,
 } from "lucide-react";
 import { api } from "@/services/mockApi";
 import {
   seedPayers, seedProviderFamilies, seedDenialReasons,
-  seedRecentActivity, seedComplianceItems,
+  seedRecentActivity, seedComplianceItems, seedDigitizationDocs,
+  seedContractFamilies, seedRedlineDocuments,
 } from "@/data/seed";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
