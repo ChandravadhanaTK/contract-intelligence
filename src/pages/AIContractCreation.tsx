@@ -334,11 +334,12 @@ export default function AIContractCreation() {
           <h1 className="text-2xl font-bold text-foreground mb-2">AI Contract Creation</h1>
           <p className="text-muted-foreground">Choose how you'd like to create your healthcare provider contract</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {([
             { mode: "full" as CreateMode, icon: FileText, title: "Full Draft Generation", desc: "Generate a complete contract draft from your inputs in one step." },
             { mode: "clause" as CreateMode, icon: Layers, title: "Clause-by-Clause Co-Authoring", desc: "Build your contract section by section with AI suggestions and edits." },
             { mode: "playbook" as CreateMode, icon: BookOpen, title: "Playbook-Guided with AI Review", desc: "Draft using your playbook rules with compliance and risk checks." },
+            { mode: "from-existing" as CreateMode, icon: Upload, title: "Start Draft Generation with Existing Contract", desc: "Upload an existing provider contract and interactively draft a new contract using extracted knowledge with page-level citations." },
           ]).map(card => (
             <div key={card.mode} className="bg-card border rounded-xl p-6 flex flex-col items-center text-center hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -350,7 +351,7 @@ export default function AIContractCreation() {
                 onClick={() => selectMode(card.mode)}
                 className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90"
               >
-                Get started <ArrowRight className="w-4 h-4" />
+                {card.mode === "from-existing" ? "Start Draft Generation" : "Get started"} <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           ))}
