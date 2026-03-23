@@ -554,7 +554,7 @@ export default function AIContractCreation() {
                 </button>
                 <button
                   onClick={() => {
-                    handleSaveDraft();
+                    handleSaveDraft("Provider Agreement – Redline Review");
                     navigate("/compliance-hub?tab=redlining");
                   }}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium hover:opacity-90"
