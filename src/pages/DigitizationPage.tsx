@@ -242,9 +242,9 @@ function UploadModal({ open, onClose }: { open: boolean; onClose: () => void }) 
         </div>
         <div className="space-y-3">
           <div>
-            <label className="text-xs font-medium text-foreground block mb-1">Payer</label>
+            <label className="text-xs font-medium text-foreground block mb-1">Provider</label>
             <select value={payer} onChange={e => setPayer(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm bg-background">
-              <option value="">Select payer...</option>
+              <option value="">Select provider...</option>
               {seedPayerOptions.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
