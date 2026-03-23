@@ -852,6 +852,55 @@ export default function AIContractCreation() {
           </div>
         </div>
       </div>
+
+      {/* Save Modal */}
+      {saveModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-card border rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-foreground">Save Contract</h3>
+              <button onClick={() => setSaveModalOpen(false)} className="p-1 hover:bg-muted rounded"><X className="w-4 h-4" /></button>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-foreground block mb-1">Document Name</label>
+              <input
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+                placeholder="Enter document name…"
+                value={saveName}
+                onChange={e => setSaveName(e.target.value)}
+                autoFocus
+                onKeyDown={e => e.key === "Enter" && saveName.trim() && handleSaveDraft()}
+              />
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase font-medium mb-2">Naming Suggestions</p>
+              <div className="flex flex-wrap gap-1.5">
+                {nameSuggestions.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setSaveName(s)}
+                    className={`text-[10px] px-2.5 py-1 rounded-lg border transition-colors ${
+                      saveName === s ? "bg-primary/10 border-primary/40 text-primary font-medium" : "hover:bg-muted text-foreground"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setSaveModalOpen(false)} className="px-4 py-2 text-xs font-medium border rounded-lg hover:bg-muted">Cancel</button>
+              <button
+                onClick={() => handleSaveDraft()}
+                disabled={!saveName.trim()}
+                className="px-4 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+              >
+                <Save className="w-3.5 h-3.5" /> Save Contract
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
