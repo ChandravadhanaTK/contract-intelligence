@@ -1708,7 +1708,7 @@ export default function ContractCreationWithOverview() {
         <TabsContent value="newgen">
           <div className="space-y-6">
             <div>
-              <h1 className="page-header">NewGen Contract Digitization</h1>
+              <h1 className="page-header">NewGen Contract Creation</h1>
               <p className="text-sm text-muted-foreground mt-1">OCR + AI pipeline for creating provider contracts into structured data</p>
               <div className="mt-4" />
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
