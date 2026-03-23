@@ -323,6 +323,7 @@ export interface TrackerObligation {
   contractId: string;
   category: "Compliance" | "Financial" | "Operational" | "Reporting" | "Insurance";
   owner: string;
+  owningTeam: string;
   frequency: "One-time" | "Monthly" | "Quarterly" | "Semi-annually" | "Annually";
   dueDate: string;
   risk: "High" | "Medium" | "Low";
