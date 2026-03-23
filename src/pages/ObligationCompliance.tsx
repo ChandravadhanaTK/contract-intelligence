@@ -252,6 +252,7 @@ export default function ObligationCompliance() {
                 <th className="text-left p-3 font-medium">Contract</th>
                 <th className="text-left p-3 font-medium">Category</th>
                 <th className="text-left p-3 font-medium">Owner</th>
+                <th className="text-left p-3 font-medium">Frequency</th>
                 <th className="text-left p-3 font-medium">Due Date</th>
                 <th className="text-left p-3 font-medium">Risk</th>
                 <th className="text-left p-3 font-medium">Evidence</th>
