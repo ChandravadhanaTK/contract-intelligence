@@ -59,6 +59,7 @@ const extractedClauses: ExtractedClause[] = [
 const sectionConfidence: Record<string, number> = {
   "s1": 96, "s2": 94, "s3": 78, "s4": 91, "s5": 88,
   "s6": 82, "s7": 85, "s8": 97, "s9": 72, "s10": 65,
+  "rate-schedule": 88,
 };
 
 const mockSections = [
