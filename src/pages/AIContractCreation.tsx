@@ -174,6 +174,8 @@ export default function AIContractCreation() {
   const [autoApply, setAutoApply] = useState(false);
   const [drafts, setDrafts] = useState<DraftMeta[]>(() => get("oci_my_drafts", []));
   const [draftSearch, setDraftSearch] = useState("");
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveName, setSaveName] = useState("");
   const centerRef = useRef<HTMLDivElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
