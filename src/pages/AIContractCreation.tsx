@@ -174,6 +174,8 @@ export default function AIContractCreation() {
   const [autoApply, setAutoApply] = useState(false);
   const [drafts, setDrafts] = useState<DraftMeta[]>(() => get("oci_my_drafts", []));
   const [draftSearch, setDraftSearch] = useState("");
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveName, setSaveName] = useState("");
   const centerRef = useRef<HTMLDivElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
@@ -240,16 +242,33 @@ export default function AIContractCreation() {
     scrollToSection(clause.sectionRef);
   };
 
-  const handleSaveDraft = () => {
+  const nameSuggestions = [
+    "Northwell Health – Provider Agreement",
+    "Mercy Health – Delegate Agreement",
+    "Cleveland Clinic – Ancillary Services",
+    "Kaiser Permanente – Behavioral Health",
+    "Mount Sinai – Renewal Amendment",
+    "Community Health – Provider Services Agreement",
+    "Memorial Hospital – Facility Agreement",
+  ];
+
+  const openSaveDialog = () => {
+    setSaveName("");
+    setSaveModalOpen(true);
+  };
+
+  const handleSaveDraft = (name?: string) => {
+    const finalName = name || saveName || "Untitled Provider Agreement";
     const draft: DraftMeta = {
       id: `draft-${Date.now()}`,
-      name: "Payer Agreement – Standard",
+      name: finalName,
       createdAt: new Date().toISOString(),
       status: "Draft",
       sections: [...sections],
     };
-    setDrafts(prev => [draft, ...prev].slice(0, 5));
-    toast.success("Draft saved");
+    setDrafts(prev => [draft, ...prev].slice(0, 10));
+    setSaveModalOpen(false);
+    toast.success(`Saved: ${finalName}`);
   };
 
   const handleLoadDraft = (draft: DraftMeta) => {
@@ -410,8 +429,8 @@ export default function AIContractCreation() {
           {!collapsedPanels.summary && (
             <div className="px-4 pb-3 flex items-center gap-6 flex-wrap">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground uppercase">Draft:</span>
-                <span className="text-xs font-medium">Payer Agreement – Standard</span>
+              <span className="text-[10px] text-muted-foreground uppercase">Draft:</span>
+                <span className="text-xs font-medium">{drafts.length > 0 ? drafts[0].name : "Provider Agreement – Unsaved"}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-muted-foreground uppercase">Completion:</span>
@@ -434,7 +453,7 @@ export default function AIContractCreation() {
                 </div>
               )}
               <div className="flex gap-1.5 ml-auto">
-                <button onClick={handleSaveDraft} className="flex items-center gap-1 px-2.5 py-1 bg-primary text-primary-foreground rounded text-[10px] font-medium hover:opacity-90">
+                <button onClick={openSaveDialog} className="flex items-center gap-1 px-2.5 py-1 bg-primary text-primary-foreground rounded text-[10px] font-medium hover:opacity-90">
                   <Save className="w-3 h-3" /> Save
                 </button>
                 <button className="flex items-center gap-1 px-2.5 py-1 border rounded text-[10px] font-medium hover:bg-muted">
@@ -483,13 +502,16 @@ export default function AIContractCreation() {
                     }`}>{d.status}</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground">{new Date(d.createdAt).toLocaleDateString()}</p>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 flex-wrap">
                     <button onClick={() => handleLoadDraft(d)} className="text-[10px] text-primary hover:underline flex items-center gap-0.5">
                       <FolderOpen className="w-3 h-3" /> Open
                     </button>
+                    <button onClick={() => navigate(`/contracts/fd-1?draft=${d.id}`)} className="text-[10px] text-secondary hover:underline flex items-center gap-0.5">
+                      <Eye className="w-3 h-3" /> View
+                    </button>
                     <button onClick={() => {
                       const dup = { ...d, id: `draft-${Date.now()}`, name: d.name + " (Copy)", createdAt: new Date().toISOString() };
-                      setDrafts(prev => [dup, ...prev].slice(0, 5));
+                      setDrafts(prev => [dup, ...prev].slice(0, 10));
                       toast.success("Duplicated");
                     }} className="text-[10px] text-muted-foreground hover:underline flex items-center gap-0.5">
                       <Copy className="w-3 h-3" /> Dup
@@ -535,7 +557,7 @@ export default function AIContractCreation() {
                 </button>
                 <button
                   onClick={() => {
-                    handleSaveDraft();
+                    handleSaveDraft("Provider Agreement – Redline Review");
                     navigate("/compliance-hub?tab=redlining");
                   }}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium hover:opacity-90"
@@ -830,6 +852,55 @@ export default function AIContractCreation() {
           </div>
         </div>
       </div>
+
+      {/* Save Modal */}
+      {saveModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-card border rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-foreground">Save Contract</h3>
+              <button onClick={() => setSaveModalOpen(false)} className="p-1 hover:bg-muted rounded"><X className="w-4 h-4" /></button>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-foreground block mb-1">Document Name</label>
+              <input
+                className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+                placeholder="Enter document name…"
+                value={saveName}
+                onChange={e => setSaveName(e.target.value)}
+                autoFocus
+                onKeyDown={e => e.key === "Enter" && saveName.trim() && handleSaveDraft()}
+              />
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase font-medium mb-2">Naming Suggestions</p>
+              <div className="flex flex-wrap gap-1.5">
+                {nameSuggestions.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setSaveName(s)}
+                    className={`text-[10px] px-2.5 py-1 rounded-lg border transition-colors ${
+                      saveName === s ? "bg-primary/10 border-primary/40 text-primary font-medium" : "hover:bg-muted text-foreground"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setSaveModalOpen(false)} className="px-4 py-2 text-xs font-medium border rounded-lg hover:bg-muted">Cancel</button>
+              <button
+                onClick={() => handleSaveDraft()}
+                disabled={!saveName.trim()}
+                className="px-4 py-2 text-xs font-medium bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+              >
+                <Save className="w-3.5 h-3.5" /> Save Contract
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
