@@ -406,7 +406,7 @@ export default function DigitizationPage({ onBack }: { onBack?: () => void }) {
             <thead>
               <tr className="border-b bg-muted/50 text-xs">
                 <th className="text-left p-3 font-medium">Document</th>
-                <th className="text-left p-3 font-medium">Payer</th>
+                <th className="text-left p-3 font-medium">Provider</th>
                 <th className="text-left p-3 font-medium">Type</th>
                 <th className="text-left p-3 font-medium">Source</th>
                 <th className="text-right p-3 font-medium">Pages</th>
