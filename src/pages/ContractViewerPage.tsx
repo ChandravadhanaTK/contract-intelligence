@@ -308,7 +308,7 @@ export default function ContractViewerPage() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <div className="p-3 border-b bg-card flex items-center gap-3">
-          <button onClick={() => navigate("/contracts")} className="p-1 hover:bg-muted rounded">
+          <button onClick={() => navigate(fromPipeline ? "/contracts/newgen" : "/contracts")} className="p-1 hover:bg-muted rounded">
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="flex-1 min-w-0">
