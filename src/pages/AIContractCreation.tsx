@@ -453,7 +453,7 @@ export default function AIContractCreation() {
                 </div>
               )}
               <div className="flex gap-1.5 ml-auto">
-                <button onClick={handleSaveDraft} className="flex items-center gap-1 px-2.5 py-1 bg-primary text-primary-foreground rounded text-[10px] font-medium hover:opacity-90">
+                <button onClick={openSaveDialog} className="flex items-center gap-1 px-2.5 py-1 bg-primary text-primary-foreground rounded text-[10px] font-medium hover:opacity-90">
                   <Save className="w-3 h-3" /> Save
                 </button>
                 <button className="flex items-center gap-1 px-2.5 py-1 border rounded text-[10px] font-medium hover:bg-muted">
