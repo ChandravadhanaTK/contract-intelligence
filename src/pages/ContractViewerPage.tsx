@@ -468,6 +468,36 @@ export default function ContractViewerPage() {
               );
             })}
 
+            {/* Rate Schedule Table in Document */}
+            <div className="mt-8 pt-6 border-t border-muted">
+              <h2 className="text-center font-bold text-sm uppercase tracking-wide mb-1" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                EXHIBIT A – RATE SCHEDULE
+              </h2>
+              <p className="text-center text-[11px] text-muted-foreground mb-4" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                Pharmacy Reimbursement Rate Schedule
+              </p>
+              <div className="overflow-x-auto border rounded">
+                <table className="w-full text-[11px]" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                  <thead>
+                    <tr className="bg-muted/50">
+                      {rateSchedule.headers.map(h => (
+                        <th key={h} className="px-2 py-1.5 text-left font-bold text-foreground border-b whitespace-nowrap">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rateSchedule.rows.map((row, i) => (
+                      <tr key={i} className={i % 2 === 0 ? "" : "bg-muted/20"}>
+                        {row.cells.map((cell, ci) => (
+                          <td key={ci} className="px-2 py-1 text-foreground border-b border-border/30 whitespace-nowrap">{cell === "" ? "—" : cell}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             {/* Signature Block */}
             {isSignMode && (
               <div ref={sigRef} className="mt-12 pt-8 border-t-2 border-foreground/20">
