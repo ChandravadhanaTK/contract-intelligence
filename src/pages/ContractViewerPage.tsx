@@ -109,6 +109,9 @@ const badgeColors: Record<string, string> = {
 };
 
 export default function ContractViewerPage() {
+  const rateSchedule = defaultRateScheduleTable;
+  const [rateScheduleOpen, setRateScheduleOpen] = useState(false);
+  const [rateModalOpen, setRateModalOpen] = useState(false);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
