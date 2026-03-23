@@ -135,7 +135,59 @@ export default function ContractViewerPage() {
     setCollapsedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
   };
 
-  const result = id ? getDocById(id) : null;
+  // Signature state
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [hasDrawn, setHasDrawn] = useState(false);
+  const sigCanvasRef = useRef<HTMLCanvasElement>(null);
+  const sigRef = useRef<HTMLDivElement>(null);
+
+  const startDraw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = sigCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.beginPath();
+    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    setIsDrawing(true);
+  }, []);
+
+  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    const canvas = sigCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#1a1a1a";
+    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.stroke();
+    setHasDrawn(true);
+  }, [isDrawing]);
+
+  const endDraw = useCallback(() => setIsDrawing(false), []);
+
+  const clearSignature = useCallback(() => {
+    const canvas = sigCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setHasDrawn(false);
+    setSignatureDataUrl(null);
+  }, []);
+
+  const applySignature = useCallback(() => {
+    const canvas = sigCanvasRef.current;
+    if (!canvas) return;
+    setSignatureDataUrl(canvas.toDataURL());
+    toast.success("Signature applied to contract");
+  }, []);
+
+
   const docName = result?.doc.name || "Contract Document";
   const familyName = result?.family.name || "";
   const docStatus = result?.doc.status || "Active";
