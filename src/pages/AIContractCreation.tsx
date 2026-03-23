@@ -502,13 +502,16 @@ export default function AIContractCreation() {
                     }`}>{d.status}</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground">{new Date(d.createdAt).toLocaleDateString()}</p>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 flex-wrap">
                     <button onClick={() => handleLoadDraft(d)} className="text-[10px] text-primary hover:underline flex items-center gap-0.5">
                       <FolderOpen className="w-3 h-3" /> Open
                     </button>
+                    <button onClick={() => navigate(`/contracts/fd-1?draft=${d.id}`)} className="text-[10px] text-secondary hover:underline flex items-center gap-0.5">
+                      <Eye className="w-3 h-3" /> View
+                    </button>
                     <button onClick={() => {
                       const dup = { ...d, id: `draft-${Date.now()}`, name: d.name + " (Copy)", createdAt: new Date().toISOString() };
-                      setDrafts(prev => [dup, ...prev].slice(0, 5));
+                      setDrafts(prev => [dup, ...prev].slice(0, 10));
                       toast.success("Duplicated");
                     }} className="text-[10px] text-muted-foreground hover:underline flex items-center gap-0.5">
                       <Copy className="w-3 h-3" /> Dup
