@@ -360,6 +360,16 @@ export default function AIContractCreation() {
     );
   }
 
+  /* ─── Draft from Existing Contract ─── */
+  if (mode === "from-existing") {
+    return (
+      <div className="page-container">
+        <BackToPipelineBanner />
+        <DraftFromExisting onBack={() => { setMode(null); set("oci_create_mode", null); }} />
+      </div>
+    );
+  }
+
   /* ─── Workspace ─── */
   return (
     <div className="flex flex-col h-[calc(100vh-3rem)] overflow-hidden">
