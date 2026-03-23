@@ -110,6 +110,9 @@ const badgeColors: Record<string, string> = {
 export default function ContractViewerPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isSignMode = searchParams.get("mode") === "sign";
+  const fromPipeline = searchParams.get("from") === "pipeline";
   const [selectedClauseId, setSelectedClauseId] = useState<string | null>(null);
   const [hoveredClauseId, setHoveredClauseId] = useState<string | null>(null);
   const [clauseSearch, setClauseSearch] = useState("");
