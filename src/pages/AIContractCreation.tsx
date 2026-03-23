@@ -429,8 +429,8 @@ export default function AIContractCreation() {
           {!collapsedPanels.summary && (
             <div className="px-4 pb-3 flex items-center gap-6 flex-wrap">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground uppercase">Draft:</span>
-                <span className="text-xs font-medium">Payer Agreement – Standard</span>
+              <span className="text-[10px] text-muted-foreground uppercase">Draft:</span>
+                <span className="text-xs font-medium">{drafts.length > 0 ? drafts[0].name : "Provider Agreement – Unsaved"}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-muted-foreground uppercase">Completion:</span>
