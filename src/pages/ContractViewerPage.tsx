@@ -52,12 +52,14 @@ const extractedClauses: ExtractedClause[] = [
   { id: "ec-8", name: "Quality & Reporting", sectionId: "s7", sectionRef: "6.1", pageRef: "Page 24", category: "Operational", confidence: "Medium", alignment: "aligned", summary: "HEDIS measures and quarterly reporting required", complianceScore: 82 },
   { id: "ec-9", name: "Network Adequacy", sectionId: "missing", sectionRef: "—", pageRef: "—", category: "Compliance", confidence: "Low", alignment: "missing", summary: "Missing: No network adequacy clause found", complianceScore: 0 },
   { id: "ec-10", name: "Dispute Resolution", sectionId: "s3", sectionRef: "2.2", pageRef: "Page 8", category: "Legal", confidence: "Low", alignment: "nonAligned", summary: "Binding arbitration without progressive escalation", complianceScore: 45 },
+  { id: "ec-11", name: "Rate Schedule Extraction", sectionId: "rate-schedule", sectionRef: "Exhibit A", pageRef: "Page 45", category: "Financial", confidence: "High", alignment: "aligned", summary: "Pharmacy reimbursement rates across Retail, Mail, Specialty, LTC, 340B, Compound & Vaccine channels — 23 line items extracted", complianceScore: 88 },
 ];
 
 // Map section IDs to confidence percentages
 const sectionConfidence: Record<string, number> = {
   "s1": 96, "s2": 94, "s3": 78, "s4": 91, "s5": 88,
   "s6": 82, "s7": 85, "s8": 97, "s9": 72, "s10": 65,
+  "rate-schedule": 88,
 };
 
 const mockSections = [
@@ -469,7 +471,7 @@ export default function ContractViewerPage() {
             })}
 
             {/* Rate Schedule Table in Document */}
-            <div className="mt-8 pt-6 border-t border-muted">
+            <div ref={el => { sectionRefs.current["rate-schedule"] = el; }} className="mt-8 pt-6 border-t border-muted">
               <h2 className="text-center font-bold text-sm uppercase tracking-wide mb-1" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
                 EXHIBIT A – RATE SCHEDULE
               </h2>
