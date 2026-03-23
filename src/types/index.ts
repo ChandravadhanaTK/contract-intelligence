@@ -9,7 +9,16 @@ export interface Contract {
   workflow: WorkflowInstance;
   documents?: ReviewDocument[];
   docProcessing?: ContractDocumentProcessing;
+  rateScheduleTable?: RateScheduleTable;
   renewalDate?: string;
+}
+
+export interface RateScheduleTable {
+  headers: string[];
+  rows: {
+    section: string;
+    cells: (string | number)[];
+  }[];
 }
 
 export interface Clause {

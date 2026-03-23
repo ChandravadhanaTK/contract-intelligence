@@ -1,0 +1,30 @@
+import type { RateScheduleTable } from "@/types";
+
+export const defaultRateScheduleTable: RateScheduleTable = {
+  headers: ["Section", "Channel", "Drug Type", "AWP Discount (%)", "Dispensing Fee ($)", "Notes"],
+  rows: [
+    { section: "Retail 30-Day", cells: ["Retail 30-Day", "Retail", "Generic", 18, 1.50, "Standard generic pricing"] },
+    { section: "Retail 30-Day", cells: ["Retail 30-Day", "Retail", "Brand – Preferred", 15, 2.00, "Formulary preferred"] },
+    { section: "Retail 30-Day", cells: ["Retail 30-Day", "Retail", "Brand – Non-Preferred", 13, 2.50, "Prior auth may apply"] },
+    { section: "Retail 30-Day", cells: ["Retail 30-Day", "Retail", "Specialty", 10, 0.00, "See specialty addendum"] },
+    { section: "Retail 90-Day", cells: ["Retail 90-Day", "Retail", "Generic", 20, 3.00, "90-day supply incentive"] },
+    { section: "Retail 90-Day", cells: ["Retail 90-Day", "Retail", "Brand – Preferred", 17, 4.50, "90-day supply"] },
+    { section: "Retail 90-Day", cells: ["Retail 90-Day", "Retail", "Brand – Non-Preferred", 14, 5.00, "Prior auth may apply"] },
+    { section: "Mail Order", cells: ["Mail Order", "Mail", "Generic", 22, 0.00, "Home delivery"] },
+    { section: "Mail Order", cells: ["Mail Order", "Mail", "Brand – Preferred", 19, 0.00, "Home delivery"] },
+    { section: "Mail Order", cells: ["Mail Order", "Mail", "Brand – Non-Preferred", 16, 0.00, "Prior auth may apply"] },
+    { section: "Mail Order", cells: ["Mail Order", "Mail", "Specialty", 12, 0.00, "See specialty addendum"] },
+    { section: "Specialty Pharmacy", cells: ["Specialty Pharmacy", "Specialty", "Oral Specialty", 10, 0.00, "Limited distribution"] },
+    { section: "Specialty Pharmacy", cells: ["Specialty Pharmacy", "Specialty", "Injectable – Self-admin", 8, 0.00, "Cold chain required"] },
+    { section: "Specialty Pharmacy", cells: ["Specialty Pharmacy", "Specialty", "Injectable – Provider", 6, 0.00, "Buy & bill excluded"] },
+    { section: "Specialty Pharmacy", cells: ["Specialty Pharmacy", "Specialty", "Infusion", 5, 0.00, "Site-of-care program"] },
+    { section: "Specialty Pharmacy", cells: ["Specialty Pharmacy", "Specialty", "Biosimilar", 14, 0.00, "Preferred over reference"] },
+    { section: "LTC / Long-Term Care", cells: ["LTC / Long-Term Care", "LTC", "Generic", 16, 2.00, "Cycle fill billing"] },
+    { section: "LTC / Long-Term Care", cells: ["LTC / Long-Term Care", "LTC", "Brand", 12, 3.00, "Cycle fill billing"] },
+    { section: "340B", cells: ["340B", "340B", "Generic", 25, 1.00, "340B ceiling price applies"] },
+    { section: "340B", cells: ["340B", "340B", "Brand", 20, 1.50, "340B ceiling price applies"] },
+    { section: "Compound", cells: ["Compound", "Retail", "Compound – Non-sterile", "", 8.00, "Ingredient cost + fee"] },
+    { section: "Compound", cells: ["Compound", "Retail", "Compound – Sterile", "", 15.00, "Ingredient cost + fee"] },
+    { section: "Vaccine / Immunization", cells: ["Vaccine / Immunization", "Retail", "Vaccines", "", 12.00, "Admin fee per dose"] },
+  ],
+};
