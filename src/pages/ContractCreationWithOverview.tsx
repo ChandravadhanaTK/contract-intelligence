@@ -228,7 +228,7 @@ function ContractWorkflowPipeline() {
   const pipelineTotal = counts.reduce((a, b) => a + b, 0) || 1;
   return (
     <div className="bg-card border rounded-lg p-5">
-      <h3 className="text-sm font-semibold mb-3">NewGen Contract Digitization Pipeline</h3>
+      <h3 className="text-sm font-semibold mb-3">NewGen Contract Creation Pipeline</h3>
       <div className="w-full h-4 rounded-full bg-muted flex overflow-hidden">
         {pipelineStages.map((stage, i) => {
           const width = (counts[i] / pipelineTotal) * 100;
@@ -1708,7 +1708,7 @@ export default function ContractCreationWithOverview() {
         <TabsContent value="newgen">
           <div className="space-y-6">
             <div>
-              <h1 className="page-header">NewGen Contract Digitization</h1>
+              <h1 className="page-header">NewGen Contract Creation</h1>
               <p className="text-sm text-muted-foreground mt-1">OCR + AI pipeline for creating provider contracts into structured data</p>
               <div className="mt-4" />
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">

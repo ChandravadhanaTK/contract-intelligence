@@ -15,7 +15,7 @@ export function BackToPipelineBanner() {
         className="flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        Back to NewGen Contract Digitization Pipeline
+        Back to NewGen Contract Creation Pipeline
       </button>
     </div>
   );
