@@ -196,7 +196,7 @@ const pipelineStages = [
   { name: "Pricing Team Review", route: "/rates", color: "bg-sky-500" },
   { name: "Legal Team Review", route: "/compliance-hub?tab=deviations", color: "bg-purple-500" },
   { name: "Negotiation & Review", route: "/compliance-hub?tab=redlining", color: "bg-orange-500" },
-  { name: "Signature", route: "/create", color: "bg-pink-500" },
+  { name: "Signature", route: "/contracts/fd-1?mode=sign&from=pipeline", color: "bg-pink-500" },
   { name: "Published", route: "/contracts", color: "bg-emerald-500" },
   { name: "Data Loading", route: "/rates", color: "bg-teal-500" },
 ];

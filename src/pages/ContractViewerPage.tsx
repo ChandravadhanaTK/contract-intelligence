@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, GitCompare, FileDown, ChevronDown, ChevronRight, Shield, FileText,
   Bot, Send, X, Sparkles, Clock, ChevronUp, Search, ArrowRight,
@@ -110,6 +110,9 @@ const badgeColors: Record<string, string> = {
 export default function ContractViewerPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isSignMode = searchParams.get("mode") === "sign";
+  const fromPipeline = searchParams.get("from") === "pipeline";
   const [selectedClauseId, setSelectedClauseId] = useState<string | null>(null);
   const [hoveredClauseId, setHoveredClauseId] = useState<string | null>(null);
   const [clauseSearch, setClauseSearch] = useState("");
@@ -132,7 +135,59 @@ export default function ContractViewerPage() {
     setCollapsedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
   };
 
+  // Signature state
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [hasDrawn, setHasDrawn] = useState(false);
+  const sigCanvasRef = useRef<HTMLCanvasElement>(null);
+  const sigRef = useRef<HTMLDivElement>(null);
+
+  const startDraw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = sigCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.beginPath();
+    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    setIsDrawing(true);
+  }, []);
+
+  const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    const canvas = sigCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#1a1a1a";
+    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.stroke();
+    setHasDrawn(true);
+  }, [isDrawing]);
+
+  const endDraw = useCallback(() => setIsDrawing(false), []);
+
+  const clearSignature = useCallback(() => {
+    const canvas = sigCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setHasDrawn(false);
+    setSignatureDataUrl(null);
+  }, []);
+
+  const applySignature = useCallback(() => {
+    const canvas = sigCanvasRef.current;
+    if (!canvas) return;
+    setSignatureDataUrl(canvas.toDataURL());
+    toast.success("Signature applied to contract");
+  }, []);
   const result = id ? getDocById(id) : null;
+
   const docName = result?.doc.name || "Contract Document";
   const familyName = result?.family.name || "";
   const docStatus = result?.doc.status || "Active";
@@ -164,6 +219,13 @@ export default function ContractViewerPage() {
       c.name.toLowerCase().includes(q) || c.category.toLowerCase().includes(q) || c.summary.toLowerCase().includes(q)
     );
   }, [clauseSearch]);
+
+  // Auto-scroll to signature section when in sign mode
+  useEffect(() => {
+    if (isSignMode && sigRef.current) {
+      setTimeout(() => sigRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 600);
+    }
+  }, [isSignMode]);
 
   // Non-aligned / high-risk iterators
   const nonAlignedIds = extractedClauses.filter(c => c.alignment === "nonAligned").map(c => c.id);
@@ -246,7 +308,7 @@ export default function ContractViewerPage() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <div className="p-3 border-b bg-card flex items-center gap-3">
-          <button onClick={() => navigate("/contracts")} className="p-1 hover:bg-muted rounded">
+          <button onClick={() => navigate(fromPipeline ? "/contracts/newgen" : "/contracts")} className="p-1 hover:bg-muted rounded">
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="flex-1 min-w-0">
@@ -401,6 +463,93 @@ export default function ContractViewerPage() {
                 </div>
               );
             })}
+
+            {/* Signature Block */}
+            {isSignMode && (
+              <div ref={sigRef} className="mt-12 pt-8 border-t-2 border-foreground/20">
+                <h2 className="text-center font-bold text-sm uppercase tracking-wide mb-8" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                  SIGNATURE PAGE
+                </h2>
+                <p className="text-[12px] text-foreground leading-relaxed mb-8 text-justify" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                  IN WITNESS WHEREOF, the parties hereto have caused this Agreement to be executed by their duly authorized representatives as of the date last written below.
+                </p>
+
+                <div className="grid grid-cols-2 gap-12 mb-8">
+                  {/* Plan signature */}
+                  <div>
+                    <p className="text-[11px] font-bold uppercase mb-4" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                      OPTUMHEALTH CARE SOLUTIONS, LLC
+                    </p>
+                    <div className="border-b border-foreground/40 mb-1 h-8" />
+                    <p className="text-[10px] text-muted-foreground">Authorized Signature</p>
+                    <div className="mt-3 border-b border-foreground/40 mb-1 h-6" />
+                    <p className="text-[10px] text-muted-foreground">Print Name & Title</p>
+                    <div className="mt-3 border-b border-foreground/40 mb-1 h-6" />
+                    <p className="text-[10px] text-muted-foreground">Date</p>
+                  </div>
+
+                  {/* Provider signature */}
+                  <div>
+                    <p className="text-[11px] font-bold uppercase mb-4" style={{ fontFamily: "'Times New Roman', Georgia, serif" }}>
+                      PROVIDER
+                    </p>
+                    {signatureDataUrl ? (
+                      <div className="border-b border-foreground/40 mb-1 h-8 flex items-end">
+                        <img src={signatureDataUrl} alt="Signature" className="h-7 object-contain" />
+                      </div>
+                    ) : (
+                      <div className="border-b border-foreground/40 mb-1 h-8" />
+                    )}
+                    <p className="text-[10px] text-muted-foreground">Authorized Signature</p>
+                    <div className="mt-3 border-b border-foreground/40 mb-1 h-6" />
+                    <p className="text-[10px] text-muted-foreground">Print Name & Title</p>
+                    <div className="mt-3 border-b border-foreground/40 mb-1 h-6" />
+                    <p className="text-[10px] text-muted-foreground">Date</p>
+                  </div>
+                </div>
+
+                {/* Draw signature pad */}
+                {!signatureDataUrl && (
+                  <div className="mt-6 p-4 border-2 border-dashed border-primary/30 rounded-lg bg-primary/5" style={{ fontFamily: "'Inter', sans-serif" }}>
+                    <p className="text-xs font-semibold text-foreground mb-2">Draw Your Signature</p>
+                    <canvas
+                      ref={sigCanvasRef}
+                      width={500}
+                      height={120}
+                      className="w-full border rounded bg-white cursor-crosshair"
+                      onMouseDown={startDraw}
+                      onMouseMove={draw}
+                      onMouseUp={endDraw}
+                      onMouseLeave={endDraw}
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={clearSignature} className="text-[11px] px-3 py-1.5 border rounded hover:bg-muted font-medium">Clear</button>
+                      <button onClick={applySignature} disabled={!hasDrawn} className="text-[11px] px-3 py-1.5 bg-primary text-primary-foreground rounded font-medium hover:opacity-90 disabled:opacity-50">
+                        Apply Signature
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {signatureDataUrl && (
+                  <div className="mt-4 flex items-center gap-3" style={{ fontFamily: "'Inter', sans-serif" }}>
+                    <span className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
+                      <CheckCircle className="w-3.5 h-3.5" /> Signature applied
+                    </span>
+                    <button onClick={clearSignature} className="text-[11px] px-2 py-1 border rounded hover:bg-muted font-medium">Re-sign</button>
+                    <button
+                      onClick={() => {
+                        toast.success("Contract signed and submitted successfully!");
+                        setTimeout(() => navigate("/contracts/newgen"), 1200);
+                      }}
+                      className="text-[11px] px-3 py-1.5 bg-primary text-primary-foreground rounded font-medium hover:opacity-90"
+                    >
+                      Submit Signed Contract
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Footer */}
             <div className="mt-12 pt-4 border-t border-muted flex items-center justify-between text-[10px] text-muted-foreground" style={{ fontFamily: "'Arial', sans-serif" }}>
