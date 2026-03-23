@@ -186,7 +186,7 @@ export default function ContractViewerPage() {
     setSignatureDataUrl(canvas.toDataURL());
     toast.success("Signature applied to contract");
   }, []);
-
+  const result = id ? getDocById(id) : null;
 
   const docName = result?.doc.name || "Contract Document";
   const familyName = result?.family.name || "";
