@@ -96,6 +96,30 @@ export const api = {
   sendChatMessage: async (requestId: string, userText: string): Promise<string> => {
     await delay(1200);
     const lower = userText.toLowerCase();
+
+    // Check for compliance improvement queries
+    const isComplianceQuery = lower.includes("improve") || lower.includes("compliance score") || lower.includes("how to fix") || (lower.includes("why") && (lower.includes("68%") || lower.includes("score") || lower.includes("confidence"))) || lower.includes("recommend") || lower.includes("what changes") || lower.includes("improve compliance");
+
+    if (isComplianceQuery) {
+      // Try to match a specific clause
+      for (const [clauseKey, rec] of Object.entries(complianceRecommendations)) {
+        if (lower.includes(clauseKey)) {
+          return `📊 Compliance Analysis: ${clauseKey.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")} — Current Score: ${rec.score}%\n\n❓ Why this score?\n${rec.why}\n\n✅ Recommended Changes to Improve Compliance:\n${rec.changes.map((c, i) => `\n${i + 1}. ${c}`).join("\n")}\n\n💡 Applying all recommended changes would raise this clause's compliance score to 90%+.`;
+        }
+      }
+
+      // Generic compliance overview
+      const lowScoreClauses = Object.entries(complianceRecommendations)
+        .filter(([, r]) => r.score < 85)
+        .sort(([, a], [, b]) => a.score - b.score);
+
+      return `📊 Compliance Improvement Summary\n\nThe following clauses need attention to improve overall compliance:\n\n${lowScoreClauses.map(([name, rec]) => {
+        const label = name.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+        const icon = rec.score === 0 ? "🔴" : rec.score < 60 ? "🟠" : "🟡";
+        return `${icon} ${label} — ${rec.score}% → ${rec.changes.length} changes needed`;
+      }).join("\n")}\n\nAsk me about a specific clause (e.g., "How to improve termination without cause?") to see detailed recommendations with regulatory citations.`;
+    }
+
     for (const [keyword, response] of Object.entries(chatAnswerMap)) {
       if (keyword !== "default" && lower.includes(keyword)) {
         return response;
