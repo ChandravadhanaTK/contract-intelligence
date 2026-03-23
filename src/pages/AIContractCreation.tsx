@@ -20,7 +20,7 @@ function set(key: string, v: unknown) {
 }
 
 /* ─── Types ─── */
-type CreateMode = "full" | "clause" | "playbook";
+type CreateMode = "full" | "clause" | "playbook" | "from-existing";
 type SectionStatus = "drafted" | "needs-input" | "missing" | "updated";
 
 interface ContractSection {
