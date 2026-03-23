@@ -463,6 +463,22 @@ export default function ContractViewerPage() {
                       )}
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{clause.summary}</p>
+                    {clause.complianceScore > 0 && clause.complianceScore < 85 && (
+                      <span
+                        onClick={e => { e.stopPropagation(); setChatOpen(true); sendChat(`How to improve ${clause.name.toLowerCase()}?`); }}
+                        className="inline-flex items-center gap-0.5 mt-1 text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium cursor-pointer hover:bg-primary/20 transition-colors"
+                      >
+                        <Sparkles className="w-2.5 h-2.5" /> Improve Compliance
+                      </span>
+                    )}
+                    {clause.alignment === "missing" && (
+                      <span
+                        onClick={e => { e.stopPropagation(); setChatOpen(true); sendChat(`How to improve ${clause.name.toLowerCase()}?`); }}
+                        className="inline-flex items-center gap-0.5 mt-1 text-[9px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-medium cursor-pointer hover:bg-destructive/20 transition-colors"
+                      >
+                        <Sparkles className="w-2.5 h-2.5" /> Add Missing Clause
+                      </span>
+                    )}
                   </button>
                 );
               })}
