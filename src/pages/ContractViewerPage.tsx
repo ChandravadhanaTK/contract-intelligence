@@ -661,7 +661,96 @@ export default function ContractViewerPage() {
               </div>
             </div>
 
-            {/* Contract Intelligence */}
+            {/* Rate Schedule */}
+            <div className="p-4 border-b">
+              <button
+                onClick={() => setRateScheduleOpen(!rateScheduleOpen)}
+                className="w-full flex items-center justify-between"
+              >
+                <h3 className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1.5">
+                  <Table2 className="w-3 h-3" /> Rate Schedule
+                </h3>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
+                    {rateSchedule.rows.length} rows
+                  </span>
+                  <Pencil className="w-3 h-3 text-muted-foreground hover:text-foreground cursor-pointer" onClick={e => { e.stopPropagation(); toast.info("Rate editing is read-only in this demo"); }} />
+                  {rateScheduleOpen ? <ChevronUp className="w-3 h-3 text-muted-foreground" /> : <ChevronDown className="w-3 h-3 text-muted-foreground" />}
+                </div>
+              </button>
+              {rateScheduleOpen && (
+                <div className="mt-3">
+                  <div className="overflow-x-auto border rounded-lg">
+                    <table className="w-full text-[9px]">
+                      <thead>
+                        <tr className="bg-muted/60">
+                          {rateSchedule.headers.map(h => (
+                            <th key={h} className="px-2 py-1.5 text-left font-semibold text-muted-foreground whitespace-nowrap">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rateSchedule.rows.slice(0, 7).map((row, i) => (
+                          <tr key={i} className={i % 2 === 0 ? "bg-background" : "bg-muted/20"}>
+                            {row.cells.map((cell, ci) => (
+                              <td key={ci} className="px-2 py-1 text-foreground whitespace-nowrap">{cell === "" ? "—" : cell}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <button
+                    onClick={() => setRateModalOpen(true)}
+                    className="mt-2 text-[10px] text-primary hover:underline font-medium flex items-center gap-1"
+                  >
+                    View full table ({rateSchedule.rows.length} rows) <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Rate Schedule Full Modal */}
+            {rateModalOpen && (
+              <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setRateModalOpen(false)}>
+                <div className="bg-card rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center justify-between px-5 py-3 border-b">
+                    <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+                      <Table2 className="w-4 h-4 text-primary" /> Rate Schedule — Full View
+                    </h2>
+                    <button onClick={() => setRateModalOpen(false)} className="p-1.5 hover:bg-muted rounded-lg"><X className="w-4 h-4" /></button>
+                  </div>
+                  <div className="flex-1 overflow-auto p-5">
+                    <table className="w-full text-xs border-collapse">
+                      <thead className="sticky top-0">
+                        <tr className="bg-muted">
+                          {rateSchedule.headers.map(h => (
+                            <th key={h} className="px-3 py-2 text-left font-semibold text-muted-foreground border-b whitespace-nowrap">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rateSchedule.rows.map((row, i) => {
+                          const isNewSection = i === 0 || row.section !== rateSchedule.rows[i - 1].section;
+                          return (
+                            <tr key={i} className={`${isNewSection ? "border-t-2 border-primary/10" : ""} ${i % 2 === 0 ? "bg-background" : "bg-muted/20"} hover:bg-primary/5`}>
+                              {row.cells.map((cell, ci) => (
+                                <td key={ci} className="px-3 py-1.5 text-foreground whitespace-nowrap border-b border-border/50">{cell === "" ? "—" : cell}</td>
+                              ))}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="px-5 py-3 border-t flex items-center justify-between">
+                    <span className="text-[10px] text-muted-foreground">{rateSchedule.rows.length} rows across {new Set(rateSchedule.rows.map(r => r.section)).size} sections</span>
+                    <button onClick={() => setRateModalOpen(false)} className="px-4 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-medium hover:opacity-90">Close</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="p-4">
               <h3 className="text-xs font-bold text-muted-foreground uppercase mb-3">Contract Intelligence</h3>
               <div className="space-y-2">
